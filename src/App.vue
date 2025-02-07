@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import Greet from "./components/Greet.vue";
-import { Button } from "@/components/ui/button";
+import { Sidebar,SidebarFooter,SidebarHeader,SidebarContent,SidebarGroup } from '@/components/ui/sidebar/index'
 </script>
 
 <template>
-  <div>
-    <Button>Click me</Button>
+  <div data-tauri-drag-region>
   </div>
 </template>
 

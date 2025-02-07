@@ -16,6 +16,9 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": true
       }
     },
     "bundle": {
@@ -42,7 +45,9 @@
         "resizable": true,
         "title": "ChatAny",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "decorations": false,
+        "transparent": true
       }
     ]
   }
