@@ -9,7 +9,7 @@ const mobile =
   process.env.TAURI_PLATFORM === "ios";
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
   css: {
     postcss: {
       plugins: [tailwind(), autoprefixer()],
@@ -41,4 +41,4 @@ export default defineConfig(async () => ({
     // produce sourcemaps for debug builds
     sourcemap: !!process.env.TAURI_DEBUG,
   },
-}));
+});
