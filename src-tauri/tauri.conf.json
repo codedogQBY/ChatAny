@@ -46,8 +46,11 @@
         "title": "ChatAny",
         "width": 800,
         "height": 600,
-        "decorations": false,
-        "transparent": true
+        "minWidth": 600,
+        "minHeight": 400,
+        "hiddenTitle": true,
+        "transparent": true,
+        "titleBarStyle": "Overlay"
       }
     ]
   }
