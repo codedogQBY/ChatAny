@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import SettingDialog from "@/components/setting-dialog/index.vue";
 import { Settings, UserRound, MoonStar, Sun } from "lucide-vue-next";
 import { routes } from "@/router";
 import { useRouter } from "vue-router";
@@ -106,16 +107,18 @@ const changeTheme = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
-            <a
-              :href="bottomMenuItem.href"
-              class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <component :is="bottomMenuItem.icon" class="h-5 w-5" />
-              <span class="sr-only">{{ bottomMenuItem.label }}</span>
-            </a>
+            <SettingDialog>
+              <a
+                href="javascript:void(0)"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Settings class="h-5 w-5" />
+                <span class="sr-only">{{ "设置" }}</span>
+              </a>
+            </SettingDialog>
           </TooltipTrigger>
           <TooltipContent side="right">
-            {{ bottomMenuItem.label }}
+            {{ "设置" }}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
