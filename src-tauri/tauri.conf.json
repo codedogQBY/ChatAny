@@ -46,8 +46,8 @@
         "title": "ChatAny",
         "width": 800,
         "height": 600,
-        "minWidth": 600,
-        "minHeight": 400,
+        "minWidth": 800,
+        "minHeight": 600,
         "hiddenTitle": true,
         "transparent": true,
         "titleBarStyle": "Overlay"

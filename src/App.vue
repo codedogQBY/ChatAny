@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import { Sidebar,SidebarFooter,SidebarHeader,SidebarContent,SidebarGroup } from '@/components/ui/sidebar/index'
+import Sidebar from "@/components/sidebar/index.vue";
+import { RouterView } from "vue-router";
 </script>
 
 <template>
-  <div data-tauri-drag-region>
+  <div class="flex min-h-screen w-full flex-col bg-muted/40">
+    <div>
+      <Sidebar />
+    </div>
+    <div class="flex flex-col pl-16">
+      <KeepAlive>
+        <RouterView />
+      </KeepAlive>
+    </div>
   </div>
 </template>
 
