@@ -14,7 +14,7 @@ import sidebar from './components/sidebar.vue';
         <DialogTrigger as-child>
             <slot />
         </DialogTrigger>
-        <DialogContent class="w-4/5 h-3/4 max-h-3/4">
+        <DialogContent class="h-3/4 max-h-3/4 p-2">
             <DialogHeader>
                 <DialogTitle>设置</DialogTitle>
             </DialogHeader>

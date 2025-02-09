@@ -18,7 +18,7 @@
             </ul>
         </div>
         <!-- 内容区域 -->
-        <div class="px-4 py-2 flex-1 h-full overflow-y-auto">
+        <div class="px-4 py-2 flex-1 h-full w-full overflow-y-auto">
             <component :is="activeView" />
         </div>
     </div>
@@ -30,7 +30,7 @@ import { ChartNoAxesGanttIcon, DatabaseIcon, Contact2Icon, GlobeIcon } from 'luc
 import Common from './common.vue';
 import Log from './log.vue';
 import About from './about.vue';
-import Model from './model.vue';
+import Model from './model/index.vue';
 
 type MenuItem = {
     label: string;

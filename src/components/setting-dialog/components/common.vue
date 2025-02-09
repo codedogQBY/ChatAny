@@ -1,5 +1,28 @@
 <template>
     <form class="space-y-2">
+        <FormField v-slot="{ componentField }" name="language">
+            <FormItem>
+                <FormLabel class="text-lg">系统语言</FormLabel>
+                <Select v-bind="componentField" :default-value="language">
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="请选择系统语言" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectItem
+                                v-for="lang in languages"
+                                :key="lang.value"
+                                :value="lang.value"
+                            >
+                                {{ lang.label }}
+                            </SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </FormItem>
+        </FormField>
         <FormField v-slot="{ componentField }" name="theme">
             <FormItem>
                 <FormLabel class="text-lg">主题模式</FormLabel>
@@ -154,29 +177,6 @@
                         </FormLabel>
                     </FormItem>
                 </RadioGroup>
-            </FormItem>
-        </FormField>
-        <FormField v-slot="{ componentField }" name="language">
-            <FormItem>
-                <FormLabel class="text-lg">系统语言</FormLabel>
-                <Select v-bind="componentField" :default-value="language">
-                    <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="请选择系统语言" />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectItem
-                                v-for="lang in languages"
-                                :key="lang.value"
-                                :value="lang.value"
-                            >
-                                {{ lang.label }}
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
             </FormItem>
         </FormField>
     </form>
