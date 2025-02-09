@@ -18,7 +18,7 @@
             </ul>
         </div>
         <!-- 内容区域 -->
-        <div class="p-2 flex-1">
+        <div class="px-4 py-2 flex-1 h-full overflow-y-auto">
             <component :is="activeView" />
         </div>
     </div>
