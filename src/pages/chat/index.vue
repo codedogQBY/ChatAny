@@ -29,7 +29,7 @@
             <div
                 v-else
                 key="empty-state"
-                class="flex-1 flex items-center justify-center bg-gradient-to-br from-background to-background/80"
+                class="flex-1 flex items-center justify-center bg-gradient-to-br from-background to-background/80 select-none"
             >
                 <div class="text-center p-8 bg-card rounded-xl shadow-lg max-w-md mx-auto">
                     <div

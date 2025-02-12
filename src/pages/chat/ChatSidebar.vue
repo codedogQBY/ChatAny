@@ -61,7 +61,7 @@
 
             <div
                 v-if="chats.length === 0"
-                class="flex flex-col items-center justify-center h-full p-4"
+                class="flex flex-col items-center justify-center h-full p-4 select-none"
             >
                 <div
                     class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-4 animate-pulse"

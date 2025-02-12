@@ -210,9 +210,17 @@
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <div>
+                                    <div class="flex items-center space-x-1">
+                                        <GlobeIcon
+                                            :class="`h-4 w-4 ${
+                                                networkEnabled
+                                                    ? 'text-primary'
+                                                    : 'text-muted-foreground'
+                                            }`"
+                                        >
+                                        </GlobeIcon>
                                         <Switch
-                                            v-model="networkEnabled"
+                                            v-model:value="networkEnabled"
                                             class="data-[state=checked]:bg-primary"
                                         />
                                     </div>
@@ -222,6 +230,7 @@
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
+
                         <Button
                             @click="sendMessage"
                             :disabled="!inputMessage.trim()"
@@ -279,6 +288,7 @@ import {
     PlugIcon,
     CommandIcon,
     SendIcon,
+    GlobeIcon,
 } from 'lucide-vue-next';
 import TypewriterText from './TypewriterText.vue';
 
