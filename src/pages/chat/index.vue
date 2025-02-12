@@ -1,174 +1,223 @@
 <template>
-    <div class="flex h-screen bg-background overflow-hidden font-sans">
-        <ChatList
-            :chats="chats"
-            :selectedChatId="selectedChat?.id"
-            @select="selectChat"
-            @add="showNewChatModal = true"
-            class="w-[280px] flex-shrink-0 border-r lg:w-[320px] hidden md:block"
-        />
-        <Button
-            @click="toggleSidebar"
-            class="fixed left-4 top-4 md:hidden z-50"
-            variant="outline"
-            size="icon"
-        >
-            <Menu class="h-4 w-4" />
-        </Button>
-
-        <!-- Mobile Sidebar -->
-        <div v-if="showMobileSidebar" class="fixed inset-0 bg-background z-40 md:hidden">
-            <ChatList
+    <div class="flex h-screen bg-background overflow-hidden">
+        <!-- 左侧聊天列表 -->
+        <div class="w-80 flex-shrink-0">
+            <ChatSidebar
                 :chats="chats"
                 :selectedChatId="selectedChat?.id"
-                @select="handleMobileSelect"
-                @add="showNewChatModal = true"
-                class="w-full h-full"
+                @add-chat="openModelSelection"
+                @select-chat="selectChat"
             />
         </div>
 
-        <ChatWindow
-            v-if="selectedChat"
-            :chat="selectedChat"
-            @send="sendMessage"
-            @edit="editChat"
-            @clear="clearChat"
-            class="flex-1 min-w-0"
-        />
-        <div v-else class="flex-1 flex items-center justify-center">
-            <div class="text-center p-8">
-                <MessageSquare class="w-16 h-16 mx-auto mb-4 text-primary" />
-                <p class="text-xl font-semibold text-foreground">准备好开始新的对话了吗？</p>
-                <p class="mt-2 text-muted-foreground">从左侧选择一个聊天，或创建新的对话！</p>
-            </div>
+        <!-- 右侧聊天区域 -->
+        <div class="flex-1 flex flex-col relative overflow-hidden">
+            <Transition name="fade" mode="out-in">
+                <ChatWindow
+                    v-if="selectedChat"
+                    :key="selectedChat.id"
+                    :chat="selectedChat"
+                    :user="currentUser"
+                    :quotedMessage="quotedMessage"
+                    @send-message="sendMessage"
+                    @toggle-network="toggleNetwork"
+                    @clear-history="clearHistory"
+                    @edit-bot="editBot"
+                    @view-history="viewHistory"
+                    @quote-message="setQuotedMessage"
+                    @cancel-quote="cancelQuote"
+                />
+                <div
+                    v-else
+                    key="empty-state"
+                    class="flex-1 flex items-center justify-center bg-gradient-to-br from-background to-background/80"
+                >
+                    <div class="text-center p-8 bg-card rounded-xl shadow-lg max-w-md mx-auto">
+                        <div
+                            class="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse"
+                        >
+                            <MessageSquareIcon class="w-12 h-12 text-primary" />
+                        </div>
+                        <h2
+                            class="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
+                        >
+                            开启你的 AI 之旅
+                        </h2>
+                        <p class="text-muted-foreground mb-8">
+                            从左侧选择或创建新的对话，探索无限可能
+                        </p>
+                        <Button size="lg" class="rounded-full px-8" @click="openModelSelection">
+                            <PlusIcon class="mr-2 h-5 w-5" />
+                            创建新对话
+                        </Button>
+                    </div>
+                </div>
+            </Transition>
         </div>
-        <NewChatModal
-            v-if="showNewChatModal"
-            @close="showNewChatModal = false"
-            @create="createNewChat"
-        />
+
+        <!-- 模型选择模态框 -->
+        <ModelSelectionModal v-model:isOpen="isModelSelectionOpen" @confirm="addChat" />
+
+        <!-- 全局通知 -->
+        <div class="fixed top-4 right-4 z-50">
+            <Toaster />
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { MessageSquare } from 'lucide-vue-next';
-import ChatList from './ChatList.vue';
+import { ref, watch } from 'vue';
+import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
-import NewChatModal from './NewChatModal.vue';
-import type { Chat, Message } from './types';
+import ModelSelectionModal from './ModelSelectionModal.vue';
+import { Button } from '@/components/ui/button';
+import Toaster from '@/components/ui/toast/Toaster.vue';
+import { useToast } from '@/components/ui/toast/use-toast';
+import { MessageSquareIcon, PlusIcon } from 'lucide-vue-next';
 
-const chats = ref<Chat[]>([
-    {
-        id: 1,
-        name: 'GPT-4 Turbo',
-        avatar: '4T',
-        model: 'gpt-4-turbo',
-        lastMessage: '让我们开始探讨这个有趣的话题吧！',
-        messages: [
-            {
-                id: 1,
-                role: 'assistant',
-                content: '你好！我是 GPT-4 Turbo。有什么我可以帮助你的吗？',
-                time: '10:00',
-            },
-            { id: 2, role: 'user', content: '你能解释一下量子计算的基本原理吗？', time: '10:01' },
-            {
-                id: 3,
-                role: 'assistant',
-                content:
-                    '当然可以！量子计算是一种利用量子力学原理进行信息处理的计算方式。它的基本单位是量子比特（qubit），不同于经典计算机的比特，qubit 可以同时处于多个状态。这种特性被称为量子叠加。\n\n量子计算的几个关键概念：\n\n1. 叠加态：qubit 可以同时为 0 和 1，直到被观测。\n2. 纠缠：两个或多个 qubit 可以彼此关联，即使相距遥远。\n3. 干涉：量子态可以相互影响，增强或抵消某些结果的概率。\n\n这些特性使得量子计算机在某些特定问题上，如大数分解、数据库搜索等，可能比经典计算机快得多。\n\n不过，量子计算仍面临许多挑战，如量子退相干和错误校正等问题。目前，我们仍处于量子计算的早期阶段，但它有潜力在未来彻底改变计算领域。',
-                time: '10:03',
-            },
-        ],
-    },
-    {
-        id: 2,
-        name: 'Claude 3',
-        avatar: 'C3',
-        model: 'claude-3',
-        lastMessage: '我很乐意为您解答这个问题。',
-        messages: [],
-    },
-]);
+interface User {
+    id: number;
+    name: string;
+    avatar: string;
+}
 
+interface Message {
+    id: number;
+    content: string;
+    sender: User;
+    timestamp: Date;
+    isNew?: boolean;
+}
+
+interface Chat {
+    id: number;
+    name: string;
+    avatar?: string;
+    messages: Message[];
+    model: string;
+    temperature: number;
+    maxTokens: number;
+}
+
+const currentUser: User = {
+    id: 1,
+    name: '当前用户',
+    avatar: '/placeholder.svg?height=40&width=40',
+};
+
+const chats = ref<Chat[]>([]);
 const selectedChat = ref<Chat | null>(null);
-const showNewChatModal = ref(false);
-
-const showMobileSidebar = ref(false);
-
-const toggleSidebar = () => {
-    showMobileSidebar.value = !showMobileSidebar.value;
-};
-
-const handleMobileSelect = (chat: Chat) => {
-    selectChat(chat);
-    showMobileSidebar.value = false;
-};
+const quotedMessage = ref<Message | null>(null);
+const isModelSelectionOpen = ref(false);
+const { toast } = useToast();
 
 const selectChat = (chat: Chat) => {
     selectedChat.value = chat;
 };
 
-const createNewChat = (name: string, model: string) => {
+const openModelSelection = () => {
+    isModelSelectionOpen.value = true;
+};
+
+const addChat = (modelInfo: { model: string; temperature: number; maxTokens: number }) => {
     const newChat: Chat = {
         id: Date.now(),
-        name,
-        avatar: model.charAt(0).toUpperCase(),
-        model,
-        lastMessage: '',
+        name: `${modelInfo.model} 对话`,
+        avatar: '/placeholder.svg?height=40&width=40',
         messages: [],
+        model: modelInfo.model,
+        temperature: modelInfo.temperature,
+        maxTokens: modelInfo.maxTokens,
     };
-    chats.value.unshift(newChat);
-    selectedChat.value = newChat;
-    showNewChatModal.value = false;
+    chats.value.push(newChat);
+    selectChat(newChat);
+    toast({
+        description: `已创建使用 ${modelInfo.model} 模型的新对话`,
+        duration: 3000,
+    });
 };
 
-const sendMessage = (content: string) => {
-    if (!selectedChat.value) return;
-
-    const newMessage: Message = {
-        id: Date.now(),
-        role: 'user',
-        content,
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    selectedChat.value.messages.push(newMessage);
-    selectedChat.value.lastMessage = content;
-
-    // 模拟AI回复
-    setTimeout(() => {
-        const aiResponse: Message = {
+const sendMessage = async (content: string) => {
+    if (selectedChat.value) {
+        const newMessage: Message = {
             id: Date.now(),
-            role: 'assistant',
-            content: '这是一个AI的模拟回复。在实际应用中，这里应该调用真实的AI服务来生成回复。',
-            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+            content,
+            sender: currentUser,
+            timestamp: new Date(),
         };
-        selectedChat.value?.messages.push(aiResponse);
-    }, 1000);
-};
-
-const editChat = (chatId: number, newName: string) => {
-    const chat = chats.value.find((c) => c.id === chatId);
-    if (chat) {
-        chat.name = newName;
+        selectedChat.value.messages.push(newMessage);
+        await simulateAIResponse();
     }
 };
 
-const clearChat = (chatId: number) => {
-    const chat = chats.value.find((c) => c.id === chatId);
-    if (chat) {
-        chat.messages = [];
-        chat.lastMessage = '';
+const simulateAIResponse = async () => {
+    if (selectedChat.value) {
+        // 模拟 AI 思考时间
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const aiMessage: Message = {
+            id: Date.now(),
+            content: '这是一个 AI 生成的回复，将会以打字机效果显示。',
+            sender: {
+                id: 0,
+                name: 'AI助手',
+                avatar: '/placeholder.svg?height=40&width=40',
+            },
+            timestamp: new Date(),
+            isNew: true,
+        };
+        selectedChat.value.messages.push(aiMessage);
     }
+};
+
+const toggleNetwork = (enabled: boolean) => {
+    toast({
+        description: `联网模式已${enabled ? '开启' : '关闭'}`,
+        duration: 3000,
+    });
+};
+
+const clearHistory = () => {
+    if (selectedChat.value) {
+        selectedChat.value.messages = [];
+        toast({
+            description: '当前对话的所有消息已被删除',
+            variant: 'destructive',
+            duration: 3000,
+        });
+    }
+};
+
+const editBot = () => {
+    toast({
+        description: '机器人设置功能即将推出',
+        duration: 3000,
+    });
+};
+
+const viewHistory = () => {
+    toast({
+        description: '历史记录查看功能即将推出',
+        duration: 3000,
+    });
+};
+
+const setQuotedMessage = (message: Message) => {
+    quotedMessage.value = message;
+};
+
+const cancelQuote = () => {
+    quotedMessage.value = null;
 };
 </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s ease;
+}
 
-body {
-    font-family: 'Inter', sans-serif;
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

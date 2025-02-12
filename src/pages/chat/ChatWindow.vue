@@ -1,271 +1,442 @@
 <template>
-    <div class="flex flex-col h-full bg-background">
-        <!-- Chat Header -->
-        <header class="p-4 border-b">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div
-                        class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg"
-                    >
-                        {{ chat.avatar }}
-                    </div>
-                    <h2 class="text-xl font-semibold text-foreground">{{ chat.name }}</h2>
-                </div>
-                <div class="flex space-x-2">
-                    <Button variant="ghost" size="icon" @click="showHistory">
-                        <History class="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" @click="editChat">
-                        <Edit class="h-5 w-5" />
-                    </Button>
-                </div>
+    <div class="flex flex-col h-full bg-gradient-to-br from-background to-background/80">
+        <!-- 顶部标题栏 -->
+        <div
+            class="flex items-center justify-between px-6 py-4 bg-card/50 backdrop-blur-sm border-b border-border/50"
+        >
+            <div class="flex items-center space-x-3">
+                <Avatar>
+                    <AvatarImage :src="chat.avatar" :alt="chat.name" />
+                    <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
+                </Avatar>
+                <h2 class="text-xl font-semibold text-foreground">{{ chat.name }}</h2>
             </div>
-        </header>
+            <div class="flex items-center space-x-2">
+                <Button variant="ghost" size="icon" @click="toggleHistory">
+                    <ClockIcon class="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" @click="$emit('edit-bot')">
+                    <SettingsIcon class="h-5 w-5" />
+                </Button>
+            </div>
+        </div>
 
-        <!-- Message List -->
-        <div class="flex-1 overflow-y-auto space-y-4 min-h-0" ref="messageList">
-            <div class="p-4 space-y-6">
-                <TransitionGroup name="chat-message">
+        <!-- 聊天内容区域 -->
+        <div class="flex-1 overflow-y-auto p-6" ref="chatContainer">
+            <TransitionGroup name="message" tag="div" class="space-y-6">
+                <div
+                    v-for="message in chat.messages"
+                    :key="message.id"
+                    :class="[
+                        'group flex items-end space-x-2',
+                        message.sender.id === user.id ? 'justify-end' : 'justify-start',
+                    ]"
+                >
+                    <Avatar v-if="message.sender.id !== user.id" class="mb-2">
+                        <AvatarImage :src="message.sender.avatar" :alt="message.sender.name" />
+                        <AvatarFallback>{{ message.sender.name[0] }}</AvatarFallback>
+                    </Avatar>
                     <div
-                        v-for="message in chat.messages"
-                        :key="message.id"
+                        class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl group"
                         :class="[
-                            'flex gap-4 items-end',
-                            message.role === 'user' ? 'flex-row-reverse' : '',
+                            message.sender.id === user.id
+                                ? 'bg-primary text-primary-foreground rounded-br-sm'
+                                : 'bg-card text-card-foreground rounded-bl-sm',
                         ]"
                     >
-                        <div
-                            class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
-                            :class="[
-                                message.role === 'user'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-secondary text-secondary-foreground',
-                            ]"
-                        >
-                            {{ message.role === 'user' ? '你' : 'AI' }}
+                        <TypewriterText
+                            v-if="message.sender.id !== user.id && message.isNew"
+                            :content="message.content"
+                            :key="message.id"
+                            :typing-speed="30"
+                            :start-delay="300"
+                            @typing-complete="message.isNew = false"
+                        />
+                        <p v-else>{{ message.content }}</p>
+                        <div class="mt-2 text-xs opacity-50">
+                            {{ new Date(message.timestamp).toLocaleTimeString() }}
                         </div>
-
-                        <div
-                            class="max-w-[75%] rounded-lg p-4 shadow-sm group relative"
-                            :class="[
-                                message.role === 'user'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-secondary text-secondary-foreground',
-                            ]"
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <Button
+                            v-if="message.sender.id === user.id"
+                            variant="ghost"
+                            size="icon"
+                            @click="$emit('quote-message', message)"
                         >
-                            <div class="prose max-w-none" v-html="formatMessage(message.content)" />
-                            <div class="mt-2 text-xs opacity-70">{{ message.time }}</div>
-                            <div
-                                class="message-actions absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded-lg px-1"
-                            >
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-8 w-8"
-                                    @click.stop="copyMessage(message.content)"
-                                >
-                                    <Copy class="h-4 w-4" />
+                            <QuoteIcon class="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" @click="copyMessage(message.content)">
+                            <CopyIcon class="h-4 w-4" />
+                        </Button>
+                        <Avatar v-if="message.sender.id === user.id" class="mb-2">
+                            <AvatarImage :src="user.avatar" :alt="user.name" />
+                            <AvatarFallback>{{ user.name[0] }}</AvatarFallback>
+                        </Avatar>
+                    </div>
+                    <div v-if="message.sender.id !== user.id" class="flex items-center space-x-2">
+                        <Button variant="ghost" size="icon" @click="copyMessage(message.content)">
+                            <CopyIcon class="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            @click="$emit('quote-message', message)"
+                        >
+                            <QuoteIcon class="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </TransitionGroup>
+        </div>
+
+        <!-- 底部输入区域 -->
+        <div class="p-4 bg-card/50 backdrop-blur-sm">
+            <!-- 引用消息展示 -->
+            <div
+                v-if="quotedMessage"
+                class="mb-2 p-3 bg-muted rounded-lg text-sm flex items-center justify-between"
+            >
+                <div class="flex items-center space-x-2">
+                    <QuoteIcon class="h-4 w-4 text-muted-foreground" />
+                    <span class="text-muted-foreground line-clamp-1">{{
+                        quotedMessage.content
+                    }}</span>
+                </div>
+                <Button variant="ghost" size="icon" class="h-6 w-6" @click="$emit('cancel-quote')">
+                    <XIcon class="h-4 w-4" />
+                </Button>
+            </div>
+
+            <!-- 输入框 -->
+            <div class="relative">
+                <Textarea
+                    v-model="inputMessage"
+                    placeholder="输入消息..."
+                    :rows="1"
+                    class="pr-12 resize-none max-h-32 overflow-y-auto pb-10"
+                    @keydown.enter.prevent="sendMessage"
+                    @input="autoResize"
+                />
+                <!-- 工具栏 -->
+                <div class="absolute bottom-2 left-2 flex items-center space-x-1">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="screenshot">
+                                    <CameraIcon class="h-4 w-4" />
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-8 w-8"
-                                    @click.stop="quoteMessage(message)"
-                                >
-                                    <Quote class="h-4 w-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>截图</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="viewLastImage">
+                                    <ImageIcon class="h-4 w-4" />
                                 </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>查看最后图片</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="confirmClearHistory">
+                                    <TrashIcon class="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>清空历史</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="managePlugins">
+                                    <PlugIcon class="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>管理插件</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Switch
+                                    v-model="networkEnabled"
+                                    class="data-[state=checked]:bg-primary"
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>联网模式: {{ networkEnabled ? '开启' : '关闭' }}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="showShortcuts">
+                                    <CommandIcon class="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>快捷键</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button variant="ghost" size="icon" @click="openSettings">
+                                    <SettingsIcon class="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>设置</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <Button
+                    @click="sendMessage"
+                    :disabled="!inputMessage.trim()"
+                    class="absolute bottom-2 right-2 rounded-full"
+                    size="icon"
+                >
+                    <SendIcon class="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+
+        <!-- 历史记录抽屉 -->
+        <Transition name="slide-up">
+            <div
+                v-if="showHistory"
+                class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+                @click.self="toggleHistory"
+            >
+                <div
+                    class="absolute bottom-0 left-0 right-0 bg-card rounded-t-xl shadow-lg max-h-[80vh] overflow-hidden"
+                >
+                    <div class="flex justify-between items-center p-4 border-b border-border">
+                        <h3 class="text-lg font-semibold">聊天历史</h3>
+                        <Button variant="ghost" size="icon" @click="toggleHistory">
+                            <XIcon class="h-5 w-5" />
+                        </Button>
+                    </div>
+                    <div class="p-4 overflow-y-auto" style="max-height: calc(80vh - 64px)">
+                        <div v-for="(message, index) in chat.messages" :key="index" class="mb-4">
+                            <div class="font-semibold">{{ message.sender.name }}</div>
+                            <div>{{ message.content }}</div>
+                            <div class="text-xs text-muted-foreground">
+                                {{ new Date(message.timestamp).toLocaleString() }}
                             </div>
                         </div>
                     </div>
-                </TransitionGroup>
-            </div>
-        </div>
-
-        <!-- Bottom Action Area -->
-        <div class="border-t bg-background/80 backdrop-blur-sm">
-            <!-- Quoted Message -->
-            <div
-                v-if="quotedMessage"
-                class="mx-4 mt-4 p-3 bg-muted/50 border rounded-lg flex items-start gap-3"
-            >
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-foreground mb-1">引用消息</p>
-                    <p class="text-sm text-muted-foreground truncate">
-                        {{ quotedMessage.content }}
-                    </p>
-                </div>
-                <Button variant="ghost" size="icon" @click="quotedMessage = null">
-                    <X class="h-4 w-4" />
-                </Button>
-            </div>
-
-            <!-- Toolbar -->
-            <div class="px-4 py-3 flex items-center space-x-2 overflow-x-auto border-t">
-                <Button variant="ghost" size="sm" @click="takeScreenshot" class="flex-shrink-0">
-                    <Camera class="h-4 w-4 mr-2" />
-                    截图
-                </Button>
-                <Button variant="ghost" size="sm" @click="showLastImage" class="flex-shrink-0">
-                    <Image class="h-4 w-4 mr-2" />
-                    图片
-                </Button>
-                <Button variant="ghost" size="sm" @click="confirmClearChat" class="flex-shrink-0">
-                    <Trash class="h-4 w-4 mr-2" />
-                    清空
-                </Button>
-                <Button variant="ghost" size="sm" @click="showPlugins" class="flex-shrink-0">
-                    <Puzzle class="h-4 w-4 mr-2" />
-                    插件
-                </Button>
-                <Button variant="ghost" size="sm" @click="showSettings" class="flex-shrink-0">
-                    <Settings class="h-4 w-4 mr-2" />
-                    设置
-                </Button>
-            </div>
-
-            <!-- Input Area -->
-            <div class="p-4">
-                <div class="relative flex items-end gap-2">
-                    <Textarea
-                        v-model="inputMessage"
-                        rows="1"
-                        class="flex-1 resize-none rounded-2xl pr-12 min-h-[56px] py-4 px-6"
-                        placeholder="输入消息..."
-                        @keydown.enter.prevent="sendMessage"
-                        ref="textarea"
-                    />
-                    <Button
-                        variant="default"
-                        size="icon"
-                        class="absolute right-2 bottom-2 rounded-xl h-10 w-10 bg-primary hover:bg-primary/90"
-                        @click="sendMessage"
-                    >
-                        <Send class="h-5 w-5" />
-                    </Button>
                 </div>
             </div>
-        </div>
+        </Transition>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { useToast } from '@/components/ui/toast/use-toast';
 import {
-    History,
-    Edit,
-    Camera,
-    Image,
-    Trash,
-    Puzzle,
-    Command,
-    Settings,
-    Copy,
-    Quote,
-    X,
-    Send,
+    ClockIcon,
+    SettingsIcon,
+    QuoteIcon,
+    XIcon,
+    CopyIcon,
+    CameraIcon,
+    ImageIcon,
+    TrashIcon,
+    PlugIcon,
+    CommandIcon,
+    SendIcon,
 } from 'lucide-vue-next';
-import type { Chat, Message } from '../types';
-import { marked } from 'marked';
+import TypewriterText from './TypewriterText.vue';
+
+interface User {
+    id: number;
+    name: string;
+    avatar: string;
+}
+
+interface Message {
+    id: number;
+    content: string;
+    sender: {
+        id: number;
+        name: string;
+        avatar: string;
+    };
+    timestamp: Date;
+    isNew?: boolean;
+}
+
+interface Chat {
+    id: number;
+    name: string;
+    avatar?: string;
+    messages: Message[];
+}
 
 const props = defineProps<{
     chat: Chat;
+    user: User;
+    quotedMessage: Message | null;
 }>();
 
 const emit = defineEmits<{
-    (e: 'send', message: string): void;
-    (e: 'edit'): void;
-    (e: 'clear'): void;
+    (e: 'send-message', message: string): void;
+    (e: 'toggle-network', enabled: boolean): void;
+    (e: 'clear-history'): void;
+    (e: 'edit-bot'): void;
+    (e: 'view-history'): void;
+    (e: 'quote-message', message: Message): void;
+    (e: 'cancel-quote'): void;
 }>();
 
 const inputMessage = ref('');
-const networkEnabled = ref(true);
-const textarea = ref<HTMLTextAreaElement>();
-const messageList = ref<HTMLElement>();
-const quotedMessage = ref<Message | null>(null);
+const networkEnabled = ref(false);
+const chatContainer = ref<HTMLElement | null>(null);
+const showHistory = ref(false);
+const { toast } = useToast();
 
 const sendMessage = () => {
-    if (!inputMessage.value.trim()) return;
-    emit('send', inputMessage.value);
-    inputMessage.value = '';
-    quotedMessage.value = null;
-};
-
-const copyMessage = (content: string) => {
-    navigator.clipboard.writeText(content);
-};
-
-const quoteMessage = (message: Message) => {
-    quotedMessage.value = message;
-    textarea.value?.focus();
-};
-
-const formatMessage = (content: string) => {
-    return marked(content);
-};
-
-const showHistory = () => {
-    // Implement history functionality
-};
-
-const editChat = () => {
-    emit('edit');
-};
-
-const takeScreenshot = () => {
-    // Implement screenshot functionality
-};
-
-const showLastImage = () => {
-    // Implement last image functionality
-};
-
-const confirmClearChat = () => {
-    if (confirm('Are you sure you want to clear all chat messages?')) {
-        emit('clear');
+    if (inputMessage.value.trim()) {
+        emit('send-message', inputMessage.value);
+        inputMessage.value = '';
+        autoResize();
+        scrollToBottom();
     }
 };
 
-const showPlugins = () => {
-    // Implement plugins functionality
+const copyMessage = async (content: string) => {
+    try {
+        await navigator.clipboard.writeText(content);
+        toast({
+            title: '已复制',
+            description: '消息内容已复制到剪贴板',
+            duration: 3000,
+        });
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+        toast({
+            title: '复制失败',
+            description: '无法复制消息内容',
+            variant: 'destructive',
+            duration: 3000,
+        });
+    }
+};
+
+const screenshot = () => {
+    toast({
+        description: '截图功能即将推出',
+        duration: 3000,
+    });
+};
+
+const viewLastImage = () => {
+    toast({
+        description: '查看最后图片功能即将推出',
+        duration: 3000,
+    });
+};
+
+const confirmClearHistory = () => {
+    if (confirm('确定要清空聊天记录吗？')) {
+        emit('clear-history');
+    }
+};
+
+const managePlugins = () => {
+    toast({
+        description: '插件管理功能即将推出',
+        duration: 3000,
+    });
 };
 
 const showShortcuts = () => {
-    // Implement shortcuts functionality
+    toast({
+        description: '快捷键功能即将推出',
+        duration: 3000,
+    });
 };
 
-const showSettings = () => {
-    // Implement settings functionality
+const openSettings = () => {
+    toast({
+        description: '设置功能即将推出',
+        duration: 3000,
+    });
 };
 
-// Auto-resize textarea
-watch(inputMessage, () => {
-    if (!textarea.value) return;
-    textarea.value.style.height = 'auto';
-    textarea.value.style.height = `${textarea.value.scrollHeight}px`;
+const toggleHistory = () => {
+    showHistory.value = !showHistory.value;
+};
+
+const autoResize = () => {
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+    }
+};
+
+const scrollToBottom = () => {
+    nextTick(() => {
+        if (chatContainer.value) {
+            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+        }
+    });
+};
+
+watch(networkEnabled, (newValue) => {
+    emit('toggle-network', newValue);
 });
 
-// Auto-scroll to bottom when new messages arrive
 watch(
     () => props.chat.messages,
-    () => {
-        if (!messageList.value) return;
-        messageList.value.scrollTop = messageList.value.scrollHeight;
+    (newMessages, oldMessages) => {
+        if (newMessages.length > oldMessages.length) {
+            const latestMessage = newMessages[newMessages.length - 1];
+            if (latestMessage.sender.id !== props.user.id) {
+                latestMessage.isNew = true;
+            }
+        }
+        scrollToBottom();
     },
     { deep: true }
 );
 </script>
 
 <style scoped>
-.chat-message-enter-active,
-.chat-message-leave-active {
-    transition: all 0.5s ease;
+.message-enter-active,
+.message-leave-active {
+    transition: all 0.5s cubic-bezier(0.05, 0.7, 0.1, 1);
 }
-.chat-message-enter-from,
-.chat-message-leave-to {
+
+.message-enter-from,
+.message-leave-to {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(30px) scale(0.9);
+}
+
+textarea {
+    transition: height 0.2s ease-out;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+    transform: translateY(100%);
 }
 </style>
