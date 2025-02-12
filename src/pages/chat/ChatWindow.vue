@@ -37,7 +37,7 @@
                             <AvatarFallback>{{ message.sender.name[0] }}</AvatarFallback>
                         </Avatar>
                         <div
-                            class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-card text-card-foreground rounded-bl-sm"
+                            class="relative text-sm max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-card text-card-foreground rounded-bl-sm"
                         >
                             <TypewriterText
                                 v-if="message.isNew"
@@ -47,27 +47,22 @@
                                 :start-delay="300"
                                 @typing-complete="message.isNew = false"
                             />
-                            <div
-                                v-else
-                                class="w-full break-words whitespace-pre-wrap text-sm leading-6"
-                            >
+                            <div v-else class="w-full break-words whitespace-pre-wrap leading-6">
                                 {{ message.content }}
                             </div>
                             <div class="mt-2 text-xs opacity-50">
                                 {{ new Date(message.timestamp).toLocaleTimeString() }}
                             </div>
                         </div>
-                        <div
-                            class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                        >
+                        <div class="flex items-center space-x-1 invisible group-hover:visible">
                             <div
-                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
                                 @click="copyMessage(message.content)"
                             >
                                 <CopyIcon class="h-3 w-3" />
                             </div>
                             <div
-                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
                                 @click="$emit('quote-message', message)"
                             >
                                 <QuoteIcon class="h-3 w-3" />
@@ -76,17 +71,15 @@
                     </template>
 
                     <template v-else>
-                        <div
-                            class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                        >
+                        <div class="flex items-center space-x-1 invisible group-hover:visible">
                             <div
-                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
                                 @click="copyMessage(message.content)"
                             >
                                 <CopyIcon class="h-3 w-3" />
                             </div>
                             <div
-                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
                                 @click="$emit('quote-message', message)"
                             >
                                 <QuoteIcon class="h-3 w-3" />
@@ -243,33 +236,25 @@
         </div>
 
         <!-- 历史记录抽屉 -->
-        <Transition name="slide-up">
-            <div
-                v-if="showHistory"
-                class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-                @click.self="toggleHistory"
-            >
-                <div
-                    class="absolute bottom-0 left-0 right-0 bg-card rounded-t-xl shadow-lg max-h-[80vh] overflow-hidden"
-                >
-                    <div class="flex justify-between items-center p-4 border-b border-border">
-                        <h3 class="text-lg font-semibold">聊天历史</h3>
-                        <Button variant="ghost" size="icon" @click="toggleHistory">
-                            <XIcon class="h-5 w-5" />
-                        </Button>
-                    </div>
-                    <div class="p-4 overflow-y-auto" style="max-height: calc(80vh - 64px)">
-                        <div v-for="(message, index) in chat.messages" :key="index" class="mb-4">
-                            <div class="font-semibold">{{ message.sender.name }}</div>
-                            <div>{{ message.content }}</div>
-                            <div class="text-xs text-muted-foreground">
-                                {{ new Date(message.timestamp).toLocaleString() }}
-                            </div>
+        <Drawer v-model:open="showHistory" class="w-96" @close="showHistory = false">
+            <DrawerContent class="user-select">
+                <div class="flex justify-between items-center p-4 border-b border-border">
+                    <h3 class="text-lg font-semibold">聊天历史</h3>
+                    <Button variant="ghost" size="icon" @click="toggleHistory(false)">
+                        <XIcon class="h-5 w-5" />
+                    </Button>
+                </div>
+                <div class="p-4 overflow-y-auto" style="max-height: calc(80vh - 64px)">
+                    <div v-for="(message, index) in chat.messages" :key="index" class="mb-4">
+                        <div class="font-semibold">{{ message.sender.name }}</div>
+                        <div>{{ message.content }}</div>
+                        <div class="text-xs text-muted-foreground">
+                            {{ new Date(message.timestamp).toLocaleString() }}
                         </div>
                     </div>
                 </div>
-            </div>
-        </Transition>
+            </DrawerContent>
+        </Drawer>
     </div>
 </template>
 
@@ -280,6 +265,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from '@/components/ui/drawer';
 import { useToast } from '@/components/ui/toast/use-toast';
 import {
     ClockIcon,
@@ -364,7 +359,7 @@ const copyMessage = async (content: string) => {
         toast({
             title: '已复制',
             description: '消息内容已复制到剪贴板',
-            duration: 3000,
+            duration: 1000,
         });
     } catch (err) {
         console.error('Failed to copy text: ', err);
@@ -372,7 +367,7 @@ const copyMessage = async (content: string) => {
             title: '复制失败',
             description: '无法复制消息内容',
             variant: 'destructive',
-            duration: 3000,
+            duration: 1000,
         });
     }
 };
@@ -380,14 +375,14 @@ const copyMessage = async (content: string) => {
 const screenshot = () => {
     toast({
         description: '截图功能即将推出',
-        duration: 3000,
+        duration: 1000,
     });
 };
 
 const viewLastImage = () => {
     toast({
         description: '查看最后图片功能即将推出',
-        duration: 3000,
+        duration: 1000,
     });
 };
 
@@ -400,21 +395,21 @@ const confirmClearHistory = () => {
 const managePlugins = () => {
     toast({
         description: '插件管理功能即将推出',
-        duration: 3000,
+        duration: 1000,
     });
 };
 
 const showShortcuts = () => {
     toast({
         description: '快捷键功能即将推出',
-        duration: 3000,
+        duration: 1000,
     });
 };
 
 const openSettings = () => {
     toast({
         description: '设置功能即将推出',
-        duration: 3000,
+        duration: 1000,
     });
 };
 
