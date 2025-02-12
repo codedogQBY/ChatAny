@@ -2,7 +2,8 @@
     <div class="flex flex-col h-full bg-gradient-to-br from-background to-background/80">
         <!-- 顶部标题栏 -->
         <div
-            class="flex items-center justify-between px-6 py-4 bg-card/50 backdrop-blur-sm border-b border-border/50"
+            data-tauri-drag-region
+            class="flex items-center justify-between px-2 py-2 bg-card/50 backdrop-blur-sm border-b border-border/50"
         >
             <div class="flex items-center space-x-3">
                 <Avatar>
@@ -27,65 +28,85 @@
                 <div
                     v-for="message in chat.messages"
                     :key="message.id"
-                    :class="[
-                        'group flex items-end space-x-2',
-                        message.sender.id === user.id ? 'justify-end' : 'justify-start',
-                    ]"
+                    class="group flex items-end space-x-2"
+                    :class="message.sender.id === user.id ? 'justify-end' : 'justify-start'"
                 >
-                    <Avatar v-if="message.sender.id !== user.id" class="mb-2">
-                        <AvatarImage :src="message.sender.avatar" :alt="message.sender.name" />
-                        <AvatarFallback>{{ message.sender.name[0] }}</AvatarFallback>
-                    </Avatar>
-                    <div
-                        class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl group"
-                        :class="[
-                            message.sender.id === user.id
-                                ? 'bg-primary text-primary-foreground rounded-br-sm'
-                                : 'bg-card text-card-foreground rounded-bl-sm',
-                        ]"
-                    >
-                        <TypewriterText
-                            v-if="message.sender.id !== user.id && message.isNew"
-                            :content="message.content"
-                            :key="message.id"
-                            :typing-speed="30"
-                            :start-delay="300"
-                            @typing-complete="message.isNew = false"
-                        />
-                        <p v-else>{{ message.content }}</p>
-                        <div class="mt-2 text-xs opacity-50">
-                            {{ new Date(message.timestamp).toLocaleTimeString() }}
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <Button
-                            v-if="message.sender.id === user.id"
-                            variant="ghost"
-                            size="icon"
-                            @click="$emit('quote-message', message)"
+                    <template v-if="message.sender.id !== user.id">
+                        <Avatar class="mb-2">
+                            <AvatarImage :src="message.sender.avatar" :alt="message.sender.name" />
+                            <AvatarFallback>{{ message.sender.name[0] }}</AvatarFallback>
+                        </Avatar>
+                        <div
+                            class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-card text-card-foreground rounded-bl-sm"
                         >
-                            <QuoteIcon class="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" @click="copyMessage(message.content)">
-                            <CopyIcon class="h-4 w-4" />
-                        </Button>
-                        <Avatar v-if="message.sender.id === user.id" class="mb-2">
+                            <TypewriterText
+                                v-if="message.isNew"
+                                :content="message.content"
+                                :key="message.id"
+                                :typing-speed="30"
+                                :start-delay="300"
+                                @typing-complete="message.isNew = false"
+                            />
+                            <div
+                                v-else
+                                class="w-full break-words whitespace-pre-wrap text-sm leading-6"
+                            >
+                                {{ message.content }}
+                            </div>
+                            <div class="mt-2 text-xs opacity-50">
+                                {{ new Date(message.timestamp).toLocaleTimeString() }}
+                            </div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        >
+                            <div
+                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                @click="copyMessage(message.content)"
+                            >
+                                <CopyIcon class="h-3 w-3" />
+                            </div>
+                            <div
+                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                @click="$emit('quote-message', message)"
+                            >
+                                <QuoteIcon class="h-3 w-3" />
+                            </div>
+                        </div>
+                    </template>
+
+                    <template v-else>
+                        <div
+                            class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        >
+                            <div
+                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                @click="copyMessage(message.content)"
+                            >
+                                <CopyIcon class="h-3 w-3" />
+                            </div>
+                            <div
+                                class="p-1 hover:bg-primary/10 rounded-sm"
+                                @click="$emit('quote-message', message)"
+                            >
+                                <QuoteIcon class="h-3 w-3" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-primary text-primary-foreground rounded-br-sm"
+                        >
+                            <div class="w-full break-words whitespace-pre-wrap text-sm leading-6">
+                                {{ message.content }}
+                            </div>
+                            <div class="mt-2 text-xs opacity-50">
+                                {{ new Date(message.timestamp).toLocaleTimeString() }}
+                            </div>
+                        </div>
+                        <Avatar class="mb-2">
                             <AvatarImage :src="user.avatar" :alt="user.name" />
                             <AvatarFallback>{{ user.name[0] }}</AvatarFallback>
                         </Avatar>
-                    </div>
-                    <div v-if="message.sender.id !== user.id" class="flex items-center space-x-2">
-                        <Button variant="ghost" size="icon" @click="copyMessage(message.content)">
-                            <CopyIcon class="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            @click="$emit('quote-message', message)"
-                        >
-                            <QuoteIcon class="h-4 w-4" />
-                        </Button>
-                    </div>
+                    </template>
                 </div>
             </TransitionGroup>
         </div>
@@ -109,99 +130,115 @@
             </div>
 
             <!-- 输入框 -->
-            <div class="relative">
+            <div
+                :class="`relative rounded-xl border ${
+                    isFocus ? 'border-primary' : 'border-border'
+                }`"
+            >
                 <Textarea
                     v-model="inputMessage"
                     placeholder="输入消息..."
                     :rows="1"
-                    class="pr-12 resize-none max-h-32 overflow-y-auto pb-10"
+                    class="resize-none overflow-auto w-full flex-1 bg-transparent p-3 pb-1.5 text-sm outline-none ring-0 placeholder:text-gray-500 border-none mb-2 focus-visible:ring-0 focus-visible:ring-offset-0"
                     @keydown.enter.prevent="sendMessage"
-                    @input="autoResize"
+                    @focus="setInputFocus(true)"
+                    @blur="setInputFocus(false)"
                 />
                 <!-- 工具栏 -->
-                <div class="absolute bottom-2 left-2 flex items-center space-x-1">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="screenshot">
-                                    <CameraIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>截图</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="viewLastImage">
-                                    <ImageIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>查看最后图片</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="confirmClearHistory">
-                                    <TrashIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>清空历史</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="managePlugins">
-                                    <PlugIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>管理插件</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Switch
-                                    v-model="networkEnabled"
-                                    class="data-[state=checked]:bg-primary"
-                                />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>联网模式: {{ networkEnabled ? '开启' : '关闭' }}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="showShortcuts">
-                                    <CommandIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>快捷键</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Button variant="ghost" size="icon" @click="openSettings">
-                                    <SettingsIcon class="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>设置</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                <div class="flex items-center space-x-1 justify-between border-none px-2 py-1">
+                    <div class="flex items-center space-x-1">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" @click="screenshot">
+                                        <CameraIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>截图</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" @click="viewLastImage">
+                                        <ImageIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>查看最后图片</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="confirmClearHistory"
+                                    >
+                                        <TrashIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>清空历史</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" @click="managePlugins">
+                                        <PlugIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>管理插件</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" @click="showShortcuts">
+                                        <CommandIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>快捷键</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button variant="ghost" size="icon" @click="openSettings">
+                                        <SettingsIcon class="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>设置</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                    <div class="flex items-center justify-center space-x-4">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <div>
+                                        <Switch
+                                            v-model="networkEnabled"
+                                            class="data-[state=checked]:bg-primary"
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>联网模式: {{ networkEnabled ? '开启' : '关闭' }}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <Button
+                            @click="sendMessage"
+                            :disabled="!inputMessage.trim()"
+                            class="rounded-full"
+                            size="icon"
+                        >
+                            <SendIcon class="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
-                <Button
-                    @click="sendMessage"
-                    :disabled="!inputMessage.trim()"
-                    class="absolute bottom-2 right-2 rounded-full"
-                    size="icon"
-                >
-                    <SendIcon class="h-4 w-4" />
-                </Button>
             </div>
         </div>
 
@@ -305,12 +342,18 @@ const networkEnabled = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 const showHistory = ref(false);
 const { toast } = useToast();
+// 是否聚焦输入框
+const isFocus = ref(false);
+
+// 设置输入框是否聚焦
+const setInputFocus = (value: boolean) => {
+    isFocus.value = value;
+};
 
 const sendMessage = () => {
     if (inputMessage.value.trim()) {
         emit('send-message', inputMessage.value);
         inputMessage.value = '';
-        autoResize();
         scrollToBottom();
     }
 };
@@ -377,14 +420,6 @@ const openSettings = () => {
 
 const toggleHistory = () => {
     showHistory.value = !showHistory.value;
-};
-
-const autoResize = () => {
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
-    }
 };
 
 const scrollToBottom = () => {

@@ -1,7 +1,10 @@
 <template>
     <div class="flex flex-col h-full bg-card/50 backdrop-blur-sm border-r border-border/50">
         <!-- 顶部标题栏 -->
-        <div class="flex items-center justify-between px-4 py-4 border-b border-border/50">
+        <div
+            data-tauri-drag-region
+            class="flex items-center justify-between px-3 py-3 border-border/50"
+        >
             <h1
                 class="text-xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
             >
@@ -25,7 +28,7 @@
                     v-for="chat in chats"
                     :key="chat.id"
                     @click="$emit('select-chat', chat)"
-                    class="group relative"
+                    class="group relative px-3"
                 >
                     <div
                         :class="[
