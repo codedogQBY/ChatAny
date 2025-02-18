@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import SettingDialog from '@/components/setting-dialog/index.vue';
 import { Settings, UserRound, MoonStar, Sun } from 'lucide-vue-next';
 import { routes } from '@/router';
 import { useRouter } from 'vue-router';
+import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
+import { DARK_MODE } from '@/types/index.d.ts';
 
 const router = useRouter();
+
+const { darkMode, setDarkMode } = useLightDarkSwitch();
 
 type MenuItem = {
     icon: unknown;
@@ -32,8 +36,6 @@ const bottomMenuItem = ref({
     href: 'javascript:void(0)',
 });
 
-// 是否是暗黑模式
-const isDarkMode = ref(false);
 // 切换模式文案
 const changeThemeText = ref('切换到暗黑模式');
 
@@ -45,9 +47,16 @@ const handleMenuItemClick = (item: MenuItem) => {
 };
 
 const changeTheme = () => {
-    isDarkMode.value = !isDarkMode.value;
-    changeThemeText.value = isDarkMode.value ? '切换到明亮模式' : '切换到暗黑模式';
+    changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+    setDarkMode(darkMode.value === DARK_MODE.DARK ? DARK_MODE.LIGHT : DARK_MODE.DARK);
 };
+
+onMounted(() => {
+    changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+});
+watch(darkMode, (newVal) => {
+    changeThemeText.value = newVal === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+});
 </script>
 
 <template>
@@ -92,7 +101,7 @@ const changeTheme = () => {
                             class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
                             @click="changeTheme"
                         >
-                            <MoonStar v-if="isDarkMode" class="h-5 w-5" />
+                            <MoonStar v-if="darkMode === DARK_MODE.DARK" class="h-5 w-5" />
                             <Sun class="h-5 w-5" v-else />
                             <span class="sr-only">{{ bottomMenuItem.label }}</span>
                         </a>

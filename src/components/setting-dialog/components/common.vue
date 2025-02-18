@@ -38,9 +38,9 @@
                 <RadioGroup
                     class="grid max-w-md grid-cols-2 gap-8 pt-2"
                     v-bind="componentField"
-                    :default-value="theme"
+                    v-model:modelValue="theme"
                 >
-                    <FormItem>
+                    <FormItem @click="setDarkMode(DARK_MODE.LIGHT)">
                         <FormLabel class="[&:has([data-state=checked])>div]:border-primary">
                             <FormControl>
                                 <RadioGroupItem value="light" class="sr-only" />
@@ -58,7 +58,7 @@
                             <span class="block w-full p-2 text-center font-normal"> 明亮模式 </span>
                         </FormLabel>
                     </FormItem>
-                    <FormItem>
+                    <FormItem @click="setDarkMode(DARK_MODE.DARK)">
                         <FormLabel class="[&:has([data-state=checked])>div]:border-primary">
                             <FormControl>
                                 <RadioGroupItem value="dark" class="sr-only" />
@@ -83,7 +83,7 @@
             <FormItem>
                 <FormLabel class="text-lg">主题色</FormLabel>
                 <RadioGroup
-                    class="grid grid-cols-4 gap-x-10"
+                    class="grid grid-cols-4 gap-x-28"
                     v-bind="componentField"
                     :default-value="themeColor"
                 >
@@ -182,16 +182,16 @@
     </form>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
-    FormItem,
-    FormField,
-    FormLabel,
-    FormDescription,
-    FormMessage,
     FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
@@ -202,22 +202,28 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { DARK_MODE, ThemeEnum } from '@/types/index.d.ts';
+import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
+import { useCommonStore } from '@/store/common';
 
-const theme = ref('light');
+const { setDarkMode, darkMode } = useLightDarkSwitch();
+const { getThemeColor } = useCommonStore();
+
+const theme = ref(DARK_MODE.LIGHT);
 
 // 主题色
 const themeColors = ref([
-    { value: 'Green', label: '绿色', color: '#16A34A' },
-    { value: 'Rose', label: '玫红色', color: '#E11D48' },
-    { value: 'Blue', label: '蓝色', color: '#2563EB' },
-    { value: 'Zinc', label: '黑色', color: '#18181B' },
-    { value: 'Orange', label: '橙色', color: '#F97316' },
-    { value: 'Yellow', label: '黄色', color: '#FACC15' },
-    { value: 'Violet', label: '紫色', color: '#7C3AED' },
-    { value: 'Red', label: '红色', color: '#DC2626' },
+    { value: 'green', label: '绿色', color: '#16A34A' },
+    { value: 'rose', label: '玫红色', color: '#E11D48' },
+    { value: 'blue', label: '蓝色', color: '#2563EB' },
+    { value: 'zinc', label: '黑色', color: '#18181B' },
+    { value: 'orange', label: '橙色', color: '#F97316' },
+    { value: 'yellow', label: '黄色', color: '#FACC15' },
+    { value: 'violet', label: '紫色', color: '#7C3AED' },
+    { value: 'red', label: '红色', color: '#DC2626' },
 ]);
 
-const themeColor = ref('Green');
+const themeColor = ref<ThemeEnum>('green');
 
 // 语言
 const languages = ref([
@@ -228,4 +234,9 @@ const languages = ref([
 ]);
 
 const language = ref('zh-CN');
+
+onMounted(() => {
+    theme.value = darkMode.value;
+    themeColor.value = getThemeColor;
+});
 </script>
