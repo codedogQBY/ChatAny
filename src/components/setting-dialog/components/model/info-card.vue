@@ -14,7 +14,7 @@
             </div>
             <div class="space-y-2">
                 <Card class="w-full" v-for="group in props.model.modelGroup" :key="model.groupName">
-                    <CardHeader class="py-2 px-4 border-gray-300 mb-2 border-b">
+                    <CardHeader class="py-2 px-4 mb-2 border-b">
                         <CardTitle class="text-base font-semibold">
                             {{ group.groupName }}
                         </CardTitle>
