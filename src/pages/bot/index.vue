@@ -16,10 +16,13 @@
                     class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(var(--primary-rgb),0.12),transparent_50%)]"
                 ></div>
 
-                <div class="relative h-full flex flex-col p-4" data-tauri-drag-region>
-                    <div class="flex justify-between items-center mb-6">
+                <div
+                    class="relative h-full flex flex-col p-4 user-select-none"
+                    data-tauri-drag-region
+                >
+                    <div class="flex justify-between items-center mb-6 user-select-none">
                         <h1
-                            class="text-xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
+                            class="text-xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent user-select-none"
                         >
                             机器人
                         </h1>
@@ -33,7 +36,7 @@
                             <div
                                 class="mr-2 p-1 bg-primary/10 rounded-md group-hover:bg-primary/20 transition-colors"
                             >
-                                <PlusIcon class="h-4 w-4" />
+                                <SmilePlusIcon class="h-4 w-4" />
                             </div>
                             创建一个机器人
                         </Button>
@@ -152,7 +155,7 @@
                                             size="lg"
                                             class="group hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
                                         >
-                                            <MessageSquareIcon
+                                            <MessageCircleMoreIcon
                                                 class="mr-2 h-5 w-5 group-hover:scale-110 transition-transform"
                                             />
                                             现在聊天
@@ -162,7 +165,7 @@
                                             size="icon"
                                             class="rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
                                         >
-                                            <ClipboardIcon class="h-5 w-5" />
+                                            <BoltIcon class="h-5 w-5" />
                                         </Button>
                                     </div>
                                 </div>
@@ -227,7 +230,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { MessageSquareIcon, ClipboardIcon, WandIcon, PlusIcon, GlobeIcon } from 'lucide-vue-next';
+import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UsageChart from './UsageChart.vue';

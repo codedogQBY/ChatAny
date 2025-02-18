@@ -16,7 +16,7 @@
                 class="rounded-full animate-pulse hover:animate-none"
                 @click="$emit('add-chat')"
             >
-                <PlusIcon class="h-4 w-4 mr-2" />
+                <MessageCirclePlusIcon class="h-4 w-4 mr-2" />
                 新对话
             </Button>
         </div>
@@ -66,7 +66,7 @@
                 <div
                     class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-4 animate-pulse"
                 >
-                    <MessageSquareIcon class="h-10 w-10 text-primary" />
+                    <MessageCircleMoreIcon class="h-10 w-10 text-primary" />
                 </div>
                 <p class="text-lg font-semibold text-center mb-2">开始你的 AI 之旅</p>
                 <p class="text-sm text-muted-foreground text-center">点击顶部按钮创建新对话</p>
@@ -79,7 +79,7 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { PlusIcon, MessageSquareIcon } from 'lucide-vue-next';
+import { MessageCirclePlusIcon, MessageCircleMoreIcon } from 'lucide-vue-next';
 
 interface Chat {
     id: number;

@@ -35,7 +35,7 @@
                     <div
                         class="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse"
                     >
-                        <MessageSquareIcon class="w-12 h-12 text-primary" />
+                        <MessageCircleIcon class="w-12 h-12 text-primary" />
                     </div>
                     <h2
                         class="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
@@ -44,7 +44,7 @@
                     </h2>
                     <p class="text-muted-foreground mb-8">从左侧选择或创建新的对话，探索无限可能</p>
                     <Button size="lg" class="rounded-full px-8" @click="openModelSelection">
-                        <PlusIcon class="mr-2 h-5 w-5" />
+                        <MessageCirclePlusIcon class="mr-2 h-5 w-5" />
                         创建新对话
                     </Button>
                 </div>
@@ -69,7 +69,7 @@ import ModelSelectionModal from './ModelSelectionModal.vue';
 import { Button } from '@/components/ui/button';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { MessageSquareIcon, PlusIcon } from 'lucide-vue-next';
+import { MessageCircleIcon, MessageCirclePlusIcon } from 'lucide-vue-next';
 
 interface User {
     id: number;
