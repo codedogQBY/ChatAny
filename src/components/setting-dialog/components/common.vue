@@ -227,7 +227,7 @@ const themeColors = ref([
     { value: 'red', label: '红色', color: '#DC2626' },
 ]);
 
-const themeColor = ref<ThemeEnum>('green');
+const themeColor = ref<ThemeEnum>(getThemeColor);
 
 // 语言
 const languages = ref([
