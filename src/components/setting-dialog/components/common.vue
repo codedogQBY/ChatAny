@@ -87,7 +87,11 @@
                     v-bind="componentField"
                     :default-value="themeColor"
                 >
-                    <FormItem v-for="color in themeColors" :key="color.value">
+                    <FormItem
+                        v-for="color in themeColors"
+                        :key="color.value"
+                        @click="setThemeColor(color.value)"
+                    >
                         <FormLabel class="[&:has([data-state=checked])>div]:border-x-slate-500">
                             <FormControl>
                                 <RadioGroupItem :value="color.value" class="sr-only" />
@@ -207,7 +211,7 @@ import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { useCommonStore } from '@/store/common';
 
 const { setDarkMode, darkMode } = useLightDarkSwitch();
-const { getThemeColor } = useCommonStore();
+const { getThemeColor, setThemeColor } = useCommonStore();
 
 const theme = ref(DARK_MODE.LIGHT);
 
