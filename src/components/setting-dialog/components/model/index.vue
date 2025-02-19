@@ -14,6 +14,18 @@
             </AccordionContent>
         </AccordionItem>
     </Accordion>
+    <div class="fixed bottom-8 left-8">
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <Button class="w-12 h-12 rounded-full bg-primary text-xl">
+                        <SmilePlusIcon />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" class="text-xs"> 新增大模型 </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
@@ -34,6 +46,9 @@ import zhipuLogo from '@/assets/model/logo/zhipu.png';
 import doubaoLogo from '@/assets/model/logo/doubao.png';
 import xinghuoLogo from '@/assets/model/logo/xinghuo.png';
 import { ModelItem } from '@/components/setting-dialog/components/model/type';
+import { SmilePlusIcon } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // 模型数据
 const models = ref<ModelItem[]>([

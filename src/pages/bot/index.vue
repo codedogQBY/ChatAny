@@ -6,7 +6,7 @@
         <div class="flex h-screen">
             <!-- Sidebar -->
             <div
-                class="w-80 bg-card/50 backdrop-blur-xl border-r border-border/50 relative overflow-hidden"
+                class="w-64 bg-card/50 backdrop-blur-xl border-r border-border/50 relative overflow-hidden"
             >
                 <!-- Decorative elements -->
                 <div
@@ -43,48 +43,50 @@
                     </div>
 
                     <!-- Bot List -->
+
                     <div class="flex-1 space-y-6 overflow-auto custom-scrollbar">
                         <div v-for="section in sections" :key="section.letter" class="space-y-2">
                             <h2 class="text-sm font-medium text-muted-foreground px-2">
                                 {{ section.letter }}
                             </h2>
-                            <div class="space-y-1">
-                                <button
-                                    v-for="bot in section.bots"
-                                    :key="bot.id"
-                                    @click="selectBot(bot)"
-                                    class="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg transition-all duration-300 hover:bg-accent/50 group"
-                                    :class="[
-                                        selectedBot?.id === bot.id ? 'bg-accent shadow-lg' : '',
-                                    ]"
-                                >
-                                    <div class="relative">
-                                        <div
-                                            class="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center ring-2 ring-border group-hover:ring-primary/50 transition-all"
-                                        >
-                                            <span
-                                                v-if="!bot.avatar"
-                                                class="text-lg font-semibold"
-                                                >{{ bot.name[0] }}</span
+                            <div class="group relative px-3">
+                                <TransitionGroup name="bot-list" tag="div" class="space-y-2">
+                                    <div
+                                        v-for="bot in section.bots"
+                                        :key="bot.id"
+                                        @click="selectBot(bot)"
+                                        :class="[
+                                            'flex items-center p-3 cursor-pointer rounded-lg transition-all duration-300',
+                                            selectedBot?.id === bot.id
+                                                ? 'bg-primary/20 shadow-lg scale-105'
+                                                : 'hover:bg-primary/10',
+                                        ]"
+                                    >
+                                        <div class="relative mr-2">
+                                            <div
+                                                class="w-8 h-8 rounded-full overflow-hidden bg-muted flex items-center justify-center ring-2 ring-border"
                                             >
-                                            <img
-                                                v-else
-                                                :src="bot.avatar"
-                                                :alt="bot.name"
-                                                class="w-full h-full object-cover"
-                                            />
+                                                <span
+                                                    v-if="!bot.avatar"
+                                                    class="text-sm font-semibold"
+                                                    >{{ bot.name[0] }}</span
+                                                >
+                                                <img
+                                                    v-else
+                                                    :src="bot.avatar"
+                                                    :alt="bot.name"
+                                                    class="w-full h-full object-cover"
+                                                />
+                                            </div>
                                         </div>
-                                        <div
-                                            class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
-                                        ></div>
-                                    </div>
-                                    <div class="flex-1 text-left overflow-hidden">
-                                        <div class="font-medium truncate">{{ bot.name }}</div>
-                                        <div class="text-sm text-muted-foreground truncate">
-                                            {{ bot.description }}
+                                        <div class="flex-1 text-left overflow-hidden">
+                                            <div class="font-medium truncate">{{ bot.name }}</div>
+                                            <div class="text-sm text-muted-foreground truncate">
+                                                {{ bot.description }}
+                                            </div>
                                         </div>
                                     </div>
-                                </button>
+                                </TransitionGroup>
                             </div>
                         </div>
                     </div>
