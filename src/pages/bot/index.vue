@@ -1,7 +1,4 @@
 <template>
-    <!--    <div v-if="isLoading" class="flex items-center justify-center h-screen">-->
-    <!--        <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>-->
-    <!--    </div>-->
     <div class="min-h-screen bg-gradient-to-br from-background to-background/95">
         <div class="flex h-screen">
             <!-- Sidebar -->
@@ -131,11 +128,8 @@
                             </div>
 
                             <div class="flex-1">
-                                <p class="text-base sm:text-lg text-muted-foreground mb-2">
-                                    {{ selectedBot.model }}
-                                </p>
                                 <h1
-                                    class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+                                    class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
                                 >
                                     {{ selectedBot.name }}
                                 </h1>
@@ -226,6 +220,9 @@ import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UsageChart from './UsageChart.vue';
+import pinyin from 'pinyin';
+import { useModelStore } from '@/store/model';
+import { ModelGroup } from '@/types';
 
 interface DayData {
     date: string;
@@ -239,50 +236,64 @@ interface Bot {
     avatar: string;
     instruction: string;
     usageData: DayData[];
-    model: string;
 }
 
-function generateUsageData(): DayData[] {
-    const data: DayData[] = [];
-    const startDate = new Date(2021, 0, 1);
-    const endDate = new Date(2024, 11, 31);
+const { getModels } = useModelStore();
 
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        data.push({
-            date: d.toISOString().split('T')[0],
-            count: Math.floor(Math.random() * 10),
-        });
+function getFirstLetter(str: string): string {
+    if (!str?.length) return '#';
+
+    const firstChar = str[0];
+
+    // 处理英文
+    if (/^[a-zA-Z]$/.test(firstChar)) {
+        return firstChar.toUpperCase();
     }
 
-    return data;
+    // 处理中文
+    if (/^[\u4e00-\u9fa5]$/.test(firstChar)) {
+        try {
+            const result = pinyin(firstChar, {
+                style: pinyin.STYLE_FIRST_LETTER,
+                segment: true, // 显式启用分词
+            });
+            return result[0]?.[0]?.toUpperCase()?.[0] || '#';
+        } catch {
+            return '#';
+        }
+    }
+
+    // 其他字符
+    return '#';
 }
 
-const sections = ref<{ letter: string; bots: Bot[] }>([
-    {
-        letter: 'C',
-        bots: [
-            {
-                id: '1',
-                name: 'Claude 3.5 Haiku',
-                description: 'Anthropic 的快速模型，专注于简短精准的对话',
-                avatar: '/placeholder.svg?height=40&width=40',
-                instruction: '我是一个快速响应的AI助手，专注于提供简洁明了的回答。',
-                usageData: generateUsageData(),
-                model: 'Claude-3.5-Haiku',
-            },
-            {
-                id: '2',
-                name: 'Claude 3.5 Sonnet',
-                description: 'Anthropic的新模型，擅长深度分析和创意写作',
-                avatar: '/placeholder.svg?height=40&width=40',
-                instruction:
-                    '我是一个专注于深度分析和创意写作的AI助手，可以帮助你探索复杂话题和创作优美文字。',
-                usageData: generateUsageData(),
-                model: 'Claude-3.5-Sonnet',
-            },
-        ],
-    },
-]);
+// 先收集模型组里的所有模型，在按首字母分组
+const defaultBots = getModels.reduce((bots: { letter: string; bots: Bot[] }[], model) => {
+    const modelGroup = model.modelGroup as ModelGroup[];
+    for (const group of modelGroup) {
+        for (const smallModel of group.models) {
+            const { name } = smallModel;
+            const letter = getFirstLetter(name);
+            const index = bots.findIndex((b) => b.letter === letter);
+            const bot: Bot = {
+                id: model.name + smallModel.name,
+                name: smallModel.name,
+                description: '',
+                avatar: model.logo,
+                instruction: '',
+                usageData: [],
+            };
+            if (index === -1) {
+                bots.push({ letter, bots: [bot] });
+            } else {
+                bots[index].bots.push(bot);
+            }
+        }
+    }
+    return bots;
+}, []);
+
+const sections = ref<{ letter: string; bots: Bot[] }[]>(defaultBots);
 
 const selectedBot = ref<Bot | null>(null);
 const selectedYear = ref(new Date().getFullYear());

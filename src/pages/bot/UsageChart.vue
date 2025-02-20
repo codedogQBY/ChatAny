@@ -90,7 +90,7 @@
                 <!-- 年份选择器 -->
                 <div class="lg:ml-4">
                     <!-- 移动端：Select 组件 -->
-                    <div class="lg:hidden w-32">
+                    <div class="lg:hidden w-32" v-if="sortedYears.length > 0">
                         <Select
                             v-model:modelValue="selectedYear"
                             @update:modelValue="handleYearChange"
@@ -112,7 +112,10 @@
                         </Select>
                     </div>
                     <!-- 桌面端：Button 组件 -->
-                    <div class="hidden lg:flex flex-col gap-2 text-sm">
+                    <div
+                        class="hidden lg:flex flex-col gap-2 text-sm"
+                        v-if="sortedYears.length > 0"
+                    >
                         <Button
                             v-for="year in sortedYears"
                             :key="year"

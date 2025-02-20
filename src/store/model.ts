@@ -51,11 +51,31 @@ const defaultModels: ModelItem[] = [
         websiteUrl: 'https://siliconflow.cn',
         modelGroup: [
             {
-                groupName: 'DeepSeek-R1',
+                groupName: 'DeepSeek-ai',
                 models: [
                     {
                         id: 'deepseek-ai/DeepSeek-R1',
                         name: 'deepseek-ai/DeepSeek-R1',
+                        skills: [],
+                    },
+                ],
+            },
+            {
+                groupName: 'Qwen',
+                models: [
+                    {
+                        id: 'Qwen2.5-7B-Instruct',
+                        name: 'Qwen2.5-7B-Instruct',
+                        skills: [],
+                    },
+                ],
+            },
+            {
+                groupName: 'BAAI',
+                models: [
+                    {
+                        id: 'BAAI/bge-m3',
+                        name: 'BAAI/bge-m3',
                         skills: [],
                     },
                 ],
@@ -73,11 +93,31 @@ const defaultModels: ModelItem[] = [
         websiteUrl: 'https://openai.com',
         modelGroup: [
             {
-                groupName: '模型组1',
+                groupName: 'GPT 4o',
                 models: [
                     {
-                        id: 'deepseek',
-                        name: 'deepseek',
+                        id: 'GPT-4o',
+                        name: 'GPT-4o',
+                        skills: [],
+                    },
+                    {
+                        id: 'GPT-4o-mini',
+                        name: 'GPT-4o-mini',
+                        skills: [],
+                    },
+                ],
+            },
+            {
+                groupName: 'o1',
+                models: [
+                    {
+                        id: 'o1-mini',
+                        name: 'o1-mini',
+                        skills: [],
+                    },
+                    {
+                        id: 'o1-preview',
+                        name: 'o1-preview',
                         skills: [],
                     },
                 ],
@@ -95,11 +135,31 @@ const defaultModels: ModelItem[] = [
         websiteUrl: 'https://claude.ai',
         modelGroup: [
             {
-                groupName: '模型组1',
+                groupName: 'Claude 3.5',
                 models: [
                     {
-                        id: 'deepseek',
-                        name: 'deepseek',
+                        id: 'Claude 3.5 Sonnet',
+                        name: 'Claude 3.5 Sonnet',
+                        skills: [],
+                    },
+                ],
+            },
+            {
+                groupName: 'Claude 3',
+                models: [
+                    {
+                        id: 'Claude 3 Opus',
+                        name: 'Claude 3 Opus',
+                        skills: [],
+                    },
+                    {
+                        id: 'Claude 3 Sonnet',
+                        name: 'Claude 3 Sonnet',
+                        skills: [],
+                    },
+                    {
+                        id: 'Claude 3 Haiku',
+                        name: 'Claude 3 Haiku',
                         skills: [],
                     },
                 ],
@@ -117,11 +177,11 @@ const defaultModels: ModelItem[] = [
         websiteUrl: 'https://kimi.moonshot.cn',
         modelGroup: [
             {
-                groupName: '模型组1',
+                groupName: 'moonshot-v1',
                 models: [
                     {
-                        id: 'deepseek',
-                        name: 'deepseek',
+                        id: 'moonshot-v1-auto',
+                        name: 'moonshot-v1-auto',
                         skills: [],
                     },
                 ],
@@ -139,11 +199,11 @@ const defaultModels: ModelItem[] = [
         websiteUrl: 'https://bigmodel.cn',
         modelGroup: [
             {
-                groupName: '模型组1',
+                groupName: 'GLM-Zero',
                 models: [
                     {
-                        id: 'deepseek',
-                        name: 'deepseek',
+                        id: 'GLM-Zero-Preview',
+                        name: 'GLM-Zero-Preview',
                         skills: [],
                     },
                 ],
@@ -159,18 +219,7 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://ark.cn-beijing.volces.com/api/v3',
         apiDocUrl: 'https://www.volcengine.com/docs/82379',
         websiteUrl: 'https://www.volcengine.com',
-        modelGroup: [
-            {
-                groupName: '模型组1',
-                models: [
-                    {
-                        id: 'deepseek',
-                        name: 'deepseek',
-                        skills: [],
-                    },
-                ],
-            },
-        ],
+        modelGroup: [],
         extraConfig: {},
     },
     {
@@ -181,18 +230,7 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://spark-api-open.xf-yun.com/v1/chat/completions',
         apiDocUrl: 'https://www.xfyun.cn/doc/spark/Web.html',
         websiteUrl: 'https://xinghuo.xfyun.cn',
-        modelGroup: [
-            {
-                groupName: '模型组1',
-                models: [
-                    {
-                        id: 'deepseek',
-                        name: 'deepseek',
-                        skills: [],
-                    },
-                ],
-            },
-        ],
+        modelGroup: [],
         extraConfig: {},
     },
 ];
@@ -207,7 +245,7 @@ export const useModelStore = defineStore('model', () => {
 
     const models = ref<ModelItem[]>(storeData);
 
-    const getModels = computed(() => models.value);
+    const getModels = computed<ModelItem[]>(() => models.value);
 
     // 同步数据到本地存储
     const syncData = () => {
