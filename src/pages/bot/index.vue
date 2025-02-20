@@ -102,129 +102,119 @@
                 <div
                     class="absolute inset-0 bg-[radial-gradient(circle_at-50%_0%,rgba(var(--primary-rgb),0.1),transparent_50%)]"
                 ></div>
-
-                <Transition
-                    enter-active-class="transition-all duration-500 ease-out"
-                    enter-from-class="opacity-0 translate-y-4"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition-all duration-300 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 translate-y-4"
-                >
-                    <div v-if="selectedBot" class="relative min-h-full p-4 sm:p-8">
-                        <div class="max-w-5xl mx-auto space-y-6">
-                            <!-- Header -->
-                            <div
-                                class="flex flex-col sm:flex-row items-start gap-4 sm:gap-8"
-                                data-tauri-drag-region
-                            >
-                                <div class="relative group w-24 sm:w-32">
-                                    <div
-                                        class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-muted flex items-center justify-center ring-4 ring-background shadow-2xl group-hover:shadow-primary/25 transition-all duration-500"
+                <div v-if="selectedBot" class="relative min-h-full p-4 sm:p-8">
+                    <div class="max-w-5xl mx-auto space-y-6">
+                        <!-- Header -->
+                        <div
+                            class="flex flex-col sm:flex-row items-start gap-4 sm:gap-8"
+                            data-tauri-drag-region
+                        >
+                            <div class="relative group w-24 sm:w-32">
+                                <div
+                                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-muted flex items-center justify-center ring-4 ring-background shadow-2xl group-hover:shadow-primary/25 transition-all duration-500"
+                                >
+                                    <span
+                                        v-if="!selectedBot.avatar"
+                                        class="text-3xl sm:text-4xl font-bold"
+                                        >{{ selectedBot.name[0] }}</span
                                     >
-                                        <span
-                                            v-if="!selectedBot.avatar"
-                                            class="text-3xl sm:text-4xl font-bold"
-                                            >{{ selectedBot.name[0] }}</span
-                                        >
-                                        <img
-                                            v-else
-                                            :src="selectedBot.avatar"
-                                            :alt="selectedBot.name"
-                                            class="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"
-                                    ></div>
+                                    <img
+                                        v-else
+                                        :src="selectedBot.avatar"
+                                        :alt="selectedBot.name"
+                                        class="w-full h-full object-cover"
+                                    />
                                 </div>
-
-                                <div class="flex-1">
-                                    <p class="text-base sm:text-lg text-muted-foreground mb-2">
-                                        {{ selectedBot.model }}
-                                    </p>
-                                    <h1
-                                        class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
-                                    >
-                                        {{ selectedBot.name }}
-                                    </h1>
-                                    <p class="mt-2 text-base sm:text-lg text-muted-foreground">
-                                        {{ selectedBot.description }}
-                                    </p>
-
-                                    <div class="flex items-center gap-4 mt-4 sm:mt-6">
-                                        <Button
-                                            size="lg"
-                                            class="group hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-                                        >
-                                            <MessageCircleMoreIcon
-                                                class="mr-2 h-5 w-5 group-hover:scale-110 transition-transform"
-                                            />
-                                            现在聊天
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            class="rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-                                        >
-                                            <BoltIcon class="h-5 w-5" />
-                                        </Button>
-                                    </div>
-                                </div>
+                                <div
+                                    class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"
+                                ></div>
                             </div>
 
-                            <!-- Instruction Card -->
-                            <Transition
-                                enter-active-class="transition-all duration-700 ease-out"
-                                enter-from-class="opacity-0 translate-y-8"
-                                enter-to-class="opacity-100 translate-y-0"
-                            >
-                                <div v-if="selectedBot.instruction" class="mt-12">
-                                    <p
-                                        class="text-primary font-medium text-lg mb-4 flex items-center gap-2"
-                                    >
-                                        <WandIcon class="h-5 w-5" />
-                                        我是根据以下指令创建的
-                                    </p>
-                                    <div class="relative">
-                                        <div
-                                            class="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent rounded-2xl blur-2xl"
-                                        ></div>
-                                        <Card
-                                            class="relative overflow-hidden backdrop-blur-sm border-primary/20"
-                                        >
-                                            <CardContent class="p-6">
-                                                <div
-                                                    class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
-                                                ></div>
-                                                <div class="relative text-lg">
-                                                    {{ selectedBot.instruction }}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </div>
-                            </Transition>
+                            <div class="flex-1">
+                                <p class="text-base sm:text-lg text-muted-foreground mb-2">
+                                    {{ selectedBot.model }}
+                                </p>
+                                <h1
+                                    class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+                                >
+                                    {{ selectedBot.name }}
+                                </h1>
+                                <p class="mt-2 text-base sm:text-lg text-muted-foreground">
+                                    {{ selectedBot.description }}
+                                </p>
 
-                            <!-- Usage Frequency Chart -->
-                            <Card
-                                class="bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300"
-                            >
-                                <CardHeader>
-                                    <CardTitle>使用频率</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <UsageChart
-                                        :data="selectedBot?.usageData || []"
-                                        :year="selectedYear"
-                                        :available-years="availableYears"
-                                        @update:year="selectedYear = $event"
-                                    />
-                                </CardContent>
-                            </Card>
+                                <div class="flex items-center gap-4 mt-4 sm:mt-6">
+                                    <Button
+                                        size="lg"
+                                        class="group hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                                    >
+                                        <MessageCircleMoreIcon
+                                            class="mr-2 h-5 w-5 group-hover:scale-110 transition-transform"
+                                        />
+                                        现在聊天
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        class="rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                                    >
+                                        <BoltIcon class="h-5 w-5" />
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Instruction Card -->
+                        <Transition
+                            enter-active-class="transition-all duration-700 ease-out"
+                            enter-from-class="opacity-0 translate-y-8"
+                            enter-to-class="opacity-100 translate-y-0"
+                        >
+                            <div v-if="selectedBot.instruction" class="mt-12">
+                                <p
+                                    class="text-primary font-medium text-lg mb-4 flex items-center gap-2"
+                                >
+                                    <WandIcon class="h-5 w-5" />
+                                    我是根据以下指令创建的
+                                </p>
+                                <div class="relative">
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent rounded-2xl blur-2xl"
+                                    ></div>
+                                    <Card
+                                        class="relative overflow-hidden backdrop-blur-sm border-primary/20"
+                                    >
+                                        <CardContent class="p-6">
+                                            <div
+                                                class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
+                                            ></div>
+                                            <div class="relative text-lg">
+                                                {{ selectedBot.instruction }}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                        </Transition>
+
+                        <!-- Usage Frequency Chart -->
+                        <Card
+                            class="bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300"
+                        >
+                            <CardHeader>
+                                <CardTitle>使用频率</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <UsageChart
+                                    :data="selectedBot?.usageData || []"
+                                    :year="selectedYear"
+                                    :available-years="availableYears"
+                                    @update:year="selectedYear = $event"
+                                />
+                            </CardContent>
+                        </Card>
                     </div>
-                </Transition>
+                </div>
             </div>
         </div>
     </div>

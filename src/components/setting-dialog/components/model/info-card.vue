@@ -87,7 +87,7 @@
                                 <TextInput
                                     class="mr-2"
                                     :modelValue="model.name"
-                                    @update:modelValue="handleUpdateModelName($event, model)"
+                                    @update:modelValue="handleUpdateModelName($event, group, model)"
                                     >{{ model.name }}</TextInput
                                 >
                                 <div v-for="skill in model.skills" :key="skill">
@@ -139,7 +139,7 @@
                                 </div>
                                 <div class="absolute right-0">
                                     <CircleMinusIcon
-                                        @click="handleDeleteModel(model)"
+                                        @click="handleDeleteModel(model, group)"
                                         class="h-4 w-4 cursor-pointer text-red-600 hover:text-red-300"
                                     />
                                 </div>
@@ -175,6 +175,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import TextInput from '@/components/setting-dialog/components/model/text-input.vue';
+import { useModelStore } from '@/store/model';
+
+const {
+    changeModelSkill,
+    removeModelGroup,
+    addSmallModel,
+    addModelGroup,
+    updateModelGroupName,
+    updateModelName,
+    removeSmallModel,
+} = useModelStore();
 
 const props = defineProps<{
     model: ModelItem;
@@ -212,9 +223,9 @@ const skillInfo: Record<Skill, SkillInfo> = {
 const handleChangeSkill = (skill: Skill, model: Model) => {
     const index = model.skills.indexOf(skill);
     if (index === -1) {
-        model.skills.push(skill);
+        changeModelSkill(model, skill, true);
     } else {
-        model.skills.splice(index, 1);
+        changeModelSkill(model, skill, false);
     }
 };
 
@@ -224,48 +235,32 @@ const toggleShowApiKey = () => {
 };
 
 // 删除模型
-const handleDeleteModel = (model: Model) => {
-    const index = props.model.modelGroup.findIndex((group) =>
-        group.models.some((m) => m.id === model.id)
-    );
-    if (index !== -1) {
-        const group = props.model.modelGroup[index];
-        group.models = group.models.filter((m) => m.id !== model.id);
-    }
+const handleDeleteModel = (model: Model, group: ModelGroup) => {
+    removeSmallModel(props.model, group, model);
 };
 
 // 新增模型组
 const handleAddModelGroup = () => {
-    props.model.modelGroup.push({
-        groupName: '新模型组',
-        models: [],
-    });
+    addModelGroup(props.model);
 };
 
 // 新增模型
 const handleAddModel = (group: ModelGroup) => {
-    group.models.push({
-        id: 'new-model',
-        name: '新模型',
-        skills: [],
-    });
+    addSmallModel(props.model, group);
 };
 
 // 删除模型组
 const handleDeleteModelGroup = (group: ModelGroup) => {
-    const index = props.model.modelGroup.findIndex((g) => g.groupName === group.groupName);
-    if (index !== -1) {
-        props.model.modelGroup.splice(index, 1);
-    }
+    removeModelGroup(props.model, group);
 };
 
 // 更新模型组名称
 const handleUpdateModelGroupName = (groupName: string, group: ModelGroup) => {
-    group.groupName = groupName;
+    updateModelGroupName(props.model, group, groupName);
 };
 
 // 更新模型名称
-const handleUpdateModelName = (name: string, model: Model) => {
-    model.name = name;
+const handleUpdateModelName = (name: string, group: ModelGroup, model: Model) => {
+    updateModelName(props.model, group, model, name);
 };
 </script>
