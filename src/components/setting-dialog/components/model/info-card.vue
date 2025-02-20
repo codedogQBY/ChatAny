@@ -1,11 +1,37 @@
 <template>
     <div class="space-y-4 px-2">
         <div class="space-y-2">
-            <Label class="block mb-2" for="api-url">API 地址</Label>
+            <Label for="api-url" class="block mb-2 flex justify-between">
+                <div>API 地址</div>
+                <div v-if="props.model.apiDocUrl">
+                    <a
+                        :href="props.model.apiDocUrl"
+                        target="_blank"
+                        class="text-xs text-gray-400 hover:text-primary flex items-center justify-center"
+                    >
+                        API 文档
+                        <ExternalLinkIcon class="h-4 w-4 inline-block ml-1" />
+                    </a>
+                </div>
+            </Label>
             <Input id="api-url" v-model="props.model.apiUrl" />
         </div>
         <div class="space-y-2">
-            <Label class="block mb-2" for="api-key">API 密钥</Label>
+            <Label for="api-key" class="block mb-2 flex justify-start items-center space-x-2">
+                <div>API 密钥</div>
+                <div
+                    v-if="props.model.apiKeyUrl"
+                    class="text-xs text-gray-400 hover:text-primary flex items-center justify-center"
+                >
+                    <a
+                        :href="props.model.apiKeyUrl"
+                        target="_blank"
+                        class="text-xs text-gray-400 hover:text-primary flex items-center justify-center"
+                    >
+                        获取密钥？
+                    </a>
+                </div>
+            </Label>
             <div class="flex w-full items-center gap-1.5">
                 <div class="relative w-full">
                     <Input
@@ -39,7 +65,16 @@
                         <CardTitle
                             class="text-base font-semibold flex justify-between items-center"
                         >
-                            <div>{{ group.groupName }}</div>
+                            <div class="space-x-2 flex items-center">
+                                <OctagonMinusIcon
+                                    @click="handleDeleteModelGroup(group)"
+                                    class="h-4 w-4 cursor-pointer text-red-600 hover:text-red-300"
+                                />
+                                <TextInput
+                                    :modelValue="group.groupName"
+                                    @update:modelValue="handleUpdateModelGroupName($event, group)"
+                                ></TextInput>
+                            </div>
                             <PlusCircleIcon
                                 @click="handleAddModel(group)"
                                 class="h-4 w-4 cursor-pointer font-semibold hover:text-gray-400"
@@ -48,8 +83,13 @@
                     </CardHeader>
                     <CardContent class="space-y-2">
                         <div class="mb-2" v-for="model in group.models" :key="model.id">
-                            <div class="space-x-2 flex items-center relative">
-                                <div>{{ model.name }}</div>
+                            <div class="flex items-center relative space-x-2">
+                                <TextInput
+                                    class="mr-2"
+                                    :modelValue="model.name"
+                                    @update:modelValue="handleUpdateModelName($event, model)"
+                                    >{{ model.name }}</TextInput
+                                >
                                 <div v-for="skill in model.skills" :key="skill">
                                     <TooltipProvider>
                                         <Tooltip>
@@ -117,8 +157,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ModelItem, Model } from '@/components/setting-dialog/components/model/type';
-import { ModelGroup, Skill } from '@/components/setting-dialog/components/model/type';
+import { ModelItem, Model, ModelGroup, Skill } from '@/types/index.d.ts';
 import {
     GlobeIcon,
     Blocks,
@@ -129,11 +168,13 @@ import {
     EyeOffIcon,
     PlusCircleIcon,
     CircleMinusIcon,
-    SmilePlusIcon,
+    OctagonMinusIcon,
+    ExternalLinkIcon,
 } from 'lucide-vue-next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import TextInput from '@/components/setting-dialog/components/model/text-input.vue';
 
 const props = defineProps<{
     model: ModelItem;
@@ -208,5 +249,23 @@ const handleAddModel = (group: ModelGroup) => {
         name: '新模型',
         skills: [],
     });
+};
+
+// 删除模型组
+const handleDeleteModelGroup = (group: ModelGroup) => {
+    const index = props.model.modelGroup.findIndex((g) => g.groupName === group.groupName);
+    if (index !== -1) {
+        props.model.modelGroup.splice(index, 1);
+    }
+};
+
+// 更新模型组名称
+const handleUpdateModelGroupName = (groupName: string, group: ModelGroup) => {
+    group.groupName = groupName;
+};
+
+// 更新模型名称
+const handleUpdateModelName = (name: string, model: Model) => {
+    model.name = name;
 };
 </script>

@@ -7,6 +7,24 @@
                         <AvatarImage class="w-6 h-6" :src="item.logo" alt="@radix-vue" />
                     </Avatar>
                     <div class="no-underline">{{ item.label }}</div>
+                    <div class="text-xs text-gray-400" v-if="item.apiDocUrl">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger as-child>
+                                    <a
+                                        :href="item.websiteUrl"
+                                        target="_blank"
+                                        class="hover:text-primary"
+                                    >
+                                        <LinkIcon class="h-4 w-4" />
+                                    </a>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" class="text-xs">
+                                    {{ `访问 ${item.label} 官网` }}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
             </AccordionTrigger>
             <AccordionContent>
@@ -45,8 +63,8 @@ import kimiLogo from '@/assets/model/logo/kimi.png';
 import zhipuLogo from '@/assets/model/logo/zhipu.png';
 import doubaoLogo from '@/assets/model/logo/doubao.png';
 import xinghuoLogo from '@/assets/model/logo/xinghuo.png';
-import { ModelItem } from '@/components/setting-dialog/components/model/type';
-import { SmilePlusIcon } from 'lucide-vue-next';
+import { ModelItem } from '@/types/index.d.ts';
+import { SmilePlusIcon, LinkIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -60,6 +78,7 @@ const models = ref<ModelItem[]>([
         apiUrl: 'https://api.deepseek.com',
         apiDocUrl: 'https://api-docs.deepseek.com',
         websiteUrl: 'https://www.deepseek.com',
+        apiKeyUrl: 'https://platform.deepseek.com/api_keys',
         modelGroup: [
             {
                 groupName: 'DeepSeek',
