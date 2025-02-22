@@ -1,6 +1,6 @@
 <template>
     <Accordion type="single" class="w-full" collapsible default-value="deepseek">
-        <AccordionItem v-for="item in models" :key="item.name" :value="item.name">
+        <AccordionItem v-for="item in suppliers" :key="item.name" :value="item.name">
             <AccordionTrigger>
                 <div class="flex items-center space-x-2">
                     <Avatar class="bg-transparent w-6 h-6">
@@ -55,14 +55,14 @@ import {
 } from '@/components/ui/accordion';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import InfoCard from '@/components/setting-dialog/components/model/info-card.vue';
-import { ModelItem } from '@/types/index.d.ts';
+import { Supplier } from '@/types';
 import { SmilePlusIcon, LinkIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModelStore } from '@/store/model';
 
-const { getModels } = useModelStore();
+const { getSuppliers } = useModelStore();
 
 // 模型数据
-const models = ref<ModelItem[]>(getModels);
+const suppliers = ref<Supplier[]>(getSuppliers);
 </script>

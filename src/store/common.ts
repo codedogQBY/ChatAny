@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { LanguageEnum, DARK_MODE, ThemeEnum, SessionModeEnum } from '@/types/index.d.ts';
+import { LanguageEnum, DARK_MODE, ThemeEnum, SessionModeEnum } from '@/types';
 import useStore from '@/hook/useStore';
 
 export const useCommonStore = defineStore('common', () => {

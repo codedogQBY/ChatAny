@@ -6,7 +6,7 @@ import { Settings, UserRound, MoonStar, Sun } from 'lucide-vue-next';
 import { routes } from '@/router';
 import { useRouter } from 'vue-router';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
-import { DARK_MODE } from '@/types/index.d.ts';
+import { DARK_MODE } from '@/types';
 
 const router = useRouter();
 

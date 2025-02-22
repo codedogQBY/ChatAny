@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { Skill, Model, ModelGroup, ModelItem } from '@/types/index.d.ts';
+import { Skill, Model, ModelGroup, Supplier } from '@/types';
 import deepseekLogo from '@/assets/model/logo/deepseek.png';
 import siliconflowLogo from '@/assets/model/logo/siliconflow.png';
 import chatGPTLogo from '@/assets/model/logo/chatGPT.png';
@@ -10,9 +10,10 @@ import zhipuLogo from '@/assets/model/logo/zhipu.png';
 import doubaoLogo from '@/assets/model/logo/doubao.png';
 import xinghuoLogo from '@/assets/model/logo/xinghuo.png';
 import useStore from '@/hook/useStore';
+import { v4 as uuidV4 } from 'uuid';
 
 // 大模型基础数据
-const defaultModels: ModelItem[] = [
+const defaultSuppliers: Supplier[] = [
     {
         name: 'deepseek',
         label: 'DeepSeek',
@@ -22,8 +23,10 @@ const defaultModels: ModelItem[] = [
         apiDocUrl: 'https://api-docs.deepseek.com',
         websiteUrl: 'https://www.deepseek.com',
         apiKeyUrl: 'https://platform.deepseek.com/api_keys',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'DeepSeek',
                 models: [
                     {
@@ -39,7 +42,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'sillconflow',
@@ -49,8 +51,10 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://api.siliconflow.cn',
         apiDocUrl: 'https://docs.siliconflow.cn/introduction',
         websiteUrl: 'https://siliconflow.cn',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'DeepSeek-ai',
                 models: [
                     {
@@ -61,6 +65,7 @@ const defaultModels: ModelItem[] = [
                 ],
             },
             {
+                id: uuidV4(),
                 groupName: 'Qwen',
                 models: [
                     {
@@ -71,6 +76,7 @@ const defaultModels: ModelItem[] = [
                 ],
             },
             {
+                id: uuidV4(),
                 groupName: 'BAAI',
                 models: [
                     {
@@ -81,7 +87,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'chatGPT',
@@ -91,8 +96,10 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://api.openai.com',
         apiDocUrl: 'https://platform.openai.com/docs',
         websiteUrl: 'https://openai.com',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'GPT 4o',
                 models: [
                     {
@@ -108,6 +115,7 @@ const defaultModels: ModelItem[] = [
                 ],
             },
             {
+                id: uuidV4(),
                 groupName: 'o1',
                 models: [
                     {
@@ -123,7 +131,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'claude',
@@ -133,8 +140,10 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://api.anthropic.com',
         apiDocUrl: 'https://docs.anthropic.com/en/docs',
         websiteUrl: 'https://claude.ai',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'Claude 3.5',
                 models: [
                     {
@@ -145,6 +154,7 @@ const defaultModels: ModelItem[] = [
                 ],
             },
             {
+                id: uuidV4(),
                 groupName: 'Claude 3',
                 models: [
                     {
@@ -165,7 +175,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'kimi',
@@ -175,8 +184,10 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://api.moonshot.cn/v1',
         apiDocUrl: 'https://platform.moonshot.cn',
         websiteUrl: 'https://kimi.moonshot.cn',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'moonshot-v1',
                 models: [
                     {
@@ -187,7 +198,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'zhipu',
@@ -197,8 +207,10 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://open.bigmodel.cn/api/paas/v4',
         apiDocUrl: 'https://bigmodel.cn/dev/api',
         websiteUrl: 'https://bigmodel.cn',
+        isDefault: true,
         modelGroup: [
             {
+                id: uuidV4(),
                 groupName: 'GLM-Zero',
                 models: [
                     {
@@ -209,7 +221,6 @@ const defaultModels: ModelItem[] = [
                 ],
             },
         ],
-        extraConfig: {},
     },
     {
         name: 'doubao',
@@ -219,8 +230,8 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://ark.cn-beijing.volces.com/api/v3',
         apiDocUrl: 'https://www.volcengine.com/docs/82379',
         websiteUrl: 'https://www.volcengine.com',
+        isDefault: true,
         modelGroup: [],
-        extraConfig: {},
     },
     {
         name: 'xinghuo',
@@ -230,62 +241,65 @@ const defaultModels: ModelItem[] = [
         apiUrl: 'https://spark-api-open.xf-yun.com/v1/chat/completions',
         apiDocUrl: 'https://www.xfyun.cn/doc/spark/Web.html',
         websiteUrl: 'https://xinghuo.xfyun.cn',
+        isDefault: true,
         modelGroup: [],
-        extraConfig: {},
     },
 ];
 
 export const useModelStore = defineStore('model', () => {
     const { setStoreData, getStoreData, hasStoreData } = useStore();
-    if (!hasStoreData('model')) {
-        setStoreData('model', defaultModels);
+    if (!hasStoreData('supplier')) {
+        setStoreData('supplier', defaultSuppliers);
     }
 
-    const storeData: ModelItem[] = getStoreData('model');
+    const storeData: Supplier[] = getStoreData('supplier');
 
-    const models = ref<ModelItem[]>(storeData);
+    const suppliers = ref<Supplier[]>(storeData);
 
-    const getModels = computed<ModelItem[]>(() => models.value);
+    const getSuppliers = computed<Supplier[]>(() => suppliers.value);
 
     // 同步数据到本地存储
     const syncData = () => {
-        setStoreData('model', models.value);
+        setStoreData('model', suppliers.value);
     };
 
     // 修改模型技能组
-    const changeModelSkill = (model: ModelItem, group: ModelGroup, skill: Skill) => {};
+    const changeModelSkill = (model: Supplier, group: ModelGroup, skill: Skill) => {};
 
-    // 删除模型组中的小模型
-    const removeSmallModel = (model: ModelItem, modelGroup: ModelGroup, modelItem: Model) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = models.value[modelIndex].modelGroup.findIndex(
+    // 删除模型组中的模型
+    const removeModel = (model: Supplier, modelGroup: ModelGroup, Supplier: Model) => {
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        const smallModelIndex = models.value[modelIndex].modelGroup[
+        const smallModelIndex = suppliers.value[modelIndex].modelGroup[
             modelGroupIndex
-        ].models.findIndex((item) => item.id === modelItem.id);
-        models.value[modelIndex].modelGroup[modelGroupIndex].models.splice(smallModelIndex, 1);
+        ].models.findIndex((item) => item.id === Supplier.id);
+        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.splice(smallModelIndex, 1);
         syncData();
     };
 
     // 新增模型组中的小模型
-    const addSmallModel = (model: ModelItem, modelGroup: ModelGroup) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = models.value[modelIndex].modelGroup.findIndex(
+    const addModel = (model: Supplier, modelGroup: ModelGroup) => {
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        models.value[modelIndex].modelGroup[modelGroupIndex].models.push({
-            id: Math.random().toString(36).substr(2),
+        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.push({
+            id: uuidV4(),
             name: '新模型',
             skills: [],
+
+            description: '',
         });
         syncData();
     };
 
     // 新增模型组
-    const addModelGroup = (model: ModelItem) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        models.value[modelIndex].modelGroup.push({
+    const addModelGroup = (model: Supplier) => {
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        suppliers.value[modelIndex].modelGroup.push({
+            id: uuidV4(),
             groupName: '新模型组',
             models: [],
         });
@@ -293,51 +307,51 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 删除模型组
-    const removeModelGroup = (model: ModelItem, modelGroup: ModelGroup) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = models.value[modelIndex].modelGroup.findIndex(
+    const removeModelGroup = (model: Supplier, modelGroup: ModelGroup) => {
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        models.value[modelIndex].modelGroup.splice(modelGroupIndex, 1);
+        suppliers.value[modelIndex].modelGroup.splice(modelGroupIndex, 1);
         syncData();
     };
 
     // 更新模型组名称
-    const updateModelGroupName = (model: ModelItem, modelGroup: ModelGroup, groupName: string) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = models.value[modelIndex].modelGroup.findIndex(
+    const updateModelGroupName = (model: Supplier, modelGroup: ModelGroup, groupName: string) => {
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        models.value[modelIndex].modelGroup[modelGroupIndex].groupName = groupName;
+        suppliers.value[modelIndex].modelGroup[modelGroupIndex].groupName = groupName;
         syncData();
     };
 
     // 更新模型名称
     const updateModelName = (
-        model: ModelItem,
+        model: Supplier,
         modelGroup: ModelGroup,
-        modelItem: Model,
+        Supplier: Model,
         name: string
     ) => {
-        const modelIndex = models.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = models.value[modelIndex].modelGroup.findIndex(
+        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        const skillIndex = models.value[modelIndex].modelGroup[modelGroupIndex].models.findIndex(
-            (item) => item.id === modelItem.id
+        const skillIndex = suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.findIndex(
+            (item) => item.id === Supplier.id
         );
-        models.value[modelIndex].modelGroup[modelGroupIndex].models[skillIndex].name = name;
+        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models[skillIndex].name = name;
         syncData();
     };
 
     return {
-        getModels,
+        getSuppliers,
         changeModelSkill,
         removeModelGroup,
-        addSmallModel,
+        addModel,
         addModelGroup,
         updateModelGroupName,
         updateModelName,
-        removeSmallModel,
+        removeModel,
     };
 });

@@ -206,7 +206,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { DARK_MODE, ThemeEnum } from '@/types/index.d.ts';
+import { DARK_MODE, ThemeEnum } from '@/types';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { useCommonStore } from '@/store/common';
 

@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue';
-import { DARK_MODE } from '@/types/index.d.ts';
+import { DARK_MODE } from '@/types';
 import { useCommonStore } from '@/store/common';
 
 export default function useLightDarkSwitch() {

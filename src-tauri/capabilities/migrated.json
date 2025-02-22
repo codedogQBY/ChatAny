@@ -51,6 +51,9 @@
     "store:allow-entries",
     "store:allow-has",
     "store:allow-length",
-    "store:allow-keys"
+    "store:allow-keys",
+    "log:default",
+    "log:allow-log",
+    "http:default"
   ]
 }

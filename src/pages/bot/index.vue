@@ -158,13 +158,13 @@
                             </div>
                         </div>
 
-                        <!-- Instruction Card -->
+                        <!-- prompt Card -->
                         <Transition
                             enter-active-class="transition-all duration-700 ease-out"
                             enter-from-class="opacity-0 translate-y-8"
                             enter-to-class="opacity-100 translate-y-0"
                         >
-                            <div v-if="selectedBot.instruction" class="mt-12">
+                            <div v-if="selectedBot.prompt" class="mt-12">
                                 <p
                                     class="text-primary font-medium text-lg mb-4 flex items-center gap-2"
                                 >
@@ -183,7 +183,7 @@
                                                 class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
                                             ></div>
                                             <div class="relative text-lg">
-                                                {{ selectedBot.instruction }}
+                                                {{ selectedBot.prompt }}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -223,7 +223,6 @@ import UsageChart from './UsageChart.vue';
 import pinyin from 'pinyin';
 import { useModelStore } from '@/store/model';
 import { ModelGroup } from '@/types';
-
 interface DayData {
     date: string;
     count: number;
@@ -232,13 +231,16 @@ interface DayData {
 interface Bot {
     id: string;
     name: string;
+    prompt?: string;
     description: string;
+    prologue: string;
     avatar: string;
-    instruction: string;
+    model?: string;
+    isDefault: boolean;
     usageData: DayData[];
 }
 
-const { getModels } = useModelStore();
+const { getSuppliers } = useModelStore();
 
 function getFirstLetter(str: string): string {
     if (!str?.length) return '#';
@@ -268,19 +270,21 @@ function getFirstLetter(str: string): string {
 }
 
 // 先收集模型组里的所有模型，在按首字母分组
-const defaultBots = getModels.reduce((bots: { letter: string; bots: Bot[] }[], model) => {
-    const modelGroup = model.modelGroup as ModelGroup[];
+const defaultBots = getSuppliers.reduce((bots: { letter: string; bots: Bot[] }[], suppliers) => {
+    const modelGroup = suppliers.modelGroup as ModelGroup[];
     for (const group of modelGroup) {
-        for (const smallModel of group.models) {
-            const { name } = smallModel;
+        for (const model of group.models) {
+            const { name } = model;
             const letter = getFirstLetter(name);
             const index = bots.findIndex((b) => b.letter === letter);
             const bot: Bot = {
-                id: model.name + smallModel.name,
-                name: smallModel.name,
-                description: '',
-                avatar: model.logo,
-                instruction: '',
+                id: suppliers.name + model.name,
+                name: model.name,
+                description: model?.description || '',
+                prologue: `您好，我是${model.name}，有什么可以帮助您的吗？`,
+                isDefault: true,
+                avatar: suppliers.logo,
+                prompt: '',
                 usageData: [],
             };
             if (index === -1) {

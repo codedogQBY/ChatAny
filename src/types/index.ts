@@ -37,14 +37,17 @@ export type Model = {
     id: string;
     name: string;
     skills: Skill[];
+    description?: string;
+    extraConfig?: Record<keyof any, any>;
 };
 
 export type ModelGroup = {
+    id: string;
     groupName: string;
     models: Model[];
 };
 
-export type ModelItem = {
+export type Supplier = {
     name: string;
     label: string;
     logo: string;
@@ -54,5 +57,5 @@ export type ModelItem = {
     websiteUrl: string;
     apiKeyUrl?: string;
     modelGroup: ModelGroup[];
-    extraConfig: Record<keyof any, any>;
+    isDefault: boolean;
 };

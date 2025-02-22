@@ -35,18 +35,14 @@
                     <div
                         class="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse"
                     >
-                        <MessageCircleIcon class="w-12 h-12 text-primary" />
+                        <MessageCircleMoreIcon class="w-12 h-12 text-primary" />
                     </div>
                     <h2
                         class="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
                     >
                         开启你的 AI 之旅
                     </h2>
-                    <p class="text-muted-foreground mb-8">从左侧选择或创建新的对话，探索无限可能</p>
-                    <Button size="lg" class="rounded-full px-8" @click="openModelSelection">
-                        <MessageCirclePlusIcon class="mr-2 h-5 w-5" />
-                        创建新对话
-                    </Button>
+                    <p class="text-muted-foreground mb-8">从左侧选择机器人对话，探索无限可能</p>
                 </div>
             </div>
         </div>
@@ -66,13 +62,11 @@ import { ref, watch } from 'vue';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
 import ModelSelectionModal from './ModelSelectionModal.vue';
-import { Button } from '@/components/ui/button';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { MessageCircleIcon, MessageCirclePlusIcon } from 'lucide-vue-next';
+import { MessageCircleMoreIcon } from 'lucide-vue-next';
 
 interface User {
-    id: number;
     name: string;
     avatar: string;
 }
@@ -96,8 +90,7 @@ interface Chat {
 }
 
 const currentUser: User = {
-    id: 1,
-    name: '当前用户',
+    name: 'User',
     avatar: '/placeholder.svg?height=40&width=40',
 };
 
@@ -115,20 +108,28 @@ const openModelSelection = () => {
     isModelSelectionOpen.value = true;
 };
 
-const addChat = (modelInfo: { model: string; temperature: number; maxTokens: number }) => {
+const addChat = (modelInfo: {
+    chatName: string;
+    bot: string;
+    systemPrompt: string;
+    temperature: number;
+    maxTokens: number;
+    topP: number;
+    contextLength: number;
+}) => {
     const newChat: Chat = {
         id: Date.now(),
-        name: `${modelInfo.model} 对话`,
+        name: modelInfo.chatName,
         avatar: '/placeholder.svg?height=40&width=40',
         messages: [],
-        model: modelInfo.model,
+        model: modelInfo.bot,
         temperature: modelInfo.temperature,
         maxTokens: modelInfo.maxTokens,
     };
     chats.value.push(newChat);
     selectChat(newChat);
     toast({
-        description: `已创建使用 ${modelInfo.model} 模型的新对话`,
+        description: `已创建使用 ${modelInfo.bot} 模型的新对话`,
         duration: 1000,
     });
 };
