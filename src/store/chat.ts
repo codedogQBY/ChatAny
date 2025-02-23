@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import store from '@/hook/useStore';
 import { useBotStore } from './bot';
+import { useModelStore } from './model';
 
 export type MessageSender = 'user' | 'bot';
 
@@ -36,6 +37,9 @@ export interface Chat {
     temperature: number;
     maxTokens: number;
     topP: number;
+    avatar?: string;
+    isDefault: boolean;
+    modelId?: string;
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -44,6 +48,7 @@ export const useChatStore = defineStore('chat', () => {
     const currentSession = ref<Session | null>(null);
 
     const botStore = useBotStore();
+    const modelStore = useModelStore();
 
     // 创建一个新的会话
     const createSession = (botId: string, chatId: string, title: string = '新的会话'): Session => {
@@ -91,6 +96,8 @@ export const useChatStore = defineStore('chat', () => {
                     temperature: 0.7,
                     maxTokens: 2000,
                     topP: 0.9,
+                    avatar: bot.avatar,
+                    isDefault: bot.isDefault,
                 };
             })
         );
@@ -140,6 +147,8 @@ export const useChatStore = defineStore('chat', () => {
                         temperature: 0.7,
                         maxTokens: 2000,
                         topP: 0.9,
+                        avatar: bot.avatar,
+                        isDefault: bot.isDefault,
                     };
                     return chat;
                 });
@@ -236,13 +245,18 @@ export const useChatStore = defineStore('chat', () => {
         const newChat: Chat = {
             id: chatId,
             name: bot.name,
-            botId: botId,
-            sessions: [createSession(botId, chatId)],
+            botId: bot.id,  // 使用机器人的 ID
+            sessions: [createSession(bot.id, chatId)],
             createdAt: Date.now(),
             updatedAt: Date.now(),
             temperature: 0.7,
             maxTokens: 2000,
             topP: 0.9,
+            avatar: bot.avatar,
+            isDefault: bot.isDefault,
+            modelId: bot.model?.supplierId 
+                ? bot.model.supplierId + bot.model.modelId  // 如果有指定模型，使用指定的模型
+                : undefined  // 否则等待用户选择
         };
 
         chats.value.push(newChat);
@@ -362,6 +376,23 @@ export const useChatStore = defineStore('chat', () => {
         await syncData();
     };
 
+    // 更新聊天的模型
+    const updateChatModel = async (chatId: string, modelId: string) => {
+        const chat = chats.value.find(c => c.id === chatId);
+        if (!chat) return;
+
+        // 只更新 chat 的模型设置，不改变 botId
+        chat.modelId = modelId;  // 需要在 Chat 类型中添加 modelId 字段
+        chat.updatedAt = Date.now();
+
+        // 更新当前会话
+        if (currentChat.value?.id === chatId) {
+            currentChat.value = chat;
+        }
+
+        await syncData();
+    };
+
     return {
         chats,
         currentChat,
@@ -379,5 +410,6 @@ export const useChatStore = defineStore('chat', () => {
         deleteSession,
         deleteChatsByBotId,
         clearSessionMessages,
+        updateChatModel,
     };
 });

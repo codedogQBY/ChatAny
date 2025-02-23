@@ -146,6 +146,36 @@
                 <!-- 工具栏 -->
                 <div class="flex items-center space-x-1 justify-between border-none px-2 py-1">
                     <div class="flex items-center space-x-1">
+                        <!-- 只有非默认机器人才显示模型选择器 -->
+                        <Select
+                            v-if="!isDefaultBot"
+                            v-model="selectedModel"
+                            @update:modelValue="handleModelChange"
+                        >
+                            <SelectTrigger class="w-[140px] h-8 hover:bg-accent">
+                                <SelectValue placeholder="选择模型" />
+                            </SelectTrigger>
+                            <SelectContent side="top" class="max-h-[200px]">
+                                <SelectGroup v-for="group in availableModels" :key="group.name">
+                                    <SelectLabel
+                                        class="font-semibold text-primary px-2 py-1.5 text-sm border-b"
+                                    >
+                                        {{ group.name }}
+                                    </SelectLabel>
+                                    <div class="py-1">
+                                        <SelectItem
+                                            v-for="model in group.models"
+                                            :key="model.id"
+                                            :value="model.id"
+                                            class="text-sm hover:bg-accent cursor-pointer ml-2"
+                                        >
+                                            {{ model.name }}
+                                        </SelectItem>
+                                    </div>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
@@ -287,7 +317,7 @@
         />
 
         <!-- 添加删除确认对话框 -->
-        <DeleteSessionAlert 
+        <DeleteSessionAlert
             v-model:open="showClearConfirm"
             title="删除当前会话"
             description="确定要删除当前会话吗？此操作将删除所有聊天记录且不可恢复。"
@@ -297,7 +327,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted } from 'vue';
+import { ref, watch, nextTick, onMounted, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -325,30 +355,18 @@ import ChatHistory from '@/components/chat/ChatHistory.vue';
 import { Session, useChatStore } from '@/store/chat';
 import ChatSettings from '@/components/chat/ChatSettings.vue';
 import DeleteSessionAlert from '@/components/chat/DeleteSessionAlert.vue';
-
-interface Message {
-    id: string | number;
-    content: string;
-    sender: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    timestamp: Date;
-    isNew?: boolean;
-    status?: string;
-}
-
-interface Chat {
-    id: string;
-    name: string;
-    avatar?: string;
-    messages: Message[];
-    sessions: Session[];
-    temperature: number;
-    maxTokens: number;
-    topP: number;
-}
+import type { Message, Chat } from '@/types';
+import { useModelStore } from '@/store/model';
+import { useBotStore } from '@/store/bot';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 const props = defineProps<{
     chat: Chat;
@@ -409,6 +427,45 @@ const settings = ref({
 });
 
 const chatStore = useChatStore();
+const modelStore = useModelStore();
+const botStore = useBotStore();
+
+// 判断是否为默认机器人
+const isDefaultBot = computed(() => {
+    if (!props.chat?.botId) return true;
+
+    const bot = botStore.sections
+        .flatMap((section) => section.bots)
+        .find((bot) => bot.id === props.chat.botId);
+
+    return bot?.isDefault ?? true;
+});
+
+// 获取所有可用的模型
+const availableModels = computed(() => {
+    const models = modelStore.getAllModels;
+    if (!models) return [];
+
+    // 直接返回所有模型，按组分类
+    const groupedModels = models.reduce(
+        (acc, model) => {
+            if (!acc[model.groupName]) {
+                acc[model.groupName] = [];
+            }
+            acc[model.groupName].push(model);
+            return acc;
+        },
+        {} as Record<string, typeof models>
+    );
+
+    return Object.entries(groupedModels).map(([groupName, models]) => ({
+        name: groupName,
+        models: models,
+    }));
+});
+
+// 当前选中的模型
+const selectedModel = ref('');
 
 // 设置输入框是否聚焦
 const setInputFocus = (value: boolean) => {
@@ -462,20 +519,20 @@ const confirmDeleteSession = () => {
 
 const handleClearConfirm = async () => {
     if (!props.currentSession) return;
-    
+
     try {
         // 删除当前会话
         await chatStore.deleteSession(props.currentSession.id);
         showClearConfirm.value = false;
-        
+
         toast({
-            description: "会话已删除",
+            description: '会话已删除',
             duration: 2000,
         });
     } catch (error) {
         toast({
-            description: "会话删除失败，请稍后重试",
-            variant: "destructive",
+            description: '会话删除失败，请稍后重试',
+            variant: 'destructive',
             duration: 2000,
         });
     }
@@ -614,6 +671,32 @@ const updateMessageStatus = (messageId: string | number, status: string) => {
     }
 };
 
+// 处理模型变更
+const handleModelChange = async (modelId: string) => {
+    if (!modelId) return;
+
+    // 更新选中的模型
+    selectedModel.value = modelId;
+
+    // 获取当前机器人
+    const bot = botStore.sections
+        .flatMap((section) => section.bots)
+        .find((bot) => bot.id === props.chat.botId);
+
+    if (!bot || bot.isDefault) return; // 默认机器人不允许更改模型
+
+    // 找到对应的供应商和模型
+    const model = modelStore.getAllModels.find((m) => m.id === modelId);
+
+    if (!model) return;
+
+    // 更新机器人的模型信息
+    await botStore.updateBotModel(bot.id, model.supplierId, model.id);
+
+    // 更新聊天的模型设置
+    await chatStore.updateChatModel(props.chat.id, modelId);
+};
+
 watch(networkEnabled, (newValue) => {
     emit('toggle-network', newValue);
 });
@@ -642,9 +725,38 @@ watch(
     { deep: true }
 );
 
-// 添加一个生命周期钩子来确保组件挂载后滚动到底部
-onMounted(() => {
-    scrollToBottom();
+// 初始化时设置选中的模型
+onMounted(async () => {
+    try {
+        await Promise.all([modelStore.initializeStore(), botStore.initializeStore()]);
+
+        const bot = botStore.sections
+            .flatMap((section) => section.bots)
+            .find((bot) => bot.id === props.chat.botId);
+
+        if (!bot) return;
+
+        if (bot.isDefault) {
+            // 默认机器人使用自己的固定模型
+            selectedModel.value = bot.model?.supplierId + bot.model?.modelId;
+        } else {
+            // 非默认机器人
+            if (bot.model) {
+                // 如果机器人已有选择的模型，使用该模型
+                selectedModel.value = bot.model.modelId;
+            } else if (availableModels.value?.length > 0) {
+                // 只有在没有选择模型时，才设置第一个可用模型
+                const firstGroup = availableModels.value[0];
+                if (firstGroup.models.length > 0) {
+                    const firstModel = firstGroup.models[0];
+                    selectedModel.value = firstModel.id;
+                    await handleModelChange(firstModel.id);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Failed to initialize stores:', error);
+    }
 });
 </script>
 

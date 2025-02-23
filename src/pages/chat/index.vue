@@ -58,7 +58,6 @@ import { useChatStore, type Message } from '@/store/chat';
 import { useBotStore } from '@/store/bot';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
-import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
 
@@ -100,6 +99,7 @@ const currentChatData = computed(() => {
         name: chatStore.currentChat.name,
         avatar: bot?.avatar,
         sessions: chatStore.currentChat.sessions,
+        botId: chatStore.currentChat.botId,
         messages: chatStore.currentSession.messages.map((msg) => ({
             id: msg.id,
             content: msg.content,
