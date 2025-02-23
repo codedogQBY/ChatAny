@@ -40,7 +40,7 @@ const startEdit = (session: Session, event: Event) => {
         const input = document.querySelector(`input[data-session-id="${session.id}"]`) as HTMLInputElement;
         if (input) {
             input.focus();
-            input.select();
+            input.setSelectionRange(input.value.length, input.value.length);
         }
     });
 };
@@ -54,6 +54,7 @@ const finishEdit = async (sessionId: string) => {
                 description: '会话已重命名',
                 duration: 1000,
             });
+            emit('close');
         } catch (error) {
             console.error('重命名失败:', error);
             toast({
@@ -104,7 +105,12 @@ const handleDeleteConfirm = async () => {
         <div
             v-for="session in sessions"
             :key="session.id"
-            class="flex items-center justify-between px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer rounded-sm group"
+            class="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer rounded-sm group transition-colors duration-200"
+            :class="[
+                chatStore.currentSession?.id === session.id
+                    ? 'bg-primary/10 text-primary hover:bg-primary/15'
+                    : 'hover:bg-accent hover:text-accent-foreground'
+            ]"
             @click="emit('select', session.id)"
         >
             <template v-if="editingId === session.id">
@@ -121,7 +127,7 @@ const handleDeleteConfirm = async () => {
                 </div>
             </template>
             <template v-else>
-                <span class="truncate">{{ session.title }}</span>
+                <span class="truncate flex-1">{{ session.title }}</span>
                 <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100">
                     <Button
                         variant="ghost"
@@ -134,7 +140,7 @@ const handleDeleteConfirm = async () => {
                     <Button
                         variant="ghost"
                         size="icon-xs"
-                        class="h-5 w-5 text-destructive hover:text-destructive"
+                        class="h-5 w-5 text-destructive/50 hover:text-destructive"
                         @click.stop="handleDeleteClick(session.id, $event)"
                     >
                         <TrashIcon class="h-3 w-3" />

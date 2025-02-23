@@ -48,23 +48,25 @@ export const useChatStore = defineStore('chat', () => {
     // 创建一个新的会话
     const createSession = (botId: string, chatId: string, title: string = '新的会话'): Session => {
         const bot = botStore.sections
-            .flatMap(section => section.bots)
-            .find(bot => bot.id === botId);
+            .flatMap((section) => section.bots)
+            .find((bot) => bot.id === botId);
         if (!bot) throw new Error('Bot not found');
 
         const session: Session = {
             id: uuidv4(),
             title,
-            messages: [{
-                id: uuidv4(),
-                sessionId: '', // 将在下面设置
-                chatId,
-                content: bot.prologue || '开始新的对话',
-                sender: 'bot',
-                status: 'sent',
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-            }],
+            messages: [
+                {
+                    id: uuidv4(),
+                    sessionId: '', // 将在下面设置
+                    chatId,
+                    content: bot.prologue || '开始新的对话',
+                    sender: 'bot',
+                    status: 'sent',
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                },
+            ],
             createdAt: Date.now(),
             updatedAt: Date.now(),
         };
@@ -76,8 +78,8 @@ export const useChatStore = defineStore('chat', () => {
 
     // 为每个bot创建默认chat
     const generateDefaultChats = (): Chat[] => {
-        return botStore.sections.flatMap(section => 
-            section.bots.map(bot => {
+        return botStore.sections.flatMap((section) =>
+            section.bots.map((bot) => {
                 const chatId = uuidv4();
                 return {
                     id: chatId,
@@ -122,11 +124,11 @@ export const useChatStore = defineStore('chat', () => {
             currentSession.value = savedState.currentSession;
 
             // 检查是否需要为新的bot创建chat
-            const existingBotIds = new Set(chats.value.map(chat => chat.botId));
+            const existingBotIds = new Set(chats.value.map((chat) => chat.botId));
             const newChats = botStore.sections
-                .flatMap(section => section.bots)
-                .filter(bot => !existingBotIds.has(bot.id))
-                .map(bot => {
+                .flatMap((section) => section.bots)
+                .filter((bot) => !existingBotIds.has(bot.id))
+                .map((bot) => {
                     const chatId = uuidv4();
                     const chat: Chat = {
                         id: chatId,
@@ -158,7 +160,7 @@ export const useChatStore = defineStore('chat', () => {
 
     // 选择聊天
     const selectChat = async (chatId: string) => {
-        const chat = chats.value.find(c => c.id === chatId);
+        const chat = chats.value.find((c) => c.id === chatId);
         if (chat) {
             currentChat.value = chat;
             currentSession.value = chat.sessions[chat.sessions.length - 1];
@@ -169,12 +171,12 @@ export const useChatStore = defineStore('chat', () => {
     // 选择会话
     const selectSession = async (sessionId: string) => {
         if (!currentChat.value) return;
-        
-        const session = currentChat.value.sessions.find(s => s.id === sessionId);
+
+        const session = currentChat.value.sessions.find((s) => s.id === sessionId);
         if (session) {
             currentSession.value = session;
             // 重置所有消息的状态
-            session.messages.forEach(msg => {
+            session.messages.forEach((msg) => {
                 if (msg.status === 'pending') {
                     msg.status = 'sent';
                 }
@@ -197,7 +199,7 @@ export const useChatStore = defineStore('chat', () => {
         currentSession.value.messages.push(newMessage);
         currentSession.value.updatedAt = Date.now();
         currentChat.value.updatedAt = Date.now();
-        
+
         await syncData();
         return newMessage;
     };
@@ -206,7 +208,7 @@ export const useChatStore = defineStore('chat', () => {
     const updateMessageStatus = async (messageId: string, status: Message['status']) => {
         if (!currentChat.value || !currentSession.value) return;
 
-        const message = currentSession.value.messages.find(m => m.id === messageId);
+        const message = currentSession.value.messages.find((m) => m.id === messageId);
         if (message) {
             message.status = status;
             message.updatedAt = Date.now();
@@ -217,7 +219,7 @@ export const useChatStore = defineStore('chat', () => {
     // 通过 botId 获取或创建 chat
     const getChatByBotId = async (botId: string) => {
         // 先查找是否已存在
-        const existingChat = chats.value.find(chat => chat.botId === botId);
+        const existingChat = chats.value.find((chat) => chat.botId === botId);
         if (existingChat) {
             await selectChat(existingChat.id);
             return existingChat;
@@ -225,9 +227,9 @@ export const useChatStore = defineStore('chat', () => {
 
         // 不存在则创建新的
         const bot = botStore.sections
-            .flatMap(section => section.bots)
-            .find(bot => bot.id === botId);
-        
+            .flatMap((section) => section.bots)
+            .find((bot) => bot.id === botId);
+
         if (!bot) throw new Error('Bot not found');
 
         const chatId = uuidv4();
@@ -250,13 +252,16 @@ export const useChatStore = defineStore('chat', () => {
     };
 
     // 更新聊天设置
-    const updateChatSettings = async (chatId: string, settings: {
-        name: string;
-        temperature: number;
-        maxTokens: number;
-        topP: number;
-    }) => {
-        const chat = chats.value.find(c => c.id === chatId);
+    const updateChatSettings = async (
+        chatId: string,
+        settings: {
+            name: string;
+            temperature: number;
+            maxTokens: number;
+            topP: number;
+        }
+    ) => {
+        const chat = chats.value.find((c) => c.id === chatId);
         if (!chat) return;
 
         chat.name = settings.name;
@@ -270,46 +275,48 @@ export const useChatStore = defineStore('chat', () => {
 
     // 重命名会话
     const renameSession = async (sessionId: string, title: string) => {
-        const chat = chats.value.find(c => c.sessions.some(s => s.id === sessionId));
-        if (!chat) return;
-
-        const session = chat.sessions.find(s => s.id === sessionId);
+        // 先确保有当前聊天
+        if (!currentChat.value) return;
+        
+        // 在当前聊天中查找会话
+        const session = currentChat.value.sessions.find(s => s.id === sessionId);
         if (!session) return;
 
         session.title = title;
         session.updatedAt = Date.now();
-        chat.updatedAt = Date.now();
+        currentChat.value.updatedAt = Date.now();
 
         await syncData();
     };
 
     // 删除会话
     const deleteSession = async (sessionId: string) => {
-        const chat = chats.value.find(c => c.sessions.some(s => s.id === sessionId));
-        if (!chat) return;
-
-        const index = chat.sessions.findIndex(s => s.id === sessionId);
+        // 先确保有当前聊天
+        if (!currentChat.value) return;
+        
+        // 在当前聊天中查找会话
+        const index = currentChat.value.sessions.findIndex(s => s.id === sessionId);
         if (index === -1) return;
 
         // 如果删除的是当前会话，先切换到其他会话
         if (currentSession.value?.id === sessionId) {
             // 如果还有其他会话，切换到最新的一个
-            if (chat.sessions.length > 1) {
-                const newIndex = index === chat.sessions.length - 1 ? index - 1 : index + 1;
-                currentSession.value = chat.sessions[newIndex];
+            if (currentChat.value.sessions.length > 1) {
+                const newIndex = index === currentChat.value.sessions.length - 1 ? index - 1 : index + 1;
+                currentSession.value = currentChat.value.sessions[newIndex];
             } else {
                 currentSession.value = null;
             }
         }
 
         // 删除会话
-        chat.sessions.splice(index, 1);
-        chat.updatedAt = Date.now();
+        currentChat.value.sessions.splice(index, 1);
+        currentChat.value.updatedAt = Date.now();
 
         // 如果这是最后一个会话，创建一个新的默认会话
-        if (chat.sessions.length === 0) {
-            const newSession = createSession(chat.botId, chat.id);
-            chat.sessions.push(newSession);
+        if (currentChat.value.sessions.length === 0) {
+            const newSession = createSession(currentChat.value.botId, currentChat.value.id);
+            currentChat.value.sessions.push(newSession);
             currentSession.value = newSession;
         }
 
@@ -332,4 +339,4 @@ export const useChatStore = defineStore('chat', () => {
         renameSession,
         deleteSession,
     };
-}); 
+});

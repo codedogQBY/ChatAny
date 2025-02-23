@@ -17,18 +17,24 @@
                     <div
                         v-for="session in group.sessions"
                         :key="session.id"
-                        class="px-4 py-2 hover:bg-accent/50 cursor-pointer transition-colors"
-                        :class="{ 'bg-accent/50': session.id === currentSession?.id }"
+                        class="group flex items-center px-4 py-2 cursor-pointer transition-all duration-200 ease-in-out"
+                        :class="[
+                            currentSession?.id === session.id
+                                ? 'bg-primary/10 text-primary hover:bg-primary/15'
+                                : 'hover:bg-accent hover:text-accent-foreground'
+                        ]"
                         @click="selectSession(session.id)"
                     >
-                        <div class="flex items-center justify-between">
-                            <span class="font-medium">{{ session.title }}</span>
-                            <span class="text-xs text-muted-foreground">
-                                {{ formatTime(session.updatedAt) }}
-                            </span>
-                        </div>
-                        <div class="text-sm text-muted-foreground truncate mt-1">
-                            {{ getLastMessage(session) }}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-medium truncate">{{ session.title }}</h3>
+                                <span class="text-sm text-muted-foreground ml-2 shrink-0">
+                                    {{ formatTime(session.updatedAt) }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-muted-foreground truncate mt-1">
+                                {{ session.messages[session.messages.length - 1]?.content || '暂无消息' }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -50,15 +56,6 @@
                     class="mb-4"
                 >
                     <div class="flex items-start gap-3">
-                        <Avatar class="mt-1">
-                            <AvatarImage
-                                :src="message.sender === 'user' ? userAvatar : botAvatar"
-                                :alt="message.sender === 'user' ? 'User' : botName"
-                            />
-                            <AvatarFallback>
-                                {{ message.sender === 'user' ? 'U' : botName[0] }}
-                            </AvatarFallback>
-                        </Avatar>
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 <span class="font-medium">
@@ -204,4 +201,10 @@ const formatDate = (timestamp?: number) => {
         day: 'numeric',
     });
 };
-</script> 
+</script>
+
+<style scoped>
+.group {
+    transform: translate3d(0, 0, 0);
+}
+</style> 
