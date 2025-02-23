@@ -33,9 +33,9 @@ export interface Chat {
     sessions: Session[];
     createdAt: number;
     updatedAt: number;
-    temperature?: number;
-    maxTokens?: number;
-    topP?: number;
+    temperature: number;
+    maxTokens: number;
+    topP: number;
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -59,7 +59,7 @@ export const useChatStore = defineStore('chat', () => {
                 id: uuidv4(),
                 sessionId: '', // 将在下面设置
                 chatId,
-                content: bot.prologue,
+                content: bot.prologue || '开始新的对话',
                 sender: 'bot',
                 status: 'sent',
                 createdAt: Date.now(),
@@ -79,7 +79,7 @@ export const useChatStore = defineStore('chat', () => {
         return botStore.sections.flatMap(section => 
             section.bots.map(bot => {
                 const chatId = uuidv4();
-                const chat: Chat = {
+                return {
                     id: chatId,
                     name: bot.name,
                     botId: bot.id,
@@ -90,7 +90,6 @@ export const useChatStore = defineStore('chat', () => {
                     maxTokens: 2000,
                     topP: 0.9,
                 };
-                return chat;
             })
         );
     };
@@ -174,6 +173,12 @@ export const useChatStore = defineStore('chat', () => {
         const session = currentChat.value.sessions.find(s => s.id === sessionId);
         if (session) {
             currentSession.value = session;
+            // 重置所有消息的状态
+            session.messages.forEach(msg => {
+                if (msg.status === 'pending') {
+                    msg.status = 'sent';
+                }
+            });
             await syncData();
         }
     };
@@ -244,6 +249,73 @@ export const useChatStore = defineStore('chat', () => {
         return newChat;
     };
 
+    // 更新聊天设置
+    const updateChatSettings = async (chatId: string, settings: {
+        name: string;
+        temperature: number;
+        maxTokens: number;
+        topP: number;
+    }) => {
+        const chat = chats.value.find(c => c.id === chatId);
+        if (!chat) return;
+
+        chat.name = settings.name;
+        chat.temperature = settings.temperature;
+        chat.maxTokens = settings.maxTokens;
+        chat.topP = settings.topP;
+        chat.updatedAt = Date.now();
+
+        await syncData();
+    };
+
+    // 重命名会话
+    const renameSession = async (sessionId: string, title: string) => {
+        const chat = chats.value.find(c => c.sessions.some(s => s.id === sessionId));
+        if (!chat) return;
+
+        const session = chat.sessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        session.title = title;
+        session.updatedAt = Date.now();
+        chat.updatedAt = Date.now();
+
+        await syncData();
+    };
+
+    // 删除会话
+    const deleteSession = async (sessionId: string) => {
+        const chat = chats.value.find(c => c.sessions.some(s => s.id === sessionId));
+        if (!chat) return;
+
+        const index = chat.sessions.findIndex(s => s.id === sessionId);
+        if (index === -1) return;
+
+        // 如果删除的是当前会话，先切换到其他会话
+        if (currentSession.value?.id === sessionId) {
+            // 如果还有其他会话，切换到最新的一个
+            if (chat.sessions.length > 1) {
+                const newIndex = index === chat.sessions.length - 1 ? index - 1 : index + 1;
+                currentSession.value = chat.sessions[newIndex];
+            } else {
+                currentSession.value = null;
+            }
+        }
+
+        // 删除会话
+        chat.sessions.splice(index, 1);
+        chat.updatedAt = Date.now();
+
+        // 如果这是最后一个会话，创建一个新的默认会话
+        if (chat.sessions.length === 0) {
+            const newSession = createSession(chat.botId, chat.id);
+            chat.sessions.push(newSession);
+            currentSession.value = newSession;
+        }
+
+        await syncData();
+    };
+
     return {
         chats,
         currentChat,
@@ -256,5 +328,8 @@ export const useChatStore = defineStore('chat', () => {
         createSession,
         getChatByBotId,
         syncData,
+        updateChatSettings,
+        renameSession,
+        deleteSession,
     };
 }); 

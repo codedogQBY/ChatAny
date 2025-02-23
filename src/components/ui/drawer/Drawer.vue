@@ -3,12 +3,16 @@ import type { DrawerRootEmits, DrawerRootProps } from 'vaul-vue'
 import { useForwardPropsEmits } from 'radix-vue'
 import { DrawerRoot } from 'vaul-vue'
 
-const props = withDefaults(defineProps<DrawerRootProps>(), {
+const props = withDefaults(defineProps<
+  DrawerRootProps & {
+    position?: 'bottom' | 'right'
+  }
+>(), {
   shouldScaleBackground: true,
+  position: 'bottom'
 })
 
 const emits = defineEmits<DrawerRootEmits>()
-
 const forwarded = useForwardPropsEmits(props, emits)
 </script>
 

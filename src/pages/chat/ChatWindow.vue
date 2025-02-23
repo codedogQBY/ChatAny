@@ -11,12 +11,18 @@
                     <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
                 </Avatar>
                 <h2 class="text-xl font-semibold text-foreground">{{ chat.name }}</h2>
+                <SessionSelector
+                    :sessions="chat.sessions"
+                    :current-session="currentSession"
+                    @select="chatStore.selectSession($event)"
+                    @create="handleCreateSession"
+                />
             </div>
             <div class="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" @click="toggleHistory">
                     <ClockIcon class="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" @click="$emit('edit-bot')">
+                <Button variant="ghost" size="icon" @click="showSettings = true">
                     <SettingsIcon class="h-5 w-5" />
                 </Button>
             </div>
@@ -28,7 +34,7 @@
                 <div
                     v-for="message in chat.messages"
                     :key="message.id"
-                    class="group flex items-end space-x-2"
+                    class="group flex items-end space-x-2 message-item"
                     :class="message.sender.id === user.id ? 'justify-end' : 'justify-start'"
                 >
                     <template v-if="message.sender.id !== user.id">
@@ -40,12 +46,12 @@
                             class="relative text-sm max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-card text-card-foreground rounded-bl-sm"
                         >
                             <TypewriterText
-                                v-if="message.isNew"
+                                v-if="message.sender.id !== user.id && message.status === 'pending'"
                                 :content="message.content"
                                 :key="message.id"
                                 :typing-speed="30"
                                 :start-delay="300"
-                                @typing-complete="message.isNew = false"
+                                @typing-complete="updateMessageStatus(message.id, 'sent')"
                             />
                             <div v-else class="w-full break-words whitespace-pre-wrap leading-6">
                                 {{ message.content }}
@@ -245,30 +251,45 @@
         </div>
 
         <!-- 历史记录抽屉 -->
-        <Drawer v-model:open="showHistory" class="w-96" @close="showHistory = false">
-            <DrawerContent class="user-select">
-                <div class="flex justify-between items-center p-4 border-b border-border">
-                    <h3 class="text-lg font-semibold">聊天历史</h3>
-                    <Button variant="ghost" size="icon" @click="toggleHistory(false)">
+        <Drawer v-model:open="showHistory" @close="showHistory = false">
+            <DrawerContent class="!w-[calc(100%-16rem)]" position="right">
+                <div class="flex h-full">
+                    <!-- 顶部关闭按钮 -->
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="absolute right-4 top-4 z-50"
+                        @click="toggleHistory"
+                    >
                         <XIcon class="h-5 w-5" />
                     </Button>
-                </div>
-                <div class="p-4 overflow-y-auto" style="max-height: calc(80vh - 64px)">
-                    <div v-for="(message, index) in chat.messages" :key="index" class="mb-4">
-                        <div class="font-semibold">{{ message.sender.name }}</div>
-                        <div>{{ message.content }}</div>
-                        <div class="text-xs text-muted-foreground">
-                            {{ new Date(message.timestamp).toLocaleString() }}
-                        </div>
-                    </div>
+
+                    <ChatHistory
+                        :sessions="chat.sessions"
+                        :current-session="currentSession"
+                        :bot-name="chat.name"
+                        :bot-avatar="chat.avatar || '/placeholder.svg?height=40&width=40'"
+                        :user-avatar="user.avatar"
+                        @select="chatStore.selectSession($event)"
+                    />
                 </div>
             </DrawerContent>
         </Drawer>
+
+        <ChatSettings
+            v-model:open="showSettings"
+            :chat-id="chat.id"
+            :name="chat.name"
+            :temperature="chat.temperature"
+            :max-tokens="chat.maxTokens"
+            :top-p="chat.topP"
+            @save="handleUpdateSettings"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -291,6 +312,20 @@ import {
     GlobeIcon,
 } from 'lucide-vue-next';
 import TypewriterText from './TypewriterText.vue';
+import SessionSelector from '@/components/chat/SessionSelector.vue';
+import ChatHistory from '@/components/chat/ChatHistory.vue';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { useChatStore } from '@/store/chat';
+import ChatSettings from '@/components/chat/ChatSettings.vue';
 
 interface Message {
     id: string | number;
@@ -302,6 +337,7 @@ interface Message {
     };
     timestamp: Date;
     isNew?: boolean;
+    status?: string;
 }
 
 interface Chat {
@@ -309,6 +345,10 @@ interface Chat {
     name: string;
     avatar?: string;
     messages: Message[];
+    sessions: Session[];
+    temperature: number;
+    maxTokens: number;
+    topP: number;
 }
 
 const props = defineProps<{
@@ -319,6 +359,7 @@ const props = defineProps<{
         avatar: string;
     };
     quotedMessage: Message | null;
+    currentSession: Session | null;
 }>();
 
 const emit = defineEmits<{
@@ -329,6 +370,19 @@ const emit = defineEmits<{
     (e: 'view-history'): void;
     (e: 'quote-message', message: Message): void;
     (e: 'cancel-quote'): void;
+    (e: 'select-session', sessionId: string): void;
+    (e: 'create-session'): void;
+    (e: 'rename-session', sessionId: string, title: string): void;
+    (e: 'delete-session', sessionId: string): void;
+    (
+        e: 'update-settings',
+        settings: {
+            name: string;
+            temperature: number;
+            maxTokens: number;
+            topP: number;
+        }
+    ): void;
 }>();
 
 const inputMessage = ref('');
@@ -338,6 +392,23 @@ const showHistory = ref(false);
 const { toast } = useToast();
 // 是否聚焦输入框
 const isFocus = ref(false);
+const showSettings = ref(false);
+
+// 初始化设置值
+const defaultSettings = {
+    temperature: 0.7,
+    maxTokens: 2000,
+    topP: 0.9,
+};
+
+const settings = ref({
+    name: props.chat.name,
+    temperature: props.chat.temperature,
+    maxTokens: props.chat.maxTokens,
+    topP: props.chat.topP,
+});
+
+const chatStore = useChatStore();
 
 // 设置输入框是否聚焦
 const setInputFocus = (value: boolean) => {
@@ -417,42 +488,157 @@ const toggleHistory = () => {
 };
 
 const scrollToBottom = () => {
-    nextTick(() => {
-        if (chatContainer.value) {
-            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-        }
+    if (chatContainer.value) {
+        // 直接设置 scrollTop 为最大值
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    }
+};
+
+const handleCreateSession = async () => {
+    if (!chatStore.currentChat) return;
+    
+    const newSession = await chatStore.createSession(
+        chatStore.currentChat.botId,
+        chatStore.currentChat.id,
+        `新的会话 ${chatStore.currentChat.sessions.length + 1}`
+    );
+
+    chatStore.currentChat.sessions.push(newSession);
+    await chatStore.selectSession(newSession.id);
+    await chatStore.syncData();
+    
+    toast({
+        description: '新会话已创建',
+        duration: 1000,
     });
+};
+
+// 重命名会话
+const handleRenameSession = (sessionId: string) => {
+    if (!props.currentSession) return;
+    const newTitle = prompt('请输入新的会话名称', props.currentSession.title);
+    if (newTitle && newTitle !== props.currentSession.title) {
+        emit('rename-session', sessionId, newTitle);
+    }
+};
+
+// 删除会话
+const handleDeleteSession = (sessionId: string) => {
+    if (confirm('确定要删除这个会话吗？此操作不可恢复。')) {
+        emit('delete-session', sessionId);
+        toast({
+            description: '会话已删除',
+            duration: 1000,
+        });
+    }
+};
+
+// 导出会话
+const handleExportSession = () => {
+    if (!props.currentSession) return;
+    const content = props.chat.messages
+        .map((msg) => {
+            const time = new Date(msg.timestamp).toLocaleString();
+            return `### ${msg.sender.name} (${time})\n\n${msg.content}\n`;
+        })
+        .join('\n');
+
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${props.currentSession.title}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+        description: '会话已导出',
+        duration: 1000,
+    });
+};
+
+// 机器人设置
+const handleBotSettings = () => {
+    emit('edit-bot');
+};
+
+// 清空会话
+const handleClearSession = () => {
+    if (confirm('确定要清空当前会话的所有消息吗？此操作不可恢复。')) {
+        emit('clear-history');
+        toast({
+            description: '会话已清空',
+            duration: 1000,
+        });
+    }
+};
+
+const handleUpdateSettings = (settings: {
+    name: string;
+    temperature: number;
+    maxTokens: number;
+    topP: number;
+}) => {
+    chatStore.updateChatSettings(props.chat.id, settings);
+    emit('update-settings', settings);
+    showSettings.value = false;
+    toast({
+        description: '设置已保存',
+        duration: 1000,
+    });
+};
+
+const updateMessageStatus = (messageId: string | number, status: string) => {
+    const message = props.chat.messages.find(m => m.id === messageId);
+    if (message) {
+        message.status = status;
+    }
 };
 
 watch(networkEnabled, (newValue) => {
     emit('toggle-network', newValue);
 });
 
+// 监听 currentSession 的变化
+watch(
+    () => props.currentSession?.id,
+    async () => {
+        await nextTick();
+        scrollToBottom();
+    },
+    { immediate: true }
+);
+
+// 监听消息变化
 watch(
     () => props.chat.messages,
     (newMessages, oldMessages) => {
         if (newMessages.length > oldMessages.length) {
             const latestMessage = newMessages[newMessages.length - 1];
-            if (latestMessage.sender.id !== props.user.id) {
-                latestMessage.isNew = true;
-            }
+            nextTick(() => {
+                scrollToBottom();
+            });
         }
-        scrollToBottom();
     },
     { deep: true }
 );
+
+// 添加一个生命周期钩子来确保组件挂载后滚动到底部
+onMounted(() => {
+    scrollToBottom();
+});
 </script>
 
 <style scoped>
 .message-enter-active,
 .message-leave-active {
-    transition: all 0.5s cubic-bezier(0.05, 0.7, 0.1, 1);
+    transition: all 0.2s ease-out;
 }
 
 .message-enter-from,
 .message-leave-to {
     opacity: 0;
-    transform: translateY(30px) scale(0.9);
+    transform: translateY(20px);
 }
 
 textarea {

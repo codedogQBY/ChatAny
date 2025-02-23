@@ -17,6 +17,7 @@
                 :chat="currentChatData"
                 :user="currentUser"
                 :quotedMessage="quotedMessage"
+                :current-session="chatStore.currentSession"
                 @send-message="sendMessage"
                 @toggle-network="toggleNetwork"
                 @clear-history="clearHistory"
@@ -24,6 +25,9 @@
                 @view-history="viewHistory"
                 @quote-message="setQuotedMessage"
                 @cancel-quote="cancelQuote"
+                @select-session="handleSessionSelect"
+                @create-session="handleCreateSession"
+                @update-settings="handleUpdateSettings"
             />
             <div
                 v-else
@@ -100,6 +104,7 @@ const currentChatData = computed(() => {
         id: chatStore.currentChat.id,
         name: chatStore.currentChat.name,
         avatar: bot?.avatar,
+        sessions: chatStore.currentChat.sessions,
         messages: chatStore.currentSession.messages.map(msg => ({
             id: msg.id,
             content: msg.content,
@@ -111,6 +116,9 @@ const currentChatData = computed(() => {
             timestamp: new Date(msg.createdAt),
             isNew: msg.sender === 'bot' && msg.status === 'pending',
         })),
+        temperature: chatStore.currentChat.temperature,
+        maxTokens: chatStore.currentChat.maxTokens,
+        topP: chatStore.currentChat.topP,
     };
 });
 
@@ -181,6 +189,51 @@ const setQuotedMessage = (message: WindowMessage) => {
 
 const cancelQuote = () => {
     quotedMessage.value = null;
+};
+
+const handleSessionSelect = async (sessionId: string) => {
+    await chatStore.selectSession(sessionId);
+};
+
+const handleCreateSession = async () => {
+    if (!chatStore.currentChat) return;
+    
+    // 创建新会话
+    const newSession = await chatStore.createSession(
+        chatStore.currentChat.botId,
+        chatStore.currentChat.id,
+        `新的会话 ${chatStore.currentChat.sessions.length + 1}`
+    );
+
+    // 添加到当前聊天的会话列表
+    chatStore.currentChat.sessions.push(newSession);
+    
+    // 选择新会话
+    await chatStore.selectSession(newSession.id);
+    
+    // 同步数据
+    await chatStore.syncData();
+
+    // 提示创建成功
+    toast({
+        description: '新会话已创建',
+        duration: 1000,
+    });
+};
+
+const handleUpdateSettings = async (settings: {
+    name: string;
+    temperature: number;
+    maxTokens: number;
+    topP: number;
+}) => {
+    if (!chatStore.currentChat) return;
+    
+    await chatStore.updateChatSettings(chatStore.currentChat.id, settings);
+    toast({
+        description: '设置已更新',
+        duration: 1000,
+    });
 };
 </script>
 
