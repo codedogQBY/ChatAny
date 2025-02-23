@@ -142,6 +142,7 @@
                                     <Button
                                         size="lg"
                                         class="group hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                                        @click="startChat"
                                     >
                                         <MessageCircleMoreIcon
                                             class="mr-2 h-5 w-5 group-hover:scale-110 transition-transform"
@@ -240,9 +241,13 @@ import { useBotStore } from '@/store/bot';
 import { useUsageStore } from '@/store/usage';
 import BotDialog from '@/components/bot/BotDialog.vue';
 import type { Bot } from '@/store/bot';
+import { useRouter } from 'vue-router';
+import { useChatStore } from '@/store/chat';
 
 const botStore = useBotStore();
 const usageStore = useUsageStore();
+const router = useRouter();
+const chatStore = useChatStore();
 
 const showCreateDialog = ref(false);
 const showEditDialog = ref(false);
@@ -251,6 +256,7 @@ const editingBot = ref<Bot | null>(null);
 onMounted(async () => {
     await botStore.initializeStore();
     await usageStore.initializeStore();
+    await chatStore.initializeStore();
 });
 
 const handleCreateBot = async (botData: Omit<Bot, 'id' | 'isDefault'>) => {
@@ -270,6 +276,20 @@ const handleUpdateBot = async (updates: Partial<Bot>) => {
     if (editingBot.value) {
         await botStore.updateBot(editingBot.value.id, updates);
     }
+};
+
+const startChat = async () => {
+    if (!botStore.selectedBot) return;
+    
+    // 确保 chatStore 已初始化
+    if (chatStore.chats.length === 0) {
+        await chatStore.initializeStore();
+    }
+    
+    // 获取或创建对应的 chat
+    await chatStore.getChatByBotId(botStore.selectedBot.id);
+    // 跳转到聊天页面
+    router.push('/chat');
 };
 </script>
 

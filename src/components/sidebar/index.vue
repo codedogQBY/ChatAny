@@ -39,24 +39,40 @@ const bottomMenuItem = ref({
 // 切换模式文案
 const changeThemeText = ref('切换到暗黑模式');
 
-const handleMenuItemClick = (item: MenuItem) => {
+// 根据当前路由更新激活状态
+const updateActiveMenuItem = (path: string) => {
     menuItems.value.forEach((menuItem) => {
-        menuItem.isActive = menuItem.label === item.label;
+        menuItem.isActive = menuItem.href === path;
     });
+};
+
+// 监听路由变化
+watch(
+    () => router.currentRoute.value.path,
+    (newPath) => {
+        updateActiveMenuItem(newPath);
+    }
+);
+
+// 初始化时设置当前路由对应的菜单项为激活状态
+onMounted(() => {
+    updateActiveMenuItem(router.currentRoute.value.path);
+    changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+});
+
+watch(darkMode, (newVal) => {
+    changeThemeText.value = newVal === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+});
+
+const handleMenuItemClick = (item: MenuItem) => {
     router.push(item.href);
+    // 不需要在这里手动更新 isActive，因为路由变化会触发 watch
 };
 
 const changeTheme = () => {
     changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
     setDarkMode(darkMode.value === DARK_MODE.DARK ? DARK_MODE.LIGHT : DARK_MODE.DARK);
 };
-
-onMounted(() => {
-    changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
-});
-watch(darkMode, (newVal) => {
-    changeThemeText.value = newVal === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
-});
 </script>
 
 <template>

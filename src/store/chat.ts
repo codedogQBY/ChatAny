@@ -209,6 +209,41 @@ export const useChatStore = defineStore('chat', () => {
         }
     };
 
+    // 通过 botId 获取或创建 chat
+    const getChatByBotId = async (botId: string) => {
+        // 先查找是否已存在
+        const existingChat = chats.value.find(chat => chat.botId === botId);
+        if (existingChat) {
+            await selectChat(existingChat.id);
+            return existingChat;
+        }
+
+        // 不存在则创建新的
+        const bot = botStore.sections
+            .flatMap(section => section.bots)
+            .find(bot => bot.id === botId);
+        
+        if (!bot) throw new Error('Bot not found');
+
+        const chatId = uuidv4();
+        const newChat: Chat = {
+            id: chatId,
+            name: bot.name,
+            botId: bot.id,
+            sessions: [createSession(bot.id, chatId)],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            temperature: 0.7,
+            maxTokens: 2000,
+            topP: 0.9,
+        };
+
+        chats.value.push(newChat);
+        await selectChat(newChat.id);
+        await syncData();
+        return newChat;
+    };
+
     return {
         chats,
         currentChat,
@@ -219,5 +254,7 @@ export const useChatStore = defineStore('chat', () => {
         addMessage,
         updateMessageStatus,
         createSession,
+        getChatByBotId,
+        syncData,
     };
 }); 
