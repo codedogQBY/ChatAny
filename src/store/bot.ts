@@ -66,15 +66,18 @@ export const useBotStore = defineStore('bot', () => {
 
     // 从模型数据生成机器人列表
     function generateBotsFromModels(): BotSection[] {
-        const bots = modelStore.getSuppliers.reduce((bots: BotSection[], supplier) => {
-            const modelGroup = supplier.modelGroup as ModelGroup[];
+        // 强制获取最新的 suppliers 数据
+        const suppliers = useModelStore().getSuppliers;
+        
+        const bots = suppliers.reduce((bots: BotSection[], supplier) => {
+            const modelGroup = supplier.modelGroup;
             for (const group of modelGroup) {
                 for (const model of group.models) {
                     const { name } = model;
                     const letter = getFirstLetter(name);
                     const index = bots.findIndex((b) => b.letter === letter);
                     const bot: Bot = {
-                        id: supplier.name + model.name,
+                        id: supplier.name + model.id,  // 保持这种构造方式
                         name: model.name,
                         description: model?.description || '',
                         prologue: `您好，我是${model.name}，有什么可以帮助您的吗？`,
@@ -242,6 +245,23 @@ export const useBotStore = defineStore('bot', () => {
         await syncData();
     };
 
+    // 更新机器人名称
+    const updateBotName = async (botId: string, newName: string) => {
+        for (const section of sections.value) {
+            const bot = section.bots.find(b => b.id === botId);
+            if (bot) {
+                bot.name = newName;
+                await syncData();
+                break;
+            }
+        }
+    };
+
+    const forceUpdate = async () => {
+        sections.value = generateBotsFromModels();
+        await syncData();
+    };
+
     return {
         sections,
         selectedBot,
@@ -250,5 +270,7 @@ export const useBotStore = defineStore('bot', () => {
         addBot,
         updateBot,
         deleteBot,
+        updateBotName,
+        forceUpdate,
     };
 }); 

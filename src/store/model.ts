@@ -11,6 +11,8 @@ import doubaoLogo from '@/assets/model/logo/doubao.png';
 import xinghuoLogo from '@/assets/model/logo/xinghuo.png';
 import { v4 as uuidV4 } from 'uuid';
 import store from '@/hook/useStore';
+import { useChatStore } from '@/store/chat';
+import { useBotStore } from '@/store/bot';
 
 // 大模型基础数据
 const defaultSuppliers: Supplier[] = [
@@ -268,8 +270,36 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 修改模型技能组
-    const changeModelSkill = async (model: Supplier, group: ModelGroup, skill: Skill) => {
-        // 实现逻辑
+    const changeModelSkill = async (
+        supplier: Supplier,
+        group: ModelGroup,
+        model: Model,
+        skill: Skill
+    ) => {
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
+        if (supplierIndex === -1) return;
+
+        const groupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
+            (item) => item.id === group.id
+        );
+        if (groupIndex === -1) return;
+
+        const modelIndex = suppliers.value[supplierIndex].modelGroup[groupIndex].models.findIndex(
+            (item) => item.id === model.id
+        );
+        if (modelIndex === -1) return;
+
+        const currentModel = suppliers.value[supplierIndex].modelGroup[groupIndex].models[modelIndex];
+        
+        // 如果技能已存在则移除,否则添加
+        if (currentModel.skills.includes(skill)) {
+            currentModel.skills = currentModel.skills.filter(s => s !== skill);
+        } else {
+            currentModel.skills.push(skill);
+        }
+
+        // 强制更新引用以触发响应式
+        suppliers.value = [...suppliers.value];
         await syncData();
     };
 
@@ -333,7 +363,7 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 更新模型名称
-    const updateModelName = (
+    const updateModelName = async (
         model: Supplier,
         modelGroup: ModelGroup,
         Supplier: Model,
@@ -346,8 +376,53 @@ export const useModelStore = defineStore('model', () => {
         const skillIndex = suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.findIndex(
             (item) => item.id === Supplier.id
         );
+        
+        // 更新模型名称
         suppliers.value[modelIndex].modelGroup[modelGroupIndex].models[skillIndex].name = name;
-        syncData();
+        await syncData();
+
+        // 获取 chatStore 和 botStore 实例
+        const chatStore = useChatStore();
+        const botStore = useBotStore();
+
+        // 构造完整的模型ID - 使用与 bot.ts 相同的构造方式
+        const modelId = model.name + Supplier.id;  // 使用 supplier.name 而不是 model.name
+
+        // 更新 chat
+        const affectedChats = chatStore.chats.filter(chat => chat.botId === modelId);
+        for (const chat of affectedChats) {
+            chat.name = name;
+        }
+        
+        if (affectedChats.length > 0) {
+            await chatStore.syncData();
+        }
+
+        // 强制更新 bot store
+        await botStore.forceUpdate();
+
+        // 如果当前选中的是被修改的 bot，更新选中状态
+        if (botStore.selectedBot?.id === modelId) {
+            const updatedBot = botStore.sections
+                .flatMap(section => section.bots)
+                .find(bot => bot.id === modelId);
+            if (updatedBot) {
+                botStore.selectedBot = updatedBot;
+            }
+        }
+    };
+
+    // 更新供应商配置
+    const updateSupplierConfig = async (updatedSupplier: Supplier) => {
+        const index = suppliers.value.findIndex(s => s.name === updatedSupplier.name);
+        if (index !== -1) {
+            suppliers.value[index] = {
+                ...suppliers.value[index],
+                apiKey: updatedSupplier.apiKey,
+                apiUrl: updatedSupplier.apiUrl
+            };
+            await syncData();
+        }
     };
 
     return {
@@ -361,5 +436,6 @@ export const useModelStore = defineStore('model', () => {
         updateModelName,
         removeModelGroup,
         syncData,
+        updateSupplierConfig,
     };
 });

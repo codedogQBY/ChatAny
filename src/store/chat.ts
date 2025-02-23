@@ -236,8 +236,8 @@ export const useChatStore = defineStore('chat', () => {
         const newChat: Chat = {
             id: chatId,
             name: bot.name,
-            botId: bot.id,
-            sessions: [createSession(bot.id, chatId)],
+            botId: botId,
+            sessions: [createSession(botId, chatId)],
             createdAt: Date.now(),
             updatedAt: Date.now(),
             temperature: 0.7,

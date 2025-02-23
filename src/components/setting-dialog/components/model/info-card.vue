@@ -14,7 +14,7 @@
                     </a>
                 </div>
             </Label>
-            <Input id="api-url" v-model="props.model.apiUrl" />
+            <Input id="api-url" v-model="props.model.apiUrl" @change="handleApiUrlChange" />
         </div>
         <div class="space-y-2">
             <Label for="api-key" class="block mb-2 flex justify-start items-center space-x-2">
@@ -38,6 +38,7 @@
                         :type="showApiKey ? 'text' : 'password'"
                         id="api-key"
                         v-model="props.model.apiKey"
+                        @change="handleApiKeyChange"
                     />
                     <span
                         class="absolute end-0 inset-y-0 flex items-center justify-center px-2 cursor-pointer"
@@ -124,7 +125,11 @@
                                                         <Checkbox
                                                             :checked="model.skills.includes(skill)"
                                                             @update:checked="
-                                                                handleChangeSkill(skill, model)
+                                                                handleChangeSkill(
+                                                                    group,
+                                                                    model,
+                                                                    skill
+                                                                )
                                                             "
                                                         >
                                                         </Checkbox>
@@ -157,7 +162,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ModelItem, Model, ModelGroup, Skill } from '@/types';
+import { Supplier, Model, ModelGroup, Skill } from '@/types';
 import {
     GlobeIcon,
     Blocks,
@@ -180,15 +185,16 @@ import { useModelStore } from '@/store/model';
 const {
     changeModelSkill,
     removeModelGroup,
-    addSmallModel,
+    addModel,
     addModelGroup,
     updateModelGroupName,
     updateModelName,
-    removeSmallModel,
+    removeModel,
+    updateSupplierConfig,
 } = useModelStore();
 
 const props = defineProps<{
-    model: ModelItem;
+    model: Supplier;
 }>();
 
 type SkillInfo = {
@@ -220,13 +226,8 @@ const skillInfo: Record<Skill, SkillInfo> = {
     },
 };
 
-const handleChangeSkill = (skill: Skill, model: Model) => {
-    const index = model.skills.indexOf(skill);
-    if (index === -1) {
-        changeModelSkill(model, skill, true);
-    } else {
-        changeModelSkill(model, skill, false);
-    }
+const handleChangeSkill = (group: ModelGroup, model: Model, skill: Skill) => {
+    changeModelSkill(props.model, group, model, skill);
 };
 
 // 展示/隐藏 API 密钥
@@ -236,7 +237,7 @@ const toggleShowApiKey = () => {
 
 // 删除模型
 const handleDeleteModel = (model: Model, group: ModelGroup) => {
-    removeSmallModel(props.model, group, model);
+    removeModel(props.model, group, model);
 };
 
 // 新增模型组
@@ -246,7 +247,7 @@ const handleAddModelGroup = () => {
 
 // 新增模型
 const handleAddModel = (group: ModelGroup) => {
-    addSmallModel(props.model, group);
+    addModel(props.model, group);
 };
 
 // 删除模型组
@@ -262,5 +263,15 @@ const handleUpdateModelGroupName = (groupName: string, group: ModelGroup) => {
 // 更新模型名称
 const handleUpdateModelName = (name: string, group: ModelGroup, model: Model) => {
     updateModelName(props.model, group, model, name);
+};
+
+// 处理API地址变更
+const handleApiUrlChange = () => {
+    updateSupplierConfig(props.model);
+};
+
+// 处理API密钥变更
+const handleApiKeyChange = () => {
+    updateSupplierConfig(props.model);
 };
 </script>
