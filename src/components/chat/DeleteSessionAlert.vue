@@ -12,6 +12,8 @@ import {
 
 const props = defineProps<{
     open: boolean;
+    title?: string;
+    description?: string;
 }>();
 
 const emit = defineEmits<{
@@ -22,16 +24,21 @@ const emit = defineEmits<{
 
 <template>
     <AlertDialog :open="open" @update:open="(v) => emit('update:open', v)">
-        <AlertDialogContent>
+        <AlertDialogContent class="w-[400px]">
             <AlertDialogHeader>
-                <AlertDialogTitle>删除会话</AlertDialogTitle>
+                <AlertDialogTitle>{{ title || '删除会话' }}</AlertDialogTitle>
                 <AlertDialogDescription>
-                    确定要删除这个会话吗？此操作不可恢复。
+                    {{ description || '确定要删除这个会话吗？此操作不可恢复。' }}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>取消</AlertDialogCancel>
-                <AlertDialogAction @click="emit('confirm')">删除</AlertDialogAction>
+                <AlertDialogAction 
+                    class="bg-destructive hover:bg-destructive/90"
+                    @click="emit('confirm')"
+                >
+                    确定
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

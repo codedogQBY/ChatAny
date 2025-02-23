@@ -172,12 +172,12 @@
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        @click="confirmClearHistory"
+                                        @click="confirmDeleteSession"
                                     >
                                         <TrashIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>清空历史</TooltipContent>
+                                <TooltipContent>删除当前会话</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                         <TooltipProvider>
@@ -285,6 +285,14 @@
             :top-p="chat.topP"
             @save="handleUpdateSettings"
         />
+
+        <!-- 添加删除确认对话框 -->
+        <DeleteSessionAlert 
+            v-model:open="showClearConfirm"
+            title="删除当前会话"
+            description="确定要删除当前会话吗？此操作将删除所有聊天记录且不可恢复。"
+            @confirm="handleClearConfirm"
+        />
     </div>
 </template>
 
@@ -316,6 +324,7 @@ import SessionSelector from '@/components/chat/SessionSelector.vue';
 import ChatHistory from '@/components/chat/ChatHistory.vue';
 import { Session, useChatStore } from '@/store/chat';
 import ChatSettings from '@/components/chat/ChatSettings.vue';
+import DeleteSessionAlert from '@/components/chat/DeleteSessionAlert.vue';
 
 interface Message {
     id: string | number;
@@ -383,6 +392,7 @@ const { toast } = useToast();
 // 是否聚焦输入框
 const isFocus = ref(false);
 const showSettings = ref(false);
+const showClearConfirm = ref(false);
 
 // 初始化设置值
 const defaultSettings = {
@@ -446,9 +456,28 @@ const viewLastImage = () => {
     });
 };
 
-const confirmClearHistory = () => {
-    if (confirm('确定要清空聊天记录吗？')) {
-        emit('clear-history');
+const confirmDeleteSession = () => {
+    showClearConfirm.value = true;
+};
+
+const handleClearConfirm = async () => {
+    if (!props.currentSession) return;
+    
+    try {
+        // 删除当前会话
+        await chatStore.deleteSession(props.currentSession.id);
+        showClearConfirm.value = false;
+        
+        toast({
+            description: "会话已删除",
+            duration: 2000,
+        });
+    } catch (error) {
+        toast({
+            description: "会话删除失败，请稍后重试",
+            variant: "destructive",
+            duration: 2000,
+        });
     }
 };
 
