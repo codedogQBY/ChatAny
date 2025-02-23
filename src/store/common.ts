@@ -8,6 +8,7 @@ interface CommonState {
     darkMode: DARK_MODE;
     themeColor: ThemeEnum;
     sessionMode: SessionModeEnum;
+    followSystem: boolean;
 }
 
 const defaultState: CommonState = {
@@ -15,6 +16,7 @@ const defaultState: CommonState = {
     darkMode: DARK_MODE.LIGHT,
     themeColor: ThemeEnum.GREEN,
     sessionMode: SessionModeEnum.LEFT,
+    followSystem: false,
 };
 
 export const useCommonStore = defineStore('common', () => {
@@ -22,11 +24,13 @@ export const useCommonStore = defineStore('common', () => {
     const darkMode = ref<DARK_MODE>(defaultState.darkMode);
     const themeColor = ref<ThemeEnum>(defaultState.themeColor);
     const sessionMode = ref<SessionModeEnum>(defaultState.sessionMode);
+    const followSystem = ref<boolean>(defaultState.followSystem);
 
     const getLanguage = computed(() => language.value);
     const getDarkMode = computed(() => darkMode.value);
     const getThemeColor = computed(() => themeColor.value);
     const getSessionMode = computed(() => sessionMode.value);
+    const getFollowSystem = computed(() => followSystem.value);
 
     // 同步数据到本地存储
     const syncData = async () => {
@@ -35,6 +39,7 @@ export const useCommonStore = defineStore('common', () => {
             darkMode: darkMode.value,
             themeColor: themeColor.value,
             sessionMode: sessionMode.value,
+            followSystem: followSystem.value,
         });
     };
 
@@ -46,11 +51,13 @@ export const useCommonStore = defineStore('common', () => {
             darkMode.value = savedState.darkMode;
             themeColor.value = savedState.themeColor;
             sessionMode.value = savedState.sessionMode;
+            followSystem.value = savedState.followSystem;
         } else {
             language.value = defaultState.language;
             darkMode.value = defaultState.darkMode;
             themeColor.value = defaultState.themeColor;
             sessionMode.value = defaultState.sessionMode;
+            followSystem.value = defaultState.followSystem;
             await syncData();
         }
         
@@ -92,15 +99,22 @@ export const useCommonStore = defineStore('common', () => {
         await syncData();
     };
 
+    const setFollowSystem = async (val: boolean) => {
+        followSystem.value = val;
+        await syncData();
+    };
+
     return {
         getLanguage,
         getDarkMode,
         getThemeColor,
         getSessionMode,
+        getFollowSystem,
         setLanguage,
         setDarkMode,
         setThemeColor,
         setSessionMode,
+        setFollowSystem,
         initializeStore,
     };
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import SettingDialog from '@/components/setting-dialog/index.vue';
 import { Settings, UserRound, MoonStar, Sun } from 'lucide-vue-next';
@@ -7,10 +7,14 @@ import { routes } from '@/router';
 import { useRouter } from 'vue-router';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { DARK_MODE } from '@/types';
+import { useCommonStore } from '@/store/common';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 const router = useRouter();
+const { toast } = useToast();
 
 const { darkMode, setDarkMode } = useLightDarkSwitch();
+const commonStore = useCommonStore();
 
 type MenuItem = {
     icon: unknown;
@@ -58,6 +62,12 @@ watch(
 onMounted(() => {
     updateActiveMenuItem(router.currentRoute.value.path);
     changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
+
+    if (commonStore.getFollowSystem) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        handleSystemThemeChange(mediaQuery);
+        mediaQuery.addEventListener('change', handleSystemThemeChange);
+    }
 });
 
 watch(darkMode, (newVal) => {
@@ -70,9 +80,31 @@ const handleMenuItemClick = (item: MenuItem) => {
 };
 
 const changeTheme = () => {
-    changeThemeText.value = darkMode.value === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
-    setDarkMode(darkMode.value === DARK_MODE.DARK ? DARK_MODE.LIGHT : DARK_MODE.DARK);
+    if (commonStore.getFollowSystem) {
+        toast({
+            description: "当前为跟随系统模式，请在设置中关闭后再手动切换",
+            duration: 2000,
+        });
+        return;
+    }
+    
+    const newMode = darkMode.value === DARK_MODE.DARK ? DARK_MODE.LIGHT : DARK_MODE.DARK;
+    setDarkMode(newMode);
+    changeThemeText.value = newMode === DARK_MODE.DARK ? '切换到明亮模式' : '切换到暗黑模式';
 };
+
+const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
+    if (!commonStore.getFollowSystem) return;
+    const isDark = e.matches;
+    setDarkMode(isDark ? DARK_MODE.DARK : DARK_MODE.LIGHT);
+    changeThemeText.value = isDark ? '切换到明亮模式' : '切换到暗黑模式';
+};
+
+onUnmounted(() => {
+    if (commonStore.getFollowSystem) {
+        window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', handleSystemThemeChange);
+    }
+});
 </script>
 
 <template>
@@ -113,17 +145,20 @@ const changeTheme = () => {
                 <Tooltip>
                     <TooltipTrigger as-child>
                         <a
-                            href="javascript:void(0)"
-                            class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                            :class="[
+                                'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
+                                commonStore.getFollowSystem 
+                                    ? 'text-muted-foreground cursor-not-allowed' 
+                                    : 'text-muted-foreground hover:text-foreground cursor-pointer'
+                            ]"
                             @click="changeTheme"
                         >
                             <MoonStar v-if="darkMode === DARK_MODE.DARK" class="h-5 w-5" />
                             <Sun class="h-5 w-5" v-else />
-                            <span class="sr-only">{{ bottomMenuItem.label }}</span>
                         </a>
                     </TooltipTrigger>
                     <TooltipContent side="right">
-                        {{ changeThemeText }}
+                        {{ commonStore.getFollowSystem ? '跟随系统模式已开启' : changeThemeText }}
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
