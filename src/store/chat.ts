@@ -245,7 +245,7 @@ export const useChatStore = defineStore('chat', () => {
         const newChat: Chat = {
             id: chatId,
             name: bot.name,
-            botId: bot.id,  // 使用机器人的 ID
+            botId: bot.id, // 使用机器人的 ID
             sessions: [createSession(bot.id, chatId)],
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -254,9 +254,9 @@ export const useChatStore = defineStore('chat', () => {
             topP: 0.9,
             avatar: bot.avatar,
             isDefault: bot.isDefault,
-            modelId: bot.model?.supplierId 
-                ? bot.model.supplierId + bot.model.modelId  // 如果有指定模型，使用指定的模型
-                : undefined  // 否则等待用户选择
+            modelId: bot.model?.supplierId
+                ? bot.model.supplierId + bot.model.modelId // 如果有指定模型，使用指定的模型
+                : undefined, // 否则等待用户选择
         };
 
         chats.value.push(newChat);
@@ -269,7 +269,6 @@ export const useChatStore = defineStore('chat', () => {
     const updateChatSettings = async (
         chatId: string,
         settings: {
-            name: string;
             temperature: number;
             maxTokens: number;
             topP: number;
@@ -278,7 +277,6 @@ export const useChatStore = defineStore('chat', () => {
         const chat = chats.value.find((c) => c.id === chatId);
         if (!chat) return;
 
-        chat.name = settings.name;
         chat.temperature = settings.temperature;
         chat.maxTokens = settings.maxTokens;
         chat.topP = settings.topP;
@@ -291,9 +289,9 @@ export const useChatStore = defineStore('chat', () => {
     const renameSession = async (sessionId: string, title: string) => {
         // 先确保有当前聊天
         if (!currentChat.value) return;
-        
+
         // 在当前聊天中查找会话
-        const session = currentChat.value.sessions.find(s => s.id === sessionId);
+        const session = currentChat.value.sessions.find((s) => s.id === sessionId);
         if (!session) return;
 
         session.title = title;
@@ -307,16 +305,17 @@ export const useChatStore = defineStore('chat', () => {
     const deleteSession = async (sessionId: string) => {
         // 先确保有当前聊天
         if (!currentChat.value) return;
-        
+
         // 在当前聊天中查找会话
-        const index = currentChat.value.sessions.findIndex(s => s.id === sessionId);
+        const index = currentChat.value.sessions.findIndex((s) => s.id === sessionId);
         if (index === -1) return;
 
         // 如果删除的是当前会话，先切换到其他会话
         if (currentSession.value?.id === sessionId) {
             // 如果还有其他会话，切换到最新的一个
             if (currentChat.value.sessions.length > 1) {
-                const newIndex = index === currentChat.value.sessions.length - 1 ? index - 1 : index + 1;
+                const newIndex =
+                    index === currentChat.value.sessions.length - 1 ? index - 1 : index + 1;
                 currentSession.value = currentChat.value.sessions[newIndex];
             } else {
                 currentSession.value = null;
@@ -344,23 +343,23 @@ export const useChatStore = defineStore('chat', () => {
             currentChat.value = null;
             currentSession.value = null;
         }
-        
+
         // 过滤掉要删除的聊天
-        chats.value = chats.value.filter(chat => chat.botId !== botId);
+        chats.value = chats.value.filter((chat) => chat.botId !== botId);
         await syncData();
     };
 
     const clearSessionMessages = async (sessionId: string) => {
         // 先确保有当前聊天
         if (!currentChat.value) return;
-        
+
         // 在当前聊天中查找会话
-        const session = currentChat.value.sessions.find(s => s.id === sessionId);
+        const session = currentChat.value.sessions.find((s) => s.id === sessionId);
         if (!session) return;
 
         // 清空当前聊天的消息
         currentChat.value.messages = [];
-        
+
         // 更新时间戳
         session.updatedAt = Date.now();
         currentChat.value.updatedAt = Date.now();
@@ -378,11 +377,11 @@ export const useChatStore = defineStore('chat', () => {
 
     // 更新聊天的模型
     const updateChatModel = async (chatId: string, modelId: string) => {
-        const chat = chats.value.find(c => c.id === chatId);
+        const chat = chats.value.find((c) => c.id === chatId);
         if (!chat) return;
 
         // 只更新 chat 的模型设置，不改变 botId
-        chat.modelId = modelId;  // 需要在 Chat 类型中添加 modelId 字段
+        chat.modelId = modelId; // 需要在 Chat 类型中添加 modelId 字段
         chat.updatedAt = Date.now();
 
         // 更新当前会话

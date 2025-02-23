@@ -17,7 +17,6 @@ import { useChatStore } from '@/store/chat';
 const props = defineProps<{
     open: boolean;
     chatId: string;
-    name: string;
     temperature: number;
     maxTokens: number;
     topP: number;
@@ -25,46 +24,39 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
-    (e: 'save', settings: {
-        name: string;
-        temperature: number;
-        maxTokens: number;
-        topP: number;
-    }): void;
 }>();
 
 const { toast } = useToast();
 const chatStore = useChatStore();
 
 const settings = ref({
-    name: props.name,
-    temperature: props.temperature,
-    maxTokens: props.maxTokens,
-    topP: props.topP,
+    temperature: [props.temperature],
+    maxTokens: [props.maxTokens],
+    topP: [props.topP],
 });
 
-watch(() => props.open, (newValue) => {
-    if (newValue) {
-        settings.value = {
-            name: props.name,
-            temperature: props.temperature,
-            maxTokens: props.maxTokens,
-            topP: props.topP,
-        };
+watch(
+    () => props.open,
+    (newValue) => {
+        if (newValue) {
+            settings.value = {
+                temperature: [props.temperature],
+                maxTokens: [props.maxTokens],
+                topP: [props.topP],
+            };
+        }
     }
-});
+);
 
 const saveSettings = () => {
     // 确保值在有效范围内
     const validatedSettings = {
-        name: settings.value.name,
-        temperature: Math.min(Math.max(settings.value.temperature, 0), 2),
-        maxTokens: Math.min(Math.max(settings.value.maxTokens, 100), 4000),
-        topP: Math.min(Math.max(settings.value.topP, 0), 1),
+        temperature: Math.min(Math.max(settings.value.temperature[0], 0), 2),
+        maxTokens: Math.min(Math.max(settings.value.maxTokens[0], 100), 4000),
+        topP: Math.min(Math.max(settings.value.topP[0], 0), 1),
     };
 
     chatStore.updateChatSettings(props.chatId, validatedSettings);
-    emit('save', validatedSettings);
     emit('update:open', false);
     toast({
         description: '设置已保存',
@@ -82,14 +74,10 @@ const saveSettings = () => {
             <div class="grid gap-4 py-4">
                 <div class="space-y-6">
                     <div class="space-y-2">
-                        <Label>名称</Label>
-                        <Input v-model="settings.name" placeholder="聊天名称" />
-                    </div>
-                    <div class="space-y-2">
                         <div class="flex justify-between items-center">
                             <Label>Temperature</Label>
                             <span class="text-sm text-muted-foreground w-12 text-right">
-                                {{ settings.temperature.toFixed(1) }}
+                                {{ settings.temperature[0].toFixed(1) }}
                             </span>
                         </div>
                         <Slider
@@ -107,14 +95,14 @@ const saveSettings = () => {
                         <div class="flex justify-between items-center">
                             <Label>Max Tokens</Label>
                             <span class="text-sm text-muted-foreground w-12 text-right">
-                                {{ settings.maxTokens }}
+                                {{ settings.maxTokens[0] }}
                             </span>
                         </div>
                         <Slider
                             v-model="settings.maxTokens"
-                            :min="100"
-                            :max="4000"
-                            :step="100"
+                            :min="128"
+                            :max="8092"
+                            :step="128"
                             class="w-full"
                         />
                         <p class="text-xs text-muted-foreground">生成文本的最大长度</p>
@@ -123,7 +111,7 @@ const saveSettings = () => {
                         <div class="flex justify-between items-center">
                             <Label>Top P</Label>
                             <span class="text-sm text-muted-foreground w-12 text-right">
-                                {{ settings.topP.toFixed(2) }}
+                                {{ settings.topP[0].toFixed(2) }}
                             </span>
                         </div>
                         <Slider
@@ -143,4 +131,4 @@ const saveSettings = () => {
             </DialogFooter>
         </DialogContent>
     </Dialog>
-</template> 
+</template>

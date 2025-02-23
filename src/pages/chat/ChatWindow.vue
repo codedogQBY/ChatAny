@@ -309,11 +309,9 @@
         <ChatSettings
             v-model:open="showSettings"
             :chat-id="chat.id"
-            :name="chat.name"
             :temperature="chat.temperature"
             :max-tokens="chat.maxTokens"
             :top-p="chat.topP"
-            @save="handleUpdateSettings"
         />
 
         <!-- 添加删除确认对话框 -->
@@ -647,21 +645,6 @@ const handleClearSession = () => {
             duration: 1000,
         });
     }
-};
-
-const handleUpdateSettings = (settings: {
-    name: string;
-    temperature: number;
-    maxTokens: number;
-    topP: number;
-}) => {
-    chatStore.updateChatSettings(props.chat.id, settings);
-    emit('update-settings', settings);
-    showSettings.value = false;
-    toast({
-        description: '设置已保存',
-        duration: 1000,
-    });
 };
 
 const updateMessageStatus = (messageId: string | number, status: string) => {
