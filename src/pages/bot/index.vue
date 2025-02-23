@@ -236,7 +236,7 @@
         v-model:show="showCreateDialog"
         @submit="handleCreateBot"
     />
-    
+
     <BotDialog
         v-if="editingBot"
         v-model:show="showEditDialog"
@@ -352,12 +352,12 @@ const handleUpdateBot = async (updates: Partial<Bot>) => {
 
 const startChat = async () => {
     if (!botStore.selectedBot) return;
-    
+
     // 确保 chatStore 已初始化
     if (chatStore.chats.length === 0) {
         await chatStore.initializeStore();
     }
-    
+
     // 获取或创建对应的 chat
     await chatStore.getChatByBotId(botStore.selectedBot.id);
     // 跳转到聊天页面
@@ -372,11 +372,11 @@ const handleDeleteBot = (bot: Bot, event: Event) => {
 
 const confirmDeleteBot = async () => {
     if (!botToDelete.value) return;
-    
+
     try {
         await chatStore.deleteChatsByBotId(botToDelete.value.id);
         await botStore.deleteBot(botToDelete.value.id);
-        
+
         toast({
             description: '机器人已删除',
             duration: 1000,
@@ -389,7 +389,7 @@ const confirmDeleteBot = async () => {
             duration: 2000,
         });
     }
-    
+
     showDeleteDialog.value = false;
 };
 

@@ -49,11 +49,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 全局通知 -->
-        <div class="fixed top-4 right-4 z-50">
-            <Toaster />
-        </div>
     </div>
 </template>
 
@@ -97,22 +92,25 @@ const currentChatData = computed(() => {
     if (!chatStore.currentChat || !chatStore.currentSession) return null;
 
     const bot = botStore.sections
-        .flatMap(section => section.bots)
-        .find(bot => bot.id === chatStore.currentChat?.botId);
+        .flatMap((section) => section.bots)
+        .find((bot) => bot.id === chatStore.currentChat?.botId);
 
     return {
         id: chatStore.currentChat.id,
         name: chatStore.currentChat.name,
         avatar: bot?.avatar,
         sessions: chatStore.currentChat.sessions,
-        messages: chatStore.currentSession.messages.map(msg => ({
+        messages: chatStore.currentSession.messages.map((msg) => ({
             id: msg.id,
             content: msg.content,
-            sender: msg.sender === 'user' ? currentUser : {
-                id: 'bot',
-                name: chatStore.currentChat.name,
-                avatar: bot?.avatar || '/placeholder.svg?height=40&width=40',
-            },
+            sender:
+                msg.sender === 'user'
+                    ? currentUser
+                    : {
+                          id: 'bot',
+                          name: chatStore.currentChat.name,
+                          avatar: bot?.avatar || '/placeholder.svg?height=40&width=40',
+                      },
             timestamp: new Date(msg.createdAt),
             isNew: msg.sender === 'bot' && msg.status === 'pending',
         })),
@@ -197,7 +195,7 @@ const handleSessionSelect = async (sessionId: string) => {
 
 const handleCreateSession = async () => {
     if (!chatStore.currentChat) return;
-    
+
     // 创建新会话
     const newSession = await chatStore.createSession(
         chatStore.currentChat.botId,
@@ -207,10 +205,10 @@ const handleCreateSession = async () => {
 
     // 添加到当前聊天的会话列表
     chatStore.currentChat.sessions.push(newSession);
-    
+
     // 选择新会话
     await chatStore.selectSession(newSession.id);
-    
+
     // 同步数据
     await chatStore.syncData();
 
@@ -228,7 +226,7 @@ const handleUpdateSettings = async (settings: {
     topP: number;
 }) => {
     if (!chatStore.currentChat) return;
-    
+
     await chatStore.updateChatSettings(chatStore.currentChat.id, settings);
     toast({
         description: '设置已更新',

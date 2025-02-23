@@ -7,6 +7,7 @@ import { useCommonStore } from './store/common';
 import { useBotStore } from './store/bot';
 import { useUsageStore } from './store/usage';
 import { useChatStore } from './store/chat';
+import Toaster from './components/ui/toast/Toaster.vue';
 
 const modelStore = useModelStore();
 const commonStore = useCommonStore();
@@ -33,6 +34,10 @@ onMounted(async () => {
                 <RouterView />
             </KeepAlive>
         </div>
+    </div>
+    <!-- 全局通知 -->
+    <div class="fixed top-4 right-4 z-50">
+        <Toaster />
     </div>
 </template>
 
