@@ -52,13 +52,15 @@
                                     <div
                                         v-for="bot in section.bots"
                                         :key="bot.id"
-                                        @click="botStore.selectBot(bot)"
+                                        class="relative flex items-center p-3 cursor-pointer rounded-lg transition-all duration-300"
                                         :class="[
-                                            'flex items-center p-3 cursor-pointer rounded-lg transition-all duration-300',
                                             botStore.selectedBot?.id === bot.id
                                                 ? 'bg-primary/20 shadow-lg scale-105'
                                                 : 'hover:bg-primary/10',
                                         ]"
+                                        @click="botStore.selectBot(bot)"
+                                        @mouseenter="handleBotMouseEnter(bot.id)"
+                                        @mouseleave="handleBotMouseLeave"
                                     >
                                         <div class="relative mr-2">
                                             <div
@@ -82,6 +84,18 @@
                                             <div class="text-sm text-muted-foreground truncate">
                                                 {{ bot.description }}
                                             </div>
+                                        </div>
+                                        <div class="flex items-center ml-2">
+                                            <Button
+                                                v-if="!bot.isDefault"
+                                                variant="ghost"
+                                                size="icon-xs"
+                                                class="opacity-0 transition-opacity"
+                                                :class="{'opacity-100': hoveredBotId === bot.id}"
+                                                @click.stop="handleDeleteBot(bot, $event)"
+                                            >
+                                                <TrashIcon class="h-3 w-3 text-destructive/70 hover:text-destructive" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </TransitionGroup>
@@ -229,11 +243,26 @@
         :bot="editingBot"
         @submit="handleUpdateBot"
     />
+
+    <Dialog v-model:open="showDeleteDialog">
+        <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>删除机器人</DialogTitle>
+                <DialogDescription>
+                    确定要删除 "{{ botToDelete?.name }}" 吗？此操作将同时删除与该机器人相关的所有聊天记录，且不可恢复。
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" @click="showDeleteDialog = false">取消</Button>
+                <Button variant="destructive" @click="confirmDeleteBot">删除</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon, Settings2Icon } from 'lucide-vue-next';
+import { onMounted, ref, watch, nextTick } from 'vue';
+import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon, Settings2Icon, TrashIcon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UsageChart from './UsageChart.vue';
@@ -243,20 +272,63 @@ import BotDialog from '@/components/bot/BotDialog.vue';
 import type { Bot } from '@/store/bot';
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/store/chat';
+import { useToast } from '@/components/ui/toast/use-toast';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 
 const botStore = useBotStore();
 const usageStore = useUsageStore();
 const router = useRouter();
 const chatStore = useChatStore();
+const { toast } = useToast();
 
 const showCreateDialog = ref(false);
 const showEditDialog = ref(false);
 const editingBot = ref<Bot | null>(null);
+const showDeleteDialog = ref(false);
+const botToDelete = ref<any>(null);
+const hoveredBotId = ref<string | null>(null);
 
 onMounted(async () => {
     await botStore.initializeStore();
     await usageStore.initializeStore();
     await chatStore.initializeStore();
+});
+
+// 监听创建对话框的关闭
+watch(showCreateDialog, (newValue) => {
+    if (!newValue) {
+        // 创建对话框关闭时，清空相关数据
+        nextTick(() => {
+            editingBot.value = null;
+        });
+    }
+});
+
+// 监听编辑对话框的关闭
+watch(showEditDialog, (newValue) => {
+    if (!newValue) {
+        // 编辑对话框关闭时，清空相关数据
+        nextTick(() => {
+            editingBot.value = null;
+        });
+    }
+});
+
+// 监听删除对话框的关闭
+watch(showDeleteDialog, (newValue) => {
+    if (!newValue) {
+        // 删除对话框关闭时，清空相关数据
+        nextTick(() => {
+            botToDelete.value = null;
+        });
+    }
 });
 
 const handleCreateBot = async (botData: Omit<Bot, 'id' | 'isDefault'>) => {
@@ -290,6 +362,43 @@ const startChat = async () => {
     await chatStore.getChatByBotId(botStore.selectedBot.id);
     // 跳转到聊天页面
     router.push('/chat');
+};
+
+const handleDeleteBot = (bot: Bot, event: Event) => {
+    event.stopPropagation();
+    botToDelete.value = bot;
+    showDeleteDialog.value = true;
+};
+
+const confirmDeleteBot = async () => {
+    if (!botToDelete.value) return;
+    
+    try {
+        await chatStore.deleteChatsByBotId(botToDelete.value.id);
+        await botStore.deleteBot(botToDelete.value.id);
+        
+        toast({
+            description: '机器人已删除',
+            duration: 1000,
+        });
+    } catch (error) {
+        console.error('删除机器人失败:', error);
+        toast({
+            description: '删除失败',
+            variant: 'destructive',
+            duration: 2000,
+        });
+    }
+    
+    showDeleteDialog.value = false;
+};
+
+const handleBotMouseEnter = (botId: string) => {
+    hoveredBotId.value = botId;
+};
+
+const handleBotMouseLeave = () => {
+    hoveredBotId.value = null;
 };
 </script>
 

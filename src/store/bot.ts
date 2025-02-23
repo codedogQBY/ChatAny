@@ -202,6 +202,46 @@ export const useBotStore = defineStore('bot', () => {
         return updatedBot;
     };
 
+    // 删除机器人
+    const deleteBot = async (botId: string) => {
+        // 先备份当前的自定义机器人
+        const customBots = sections.value.flatMap(section => 
+            section.bots.filter(bot => !bot.isDefault)
+        );
+        
+        // 重新生成包含默认机器人的列表
+        sections.value = generateBotsFromModels();
+        
+        // 将未被删除的自定义机器人添加回去
+        customBots.forEach(bot => {
+            if (bot.id !== botId) {
+                const letter = getFirstLetter(bot.name);
+                const sectionIndex = sections.value.findIndex(s => s.letter === letter);
+                if (sectionIndex === -1) {
+                    sections.value.push({ letter, bots: [bot] });
+                } else {
+                    sections.value[sectionIndex].bots.push(bot);
+                }
+            }
+        });
+        
+        // 删除空的分组
+        sections.value = sections.value.filter(section => section.bots.length > 0);
+        
+        // 重新排序
+        sections.value = sortSections(sections.value);
+        
+        // 如果当前选中的机器人被删除了，选择第一个可用的机器人
+        if (selectedBot.value?.id === botId) {
+            const firstBot = sections.value[0]?.bots[0];
+            if (firstBot) {
+                selectedBot.value = firstBot;
+            }
+        }
+        
+        await syncData();
+    };
+
     return {
         sections,
         selectedBot,
@@ -209,5 +249,6 @@ export const useBotStore = defineStore('bot', () => {
         initializeStore,
         addBot,
         updateBot,
+        deleteBot,
     };
 }); 

@@ -323,6 +323,19 @@ export const useChatStore = defineStore('chat', () => {
         await syncData();
     };
 
+    // 删除指定 botId 的所有聊天
+    const deleteChatsByBotId = async (botId: string) => {
+        // 如果当前聊天属于要删除的机器人，先清空当前聊天
+        if (currentChat.value?.botId === botId) {
+            currentChat.value = null;
+            currentSession.value = null;
+        }
+        
+        // 过滤掉要删除的聊天
+        chats.value = chats.value.filter(chat => chat.botId !== botId);
+        await syncData();
+    };
+
     return {
         chats,
         currentChat,
@@ -338,5 +351,6 @@ export const useChatStore = defineStore('chat', () => {
         updateChatSettings,
         renameSession,
         deleteSession,
+        deleteChatsByBotId,
     };
 });
