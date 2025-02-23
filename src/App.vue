@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import Sidebar from '@/components/sidebar/index.vue';
 import { RouterView } from 'vue-router';
+import { onMounted } from 'vue';
+import { useModelStore } from './store/model';
+import { useCommonStore } from './store/common';
+
+const modelStore = useModelStore();
+const commonStore = useCommonStore();
+
+onMounted(async () => {
+    await commonStore.initializeStore();
+    await modelStore.initializeStore();
+});
 </script>
 
 <template>

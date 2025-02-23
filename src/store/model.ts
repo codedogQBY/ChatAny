@@ -9,8 +9,8 @@ import kimiLogo from '@/assets/model/logo/kimi.png';
 import zhipuLogo from '@/assets/model/logo/zhipu.png';
 import doubaoLogo from '@/assets/model/logo/doubao.png';
 import xinghuoLogo from '@/assets/model/logo/xinghuo.png';
-import useStore from '@/hook/useStore';
 import { v4 as uuidV4 } from 'uuid';
+import store from '@/hook/useStore';
 
 // 大模型基础数据
 const defaultSuppliers: Supplier[] = [
@@ -247,27 +247,34 @@ const defaultSuppliers: Supplier[] = [
 ];
 
 export const useModelStore = defineStore('model', () => {
-    const { setStoreData, getStoreData, hasStoreData } = useStore();
-    if (!hasStoreData('supplier')) {
-        setStoreData('supplier', defaultSuppliers);
-    }
-
-    const storeData: Supplier[] = getStoreData('supplier');
-
-    const suppliers = ref<Supplier[]>(storeData);
+    const suppliers = ref<Supplier[]>(defaultSuppliers);
 
     const getSuppliers = computed<Supplier[]>(() => suppliers.value);
 
     // 同步数据到本地存储
-    const syncData = () => {
-        setStoreData('model', suppliers.value);
+    const syncData = async () => {
+        await store.set('suppliers', suppliers.value);
+    };
+
+    // 初始化数据
+    const initializeStore = async () => {
+        const savedSuppliers = await store.get<Supplier[]>('suppliers');
+        if (savedSuppliers) {
+            suppliers.value = savedSuppliers;
+        } else {
+            suppliers.value = defaultSuppliers;
+            await syncData();
+        }
     };
 
     // 修改模型技能组
-    const changeModelSkill = (model: Supplier, group: ModelGroup, skill: Skill) => {};
+    const changeModelSkill = async (model: Supplier, group: ModelGroup, skill: Skill) => {
+        // 实现逻辑
+        await syncData();
+    };
 
     // 删除模型组中的模型
-    const removeModel = (model: Supplier, modelGroup: ModelGroup, Supplier: Model) => {
+    const removeModel = async (model: Supplier, modelGroup: ModelGroup, Supplier: Model) => {
         const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
         const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
@@ -276,7 +283,7 @@ export const useModelStore = defineStore('model', () => {
             modelGroupIndex
         ].models.findIndex((item) => item.id === Supplier.id);
         suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.splice(smallModelIndex, 1);
-        syncData();
+        await syncData();
     };
 
     // 新增模型组中的小模型
@@ -289,7 +296,6 @@ export const useModelStore = defineStore('model', () => {
             id: uuidV4(),
             name: '新模型',
             skills: [],
-
             description: '',
         });
         syncData();
@@ -347,11 +353,13 @@ export const useModelStore = defineStore('model', () => {
     return {
         getSuppliers,
         changeModelSkill,
-        removeModelGroup,
+        removeModel,
+        initializeStore,
         addModel,
         addModelGroup,
         updateModelGroupName,
         updateModelName,
-        removeModel,
+        removeModelGroup,
+        syncData,
     };
 });
