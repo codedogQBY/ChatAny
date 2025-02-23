@@ -292,17 +292,11 @@ import {
 } from 'lucide-vue-next';
 import TypewriterText from './TypewriterText.vue';
 
-interface User {
-    id: number;
-    name: string;
-    avatar: string;
-}
-
 interface Message {
-    id: number;
+    id: string | number;
     content: string;
     sender: {
-        id: number;
+        id: string;
         name: string;
         avatar: string;
     };
@@ -311,7 +305,7 @@ interface Message {
 }
 
 interface Chat {
-    id: number;
+    id: string;
     name: string;
     avatar?: string;
     messages: Message[];
@@ -319,7 +313,11 @@ interface Chat {
 
 const props = defineProps<{
     chat: Chat;
-    user: User;
+    user: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
     quotedMessage: Message | null;
 }>();
 

@@ -3,8 +3,8 @@
         <!-- 左侧聊天列表 -->
         <div class="w-64 flex-shrink-0">
             <ChatSidebar
-                :chats="chats"
-                :selectedChatId="selectedChat?.id"
+                :chats="chatStore.chats"
+                :selectedChatId="chatStore.currentChat?.id"
                 @select-chat="selectChat"
             />
         </div>
@@ -12,9 +12,9 @@
         <!-- 右侧聊天区域 -->
         <div class="flex-1 flex flex-col relative overflow-hidden">
             <ChatWindow
-                v-if="selectedChat"
-                :key="selectedChat.id"
-                :chat="selectedChat"
+                v-if="chatStore.currentChat && chatStore.currentSession"
+                :key="chatStore.currentChat.id"
+                :chat="currentChatData"
                 :user="currentUser"
                 :quotedMessage="quotedMessage"
                 @send-message="sendMessage"
@@ -54,80 +54,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed } from 'vue';
+import { useChatStore, type Message } from '@/store/chat';
+import { useBotStore } from '@/store/bot';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
 
-interface User {
-    name: string;
-    avatar: string;
-}
+const chatStore = useChatStore();
+const botStore = useBotStore();
+const { toast } = useToast();
 
-interface Message {
-    id: number;
-    content: string;
-    sender: User;
-    timestamp: Date;
-    isNew?: boolean;
-}
-
-interface Chat {
-    id: number;
-    name: string;
-    avatar?: string;
-    messages: Message[];
-    model: string;
-    temperature: number;
-    maxTokens: number;
-}
-
-const currentUser: User = {
+const currentUser = {
+    id: 'user',
     name: 'User',
     avatar: '/placeholder.svg?height=40&width=40',
 };
 
-const chats = ref<Chat[]>([]);
-const selectedChat = ref<Chat | null>(null);
-const quotedMessage = ref<Message | null>(null);
-const { toast } = useToast();
+// 修改引用消息的类型
+interface WindowMessage {
+    id: string | number;
+    content: string;
+    sender: {
+        id: string;
+        name: string;
+        avatar: string;
+    };
+    timestamp: Date;
+    isNew?: boolean;
+}
 
-const selectChat = (chat: Chat) => {
-    selectedChat.value = chat;
+const quotedMessage = ref<WindowMessage | null>(null);
+
+// 转换 chat 数据以适配 ChatWindow 组件的格式
+const currentChatData = computed(() => {
+    if (!chatStore.currentChat || !chatStore.currentSession) return null;
+
+    const bot = botStore.sections
+        .flatMap(section => section.bots)
+        .find(bot => bot.id === chatStore.currentChat?.botId);
+
+    return {
+        id: chatStore.currentChat.id,
+        name: chatStore.currentChat.name,
+        avatar: bot?.avatar,
+        messages: chatStore.currentSession.messages.map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            sender: msg.sender === 'user' ? currentUser : {
+                id: 'bot',
+                name: chatStore.currentChat.name,
+                avatar: bot?.avatar || '/placeholder.svg?height=40&width=40',
+            },
+            timestamp: new Date(msg.createdAt),
+            isNew: msg.sender === 'bot' && msg.status === 'pending',
+        })),
+    };
+});
+
+const selectChat = async (chatId: string) => {
+    await chatStore.selectChat(chatId);
 };
 
 const sendMessage = async (content: string) => {
-    if (selectedChat.value) {
-        const newMessage: Message = {
-            id: Date.now(),
-            content,
-            sender: currentUser,
-            timestamp: new Date(),
-        };
-        selectedChat.value.messages.push(newMessage);
-        await simulateAIResponse();
-    }
-};
+    if (!chatStore.currentChat?.id || !chatStore.currentSession?.id) return;
 
-const simulateAIResponse = async () => {
-    if (selectedChat.value) {
-        // 模拟 AI 思考时间
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const aiMessage: Message = {
-            id: Date.now(),
+    // 先添加用户消息
+    await chatStore.addMessage({
+        content,
+        chatId: chatStore.currentChat.id,
+        sessionId: chatStore.currentSession.id,
+        sender: 'user',
+        status: 'sent',
+    });
+
+    // 模拟AI回复
+    setTimeout(async () => {
+        await chatStore.addMessage({
             content: '这是一个 AI 生成的回复，将会以打字机效果显示。',
-            sender: {
-                id: 0,
-                name: 'AI助手',
-                avatar: '/placeholder.svg?height=40&width=40',
-            },
-            timestamp: new Date(),
-            isNew: true,
-        };
-        selectedChat.value.messages.push(aiMessage);
-    }
+            chatId: chatStore.currentChat!.id,
+            sessionId: chatStore.currentSession!.id,
+            sender: 'bot',
+            status: 'pending', // 使用 pending 状态来触发打字机效果
+        });
+    }, 1000);
 };
 
 const toggleNetwork = (enabled: boolean) => {
@@ -137,9 +149,10 @@ const toggleNetwork = (enabled: boolean) => {
     });
 };
 
-const clearHistory = () => {
-    if (selectedChat.value) {
-        selectedChat.value.messages = [];
+const clearHistory = async () => {
+    if (chatStore.currentChat && chatStore.currentSession) {
+        chatStore.currentSession.messages = [];
+        await chatStore.syncData();
         toast({
             description: '当前对话的所有消息已被删除',
             variant: 'destructive',
@@ -162,7 +175,7 @@ const viewHistory = () => {
     });
 };
 
-const setQuotedMessage = (message: Message) => {
+const setQuotedMessage = (message: WindowMessage) => {
     quotedMessage.value = message;
 };
 
