@@ -29,6 +29,7 @@
                     <div class="space-y-2 mb-8">
                         <Button
                             class="w-full justify-start group hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                            @click="showCreateDialog = true"
                         >
                             <div
                                 class="mr-2 p-1 bg-primary/10 rounded-md group-hover:bg-primary/20 transition-colors"
@@ -42,7 +43,7 @@
                     <!-- Bot List -->
 
                     <div class="flex-1 space-y-6 overflow-auto custom-scrollbar">
-                        <div v-for="section in sections" :key="section.letter" class="space-y-2">
+                        <div v-for="section in botStore.sections" :key="section.letter" class="space-y-2">
                             <h2 class="text-sm font-medium text-muted-foreground px-2">
                                 {{ section.letter }}
                             </h2>
@@ -51,10 +52,10 @@
                                     <div
                                         v-for="bot in section.bots"
                                         :key="bot.id"
-                                        @click="selectBot(bot)"
+                                        @click="botStore.selectBot(bot)"
                                         :class="[
                                             'flex items-center p-3 cursor-pointer rounded-lg transition-all duration-300',
-                                            selectedBot?.id === bot.id
+                                            botStore.selectedBot?.id === bot.id
                                                 ? 'bg-primary/20 shadow-lg scale-105'
                                                 : 'hover:bg-primary/10',
                                         ]"
@@ -99,7 +100,7 @@
                 <div
                     class="absolute inset-0 bg-[radial-gradient(circle_at-50%_0%,rgba(var(--primary-rgb),0.1),transparent_50%)]"
                 ></div>
-                <div v-if="selectedBot" class="relative min-h-full p-4 sm:p-8">
+                <div v-if="botStore.selectedBot" class="relative min-h-full p-4 sm:p-8">
                     <div class="max-w-5xl mx-auto space-y-6">
                         <!-- Header -->
                         <div
@@ -111,14 +112,14 @@
                                     class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-muted flex items-center justify-center ring-4 ring-background shadow-2xl group-hover:shadow-primary/25 transition-all duration-500"
                                 >
                                     <span
-                                        v-if="!selectedBot.avatar"
+                                        v-if="!botStore.selectedBot.avatar"
                                         class="text-3xl sm:text-4xl font-bold"
-                                        >{{ selectedBot.name[0] }}</span
+                                        >{{ botStore.selectedBot.name[0] }}</span
                                     >
                                     <img
                                         v-else
-                                        :src="selectedBot.avatar"
-                                        :alt="selectedBot.name"
+                                        :src="botStore.selectedBot.avatar"
+                                        :alt="botStore.selectedBot.name"
                                         class="w-full h-full object-cover"
                                     />
                                 </div>
@@ -131,10 +132,10 @@
                                 <h1
                                     class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
                                 >
-                                    {{ selectedBot.name }}
+                                    {{ botStore.selectedBot.name }}
                                 </h1>
                                 <p class="mt-2 text-base sm:text-lg text-muted-foreground">
-                                    {{ selectedBot.description }}
+                                    {{ botStore.selectedBot.description }}
                                 </p>
 
                                 <div class="flex items-center gap-4 mt-4 sm:mt-6">
@@ -148,9 +149,11 @@
                                         现在聊天
                                     </Button>
                                     <Button
+                                        v-if="!botStore.selectedBot.isDefault"
                                         variant="outline"
                                         size="icon"
                                         class="rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                                        @click="editBot(botStore.selectedBot)"
                                     >
                                         <BoltIcon class="h-5 w-5" />
                                     </Button>
@@ -164,7 +167,7 @@
                             enter-from-class="opacity-0 translate-y-8"
                             enter-to-class="opacity-100 translate-y-0"
                         >
-                            <div v-if="selectedBot.prompt" class="mt-12">
+                            <div v-if="botStore.selectedBot.prompt" class="mt-12">
                                 <p
                                     class="text-primary font-medium text-lg mb-4 flex items-center gap-2"
                                 >
@@ -183,7 +186,7 @@
                                                 class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
                                             ></div>
                                             <div class="relative text-lg">
-                                                {{ selectedBot.prompt }}
+                                                {{ botStore.selectedBot.prompt }}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -200,10 +203,10 @@
                             </CardHeader>
                             <CardContent>
                                 <UsageChart
-                                    :data="selectedBot?.usageData || []"
-                                    :year="selectedYear"
-                                    :available-years="availableYears"
-                                    @update:year="selectedYear = $event"
+                                    :data="usageStore.getBotUsage(botStore.selectedBot?.id || '')"
+                                    :year="usageStore.selectedYear"
+                                    :available-years="usageStore.getAvailableYears(botStore.selectedBot?.id || '')"
+                                    @update:year="usageStore.selectedYear = $event"
                                 />
                             </CardContent>
                         </Card>
@@ -212,114 +215,62 @@
             </div>
         </div>
     </div>
+
+    <!-- 添加对话框组件 -->
+    <BotDialog
+        v-model:show="showCreateDialog"
+        @submit="handleCreateBot"
+    />
+    
+    <BotDialog
+        v-if="editingBot"
+        v-model:show="showEditDialog"
+        :bot="editingBot"
+        @submit="handleUpdateBot"
+    />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
+import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon, Settings2Icon } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UsageChart from './UsageChart.vue';
-import pinyin from 'pinyin';
-import { useModelStore } from '@/store/model';
-import { ModelGroup } from '@/types';
-interface DayData {
-    date: string;
-    count: number;
-}
+import { useBotStore } from '@/store/bot';
+import { useUsageStore } from '@/store/usage';
+import BotDialog from '@/components/bot/BotDialog.vue';
+import type { Bot } from '@/store/bot';
 
-interface Bot {
-    id: string;
-    name: string;
-    prompt?: string;
-    description: string;
-    prologue: string;
-    avatar: string;
-    model?: string;
-    isDefault: boolean;
-    usageData: DayData[];
-}
+const botStore = useBotStore();
+const usageStore = useUsageStore();
 
-const { getSuppliers } = useModelStore();
-
-function getFirstLetter(str: string): string {
-    if (!str?.length) return '#';
-
-    const firstChar = str[0];
-
-    // 处理英文
-    if (/^[a-zA-Z]$/.test(firstChar)) {
-        return firstChar.toUpperCase();
-    }
-
-    // 处理中文
-    if (/^[\u4e00-\u9fa5]$/.test(firstChar)) {
-        try {
-            const result = pinyin(firstChar, {
-                style: pinyin.STYLE_FIRST_LETTER,
-                segment: true, // 显式启用分词
-            });
-            return result[0]?.[0]?.toUpperCase()?.[0] || '#';
-        } catch {
-            return '#';
-        }
-    }
-
-    // 其他字符
-    return '#';
-}
-
-// 先收集模型组里的所有模型，在按首字母分组
-const defaultBots = getSuppliers.reduce((bots: { letter: string; bots: Bot[] }[], suppliers) => {
-    const modelGroup = suppliers.modelGroup as ModelGroup[];
-    for (const group of modelGroup) {
-        for (const model of group.models) {
-            const { name } = model;
-            const letter = getFirstLetter(name);
-            const index = bots.findIndex((b) => b.letter === letter);
-            const bot: Bot = {
-                id: suppliers.name + model.name,
-                name: model.name,
-                description: model?.description || '',
-                prologue: `您好，我是${model.name}，有什么可以帮助您的吗？`,
-                isDefault: true,
-                avatar: suppliers.logo,
-                prompt: '',
-                usageData: [],
-            };
-            if (index === -1) {
-                bots.push({ letter, bots: [bot] });
-            } else {
-                bots[index].bots.push(bot);
-            }
-        }
-    }
-    return bots;
-}, []);
-
-const sections = ref<{ letter: string; bots: Bot[] }[]>(defaultBots);
-
-const selectedBot = ref<Bot | null>(null);
-const selectedYear = ref(new Date().getFullYear());
-
-const availableYears = computed(() => {
-    if (!selectedBot.value?.usageData.length) return [];
-    const years = new Set(selectedBot.value.usageData.map((d) => new Date(d.date).getFullYear()));
-    return Array.from(years).sort((a, b) => b - a);
-});
-
-const selectBot = (bot: Bot) => {
-    selectedBot.value = bot;
-    if (availableYears.value.length > 0) {
-        selectedYear.value = availableYears.value[0];
-    }
-};
+const showCreateDialog = ref(false);
+const showEditDialog = ref(false);
+const editingBot = ref<Bot | null>(null);
 
 onMounted(async () => {
-    if (sections.value[0]?.bots.length > 0) {
-        selectBot(sections.value[0].bots[0]);
-    }
+    await botStore.initializeStore();
+    await usageStore.initializeStore();
 });
+
+const handleCreateBot = async (botData: Omit<Bot, 'id' | 'isDefault'>) => {
+    const newBot = await botStore.addBot({
+        ...botData,
+        isDefault: false,
+    });
+    await botStore.selectBot(newBot);
+};
+
+const editBot = (bot: Bot) => {
+    editingBot.value = bot;
+    showEditDialog.value = true;
+};
+
+const handleUpdateBot = async (updates: Partial<Bot>) => {
+    if (editingBot.value) {
+        await botStore.updateBot(editingBot.value.id, updates);
+    }
+};
 </script>
 
 <style scoped>

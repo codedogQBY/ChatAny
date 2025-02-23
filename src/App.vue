@@ -4,13 +4,19 @@ import { RouterView } from 'vue-router';
 import { onMounted } from 'vue';
 import { useModelStore } from './store/model';
 import { useCommonStore } from './store/common';
+import { useBotStore } from './store/bot';
+import { useUsageStore } from './store/usage';
 
 const modelStore = useModelStore();
 const commonStore = useCommonStore();
+const botStore = useBotStore();
+const usageStore = useUsageStore();
 
 onMounted(async () => {
     await commonStore.initializeStore();
     await modelStore.initializeStore();
+    await botStore.initializeStore();
+    await usageStore.initializeStore();
 });
 </script>
 
