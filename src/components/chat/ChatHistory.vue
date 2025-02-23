@@ -1,48 +1,54 @@
 <template>
     <div class="flex h-full w-full">
         <!-- 左侧会话列表 -->
-        <div class="w-1/3 border-r border-border bg-background/50">
+        <div class="w-48 shrink-0 border-r border-border bg-background/50">
             <div class="p-4 border-b border-border">
                 <h3 class="text-lg font-semibold">会话历史</h3>
             </div>
             <div class="overflow-y-auto h-[calc(100%-60px)]">
-                <div
-                    v-for="group in sessionGroups"
-                    :key="group.label"
-                    class="mb-4"
-                >
-                    <div class="px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
-                        {{ group.label }}
-                    </div>
-                    <div
-                        v-for="session in group.sessions"
-                        :key="session.id"
-                        class="group flex items-center px-4 py-2 cursor-pointer transition-all duration-200 ease-in-out"
-                        :class="[
-                            currentSession?.id === session.id
-                                ? 'bg-primary/10 text-primary hover:bg-primary/15'
-                                : 'hover:bg-accent hover:text-accent-foreground'
-                        ]"
-                        @click="selectSession(session.id)"
-                    >
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-medium truncate">{{ session.title }}</h3>
-                                <span class="text-sm text-muted-foreground ml-2 shrink-0">
-                                    {{ formatTime(session.updatedAt) }}
-                                </span>
+                <TransitionGroup name="history-list" tag="div" class="space-y-2 px-2">
+                    <div v-for="group in sessionGroups" :key="group.label" class="mb-4">
+                        <div class="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                            {{ group.label }}
+                        </div>
+
+                        <div
+                            v-for="session in group.sessions"
+                            :key="session.id"
+                            class="group relative flex items-center py-1.5 cursor-pointer transition-all duration-200 ease-in-out"
+                            @click="selectSession(session.id)"
+                        >
+                            <div
+                                :class="[
+                                    'flex items-center px-2 py-1.5 cursor-pointer rounded-lg transition-all duration-300 w-full',
+                                    currentSession?.id === session.id
+                                        ? 'bg-primary/20 shadow-lg scale-105'
+                                        : 'hover:bg-primary/10',
+                                ]"
+                            >
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium truncate">{{ session.title }}</h3>
+                                        <span class="text-sm text-muted-foreground ml-2 shrink-0">
+                                            {{ formatTime(session.updatedAt) }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-muted-foreground truncate mt-1">
+                                        {{
+                                            session.messages[session.messages.length - 1]
+                                                ?.content || '暂无消息'
+                                        }}
+                                    </p>
+                                </div>
                             </div>
-                            <p class="text-sm text-muted-foreground truncate mt-1">
-                                {{ session.messages[session.messages.length - 1]?.content || '暂无消息' }}
-                            </p>
                         </div>
                     </div>
-                </div>
+                </TransitionGroup>
             </div>
         </div>
 
         <!-- 右侧会话详情 -->
-        <div class="flex-1 flex flex-col bg-background/50">
+        <div class="flex-1 flex flex-col bg-background/50 min-w-0">
             <div class="p-4 border-b border-border">
                 <h3 class="text-lg font-semibold">{{ currentSession?.title }}</h3>
                 <p class="text-sm text-muted-foreground">
@@ -50,11 +56,7 @@
                 </p>
             </div>
             <div class="flex-1 overflow-y-auto p-4">
-                <div
-                    v-for="message in currentSession?.messages"
-                    :key="message.id"
-                    class="mb-4"
-                >
+                <div v-for="message in currentSession?.messages" :key="message.id" class="mb-4">
                     <div class="flex items-start gap-3">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
@@ -116,7 +118,7 @@ const sessionGroups = computed(() => {
         { label: '更早', sessions: [] as Session[] },
     ];
 
-    props.sessions.forEach(session => {
+    props.sessions.forEach((session) => {
         const time = session.updatedAt;
         if (time >= today) {
             groups[0].sessions.push(session);
@@ -131,10 +133,10 @@ const sessionGroups = computed(() => {
         }
     });
 
-    groups.forEach(group => {
+    groups.forEach((group) => {
         group.sessions.sort((a, b) => b.updatedAt - a.updatedAt);
     });
-    return groups.filter(group => group.sessions.length > 0);
+    return groups.filter((group) => group.sessions.length > 0);
 });
 
 const selectSession = (sessionId: string) => {
@@ -160,7 +162,7 @@ const handleExport = () => {
     if (!props.currentSession) return;
     // 导出会话内容为 Markdown
     const content = props.currentSession.messages
-        .map(msg => {
+        .map((msg) => {
             const sender = msg.sender === 'user' ? 'You' : props.botName;
             const time = formatTime(msg.createdAt);
             return `### ${sender} (${time})\n\n${msg.content}\n`;
@@ -187,9 +189,9 @@ const getLastMessage = (session: Session) => {
 };
 
 const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    return new Date(timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
     });
 };
 
@@ -207,4 +209,16 @@ const formatDate = (timestamp?: number) => {
 .group {
     transform: translate3d(0, 0, 0);
 }
-</style> 
+
+/* 添加过渡动画 */
+.history-list-enter-active,
+.history-list-leave-active {
+    transition: all 0.3s ease;
+}
+
+.history-list-enter-from,
+.history-list-leave-to {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+</style>

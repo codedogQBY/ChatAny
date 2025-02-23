@@ -268,7 +268,7 @@
                         :sessions="chat.sessions"
                         :current-session="currentSession"
                         :bot-name="chat.name"
-                        :bot-avatar="chat.avatar || '/placeholder.svg?height=40&width=40'"
+                        :bot-avatar="chat.avatar || ''"
                         :user-avatar="user.avatar"
                         @select="chatStore.selectSession($event)"
                     />
@@ -314,17 +314,7 @@ import {
 import TypewriterText from './TypewriterText.vue';
 import SessionSelector from '@/components/chat/SessionSelector.vue';
 import ChatHistory from '@/components/chat/ChatHistory.vue';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { useChatStore } from '@/store/chat';
+import { Session, useChatStore } from '@/store/chat';
 import ChatSettings from '@/components/chat/ChatSettings.vue';
 
 interface Message {
@@ -496,7 +486,7 @@ const scrollToBottom = () => {
 
 const handleCreateSession = async () => {
     if (!chatStore.currentChat) return;
-    
+
     const newSession = await chatStore.createSession(
         chatStore.currentChat.botId,
         chatStore.currentChat.id,
@@ -506,7 +496,7 @@ const handleCreateSession = async () => {
     chatStore.currentChat.sessions.push(newSession);
     await chatStore.selectSession(newSession.id);
     await chatStore.syncData();
-    
+
     toast({
         description: '新会话已创建',
         duration: 1000,
@@ -589,7 +579,7 @@ const handleUpdateSettings = (settings: {
 };
 
 const updateMessageStatus = (messageId: string | number, status: string) => {
-    const message = props.chat.messages.find(m => m.id === messageId);
+    const message = props.chat.messages.find((m) => m.id === messageId);
     if (message) {
         message.status = status;
     }
