@@ -738,7 +738,7 @@ onMounted(async () => {
 
         if (bot.isDefault) {
             // 默认机器人使用自己的固定模型
-            selectedModel.value = bot.model?.supplierId + bot.model?.modelId;
+            selectedModel.value = bot?.model?.supplierId + bot?.model?.modelId;
         } else {
             // 非默认机器人
             if (bot.model) {
