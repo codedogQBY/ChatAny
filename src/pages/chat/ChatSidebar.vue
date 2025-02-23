@@ -10,15 +10,6 @@
             >
                 AI Chat
             </h1>
-            <Button
-                variant="outline"
-                size="sm"
-                class="rounded-full animate-pulse hover:animate-none"
-                @click="$emit('add-chat')"
-            >
-                <MessageCirclePlusIcon class="h-4 w-4 mr-2" />
-                新对话
-            </Button>
         </div>
 
         <!-- 聊天列表 -->

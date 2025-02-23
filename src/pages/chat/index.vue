@@ -5,7 +5,6 @@
             <ChatSidebar
                 :chats="chats"
                 :selectedChatId="selectedChat?.id"
-                @add-chat="openModelSelection"
                 @select-chat="selectChat"
             />
         </div>
@@ -47,9 +46,6 @@
             </div>
         </div>
 
-        <!-- 模型选择模态框 -->
-        <ModelSelectionModal v-model:isOpen="isModelSelectionOpen" @confirm="addChat" />
-
         <!-- 全局通知 -->
         <div class="fixed top-4 right-4 z-50">
             <Toaster />
@@ -61,7 +57,6 @@
 import { ref, watch } from 'vue';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
-import ModelSelectionModal from './ModelSelectionModal.vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
@@ -97,41 +92,10 @@ const currentUser: User = {
 const chats = ref<Chat[]>([]);
 const selectedChat = ref<Chat | null>(null);
 const quotedMessage = ref<Message | null>(null);
-const isModelSelectionOpen = ref(false);
 const { toast } = useToast();
 
 const selectChat = (chat: Chat) => {
     selectedChat.value = chat;
-};
-
-const openModelSelection = () => {
-    isModelSelectionOpen.value = true;
-};
-
-const addChat = (modelInfo: {
-    chatName: string;
-    bot: string;
-    systemPrompt: string;
-    temperature: number;
-    maxTokens: number;
-    topP: number;
-    contextLength: number;
-}) => {
-    const newChat: Chat = {
-        id: Date.now(),
-        name: modelInfo.chatName,
-        avatar: '/placeholder.svg?height=40&width=40',
-        messages: [],
-        model: modelInfo.bot,
-        temperature: modelInfo.temperature,
-        maxTokens: modelInfo.maxTokens,
-    };
-    chats.value.push(newChat);
-    selectChat(newChat);
-    toast({
-        description: `已创建使用 ${modelInfo.bot} 模型的新对话`,
-        duration: 1000,
-    });
 };
 
 const sendMessage = async (content: string) => {

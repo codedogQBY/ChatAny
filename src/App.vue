@@ -6,16 +6,19 @@ import { useModelStore } from './store/model';
 import { useCommonStore } from './store/common';
 import { useBotStore } from './store/bot';
 import { useUsageStore } from './store/usage';
+import { useChatStore } from './store/chat';
 
 const modelStore = useModelStore();
 const commonStore = useCommonStore();
 const botStore = useBotStore();
 const usageStore = useUsageStore();
+const chatStore = useChatStore();
 
 onMounted(async () => {
     await commonStore.initializeStore();
     await modelStore.initializeStore();
     await botStore.initializeStore();
+    await chatStore.initializeStore();
     await usageStore.initializeStore();
 });
 </script>
