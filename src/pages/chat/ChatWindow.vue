@@ -226,7 +226,7 @@
                                         >
                                         </GlobeIcon>
                                         <Switch
-                                            v-model:value="networkEnabled"
+                                            v-model:checked="networkEnabled"
                                             class="data-[state=checked]:bg-primary"
                                         />
                                     </div>

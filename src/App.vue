@@ -30,9 +30,11 @@ onMounted(async () => {
             <Sidebar />
         </div>
         <div class="flex flex-col pl-16">
-            <KeepAlive>
-                <RouterView />
-            </KeepAlive>
+            <router-view v-slot="{ Component }">
+                <keep-alive>
+                    <component :is="Component" />
+                </keep-alive>
+            </router-view>
         </div>
     </div>
     <!-- 全局通知 -->

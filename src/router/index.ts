@@ -1,6 +1,9 @@
 import { createMemoryHistory, createRouter, RouteRecordRaw } from "vue-router";
-import { Chat, Bot } from "@/pages/index";
 import { MessageCircleMore, BotIcon } from "lucide-vue-next";
+
+// 使用动态导入替代直接导入
+const Chat = () => import("@/pages/chat/index.vue");
+const Bot = () => import("@/pages/bot/index.vue");
 
 const routes: RouteRecordRaw[] = [
   {
@@ -9,7 +12,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/chat",
-    component: Chat,
+    component: Chat,  // 懒加载组件
     meta: {
       icon: MessageCircleMore,
       title: "聊天",
@@ -18,7 +21,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: "/bot",
-    component: Bot,
+    component: Bot,  // 懒加载组件
     meta: {
       icon: BotIcon,
       title: "助手",
