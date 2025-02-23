@@ -54,6 +54,11 @@
     "store:allow-keys",
     "log:default",
     "log:allow-log",
-    "http:default"
+    "http:default",
+    "upload:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-app-read",
+    "fs:allow-app-write"
   ]
 }

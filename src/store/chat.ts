@@ -357,21 +357,13 @@ export const useChatStore = defineStore('chat', () => {
         const session = currentChat.value.sessions.find((s) => s.id === sessionId);
         if (!session) return;
 
-        // 清空当前聊天的消息
-        currentChat.value.messages = [];
-
+        // 清空会话的消息
+        session.messages = [];
+        
         // 更新时间戳
         session.updatedAt = Date.now();
         currentChat.value.updatedAt = Date.now();
 
-        // 如果这是最后一个会话，创建一个新的默认会话
-        if (currentChat.value.sessions.length === 0) {
-            const newSession = createSession(currentChat.value.botId, currentChat.value.id);
-            currentChat.value.sessions.push(newSession);
-            currentSession.value = newSession;
-        }
-
-        // 同步数据
         await syncData();
     };
 

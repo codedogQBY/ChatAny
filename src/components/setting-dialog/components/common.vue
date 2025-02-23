@@ -9,11 +9,7 @@
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectItem
-                            v-for="lang in languages"
-                            :key="lang.value"
-                            :value="lang.value"
-                        >
+                        <SelectItem v-for="lang in languages" :key="lang.value" :value="lang.value">
                             {{ lang.label }}
                         </SelectItem>
                     </SelectGroup>
@@ -25,14 +21,14 @@
         <div class="space-y-2">
             <div class="text-lg font-medium">主题模式</div>
             <div class="flex items-center space-x-2">
-                <Checkbox 
+                <Checkbox
                     v-model:checked="followSystem"
                     @update:checked="handleFollowSystemChange"
-                /> 
+                />
                 <Label>跟随系统</Label>
             </div>
             <div class="text-sm text-muted-foreground">勾选后，将根据系统设置自动切换主题模式</div>
-            
+
             <RadioGroup
                 class="grid max-w-md grid-cols-2 gap-8 pt-2"
                 v-model="theme"
@@ -41,7 +37,9 @@
                 <div @click="setDarkMode(DARK_MODE.LIGHT)">
                     <Label class="[&:has([data-state=checked])>div]:border-primary">
                         <RadioGroupItem value="light" class="sr-only" />
-                        <div class="items-center rounded-md border-2 border-muted p-1 hover:border-accent cursor-pointer">
+                        <div
+                            class="items-center rounded-md border-2 border-muted p-1 hover:border-accent cursor-pointer"
+                        >
                             <div class="space-y-2 rounded-sm bg-[#ecedef] p-2">
                                 <div class="space-y-2 rounded-md bg-white p-2 shadow-sm">
                                     <div class="h-2 w-20 rounded-lg bg-[#ecedef]" />
@@ -55,7 +53,9 @@
                 <div @click="setDarkMode(DARK_MODE.DARK)">
                     <Label class="[&:has([data-state=checked])>div]:border-primary">
                         <RadioGroupItem value="dark" class="sr-only" />
-                        <div class="items-center rounded-md border-2 border-muted bg-popover p-1 hover:bg-accent hover:text-accent-foreground cursor-pointer">
+                        <div
+                            class="items-center rounded-md border-2 border-muted bg-popover p-1 hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
                             <div class="space-y-2 rounded-sm bg-slate-950 p-2">
                                 <div class="space-y-2 rounded-md bg-slate-800 p-2 shadow-sm">
                                     <div class="h-2 w-20 rounded-lg bg-slate-400" />
@@ -72,10 +72,7 @@
         <!-- 主题色 -->
         <div class="space-y-2">
             <div class="text-lg font-medium">主题色</div>
-            <RadioGroup
-                class="grid grid-cols-4 gap-x-28"
-                v-model="themeColor"
-            >
+            <RadioGroup class="grid grid-cols-4 gap-x-28" v-model="themeColor">
                 <div
                     v-for="color in themeColors"
                     :key="color.value"
@@ -83,7 +80,9 @@
                 >
                     <Label class="[&:has([data-state=checked])>div]:border-x-slate-500">
                         <RadioGroupItem :value="color.value" class="sr-only" />
-                        <div class="cursor-pointer border-transparent border-4 w-12 h-12 rounded-full flex items-center justify-center">
+                        <div
+                            class="cursor-pointer border-transparent border-4 w-12 h-12 rounded-full flex items-center justify-center"
+                        >
                             <div
                                 class="w-8 h-8 rounded-full"
                                 :style="{ backgroundColor: color.color }"
@@ -95,73 +94,161 @@
             </RadioGroup>
         </div>
 
-        <!-- 清除缓存 -->
-        <div class="space-y-4">
-            <div class="text-lg font-medium">系统数据</div>
-            <div class="relative p-6 rounded-lg border border-border bg-card hover:shadow-lg transition-all duration-300">
-                <div class="flex items-center space-x-2 mb-2">
-                    <DatabaseIcon class="h-5 w-5 text-muted-foreground" />
-                    <div class="font-medium">重置系统数据</div>
-                </div>
-                <div class="text-sm text-muted-foreground mb-4">
-                    将重置所有本地数据到初始状态，包括聊天记录、模型配置、系统设置等
-                </div>
-                <Transition
-                    enter-active-class="transition-all duration-300"
-                    leave-active-class="transition-all duration-300"
-                    enter-from-class="opacity-0 -translate-y-1"
-                    leave-to-class="opacity-0 -translate-y-1"
-                >
-                    <div 
-                        v-if="showTip" 
-                        class="absolute left-6 text-xs text-destructive"
-                        style="top: 5rem;"
-                    >
-                        {{ tipMessage }}
-                    </div>
-                </Transition>
-                <div class="flex justify-end">
-                    <Popover v-model:open="showResetConfirm">
-                        <PopoverTrigger asChild>
-                            <Button 
-                                variant="destructive" 
-                                class="relative"
-                                :disabled="isResetting || isDebouncing"
-                            >
-                                <Loader2Icon v-if="isResetting" class="h-4 w-4 animate-spin" />
-                                <RotateCcwIcon v-else class="h-4 w-4" />
-                                <span class="ml-2">{{ isResetting ? '重置中...' : '重置系统' }}</span>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent class="w-80">
-                            <div class="space-y-4">
-                                <div class="font-medium">确认重置系统？</div>
-                                <div class="text-sm text-muted-foreground">
-                                    此操作将清除所有本地数据并恢复到初始状态，包括：
-                                    <ul class="list-disc list-inside mt-2 space-y-1">
-                                        <li>所有的聊天记录</li>
-                                        <li>模型配置信息</li>
-                                        <li>系统个性化设置</li>
-                                    </ul>
-                                    此操作不可恢复！
-                                </div>
-                                <div class="flex justify-end gap-2">
-                                    <Button variant="outline" @click="showResetConfirm = false">取消</Button>
-                                    <Button 
-                                        variant="destructive"
-                                        :disabled="isResetting"
-                                        @click="handleResetSystem"
-                                    >
-                                        确认重置
-                                    </Button>
-                                </div>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                </div>
+        <!-- 系统数据 -->
+        <div class="space-y-6">
+            <h3 class="text-lg font-medium">系统数据</h3>
 
-                <!-- 装饰性背景 -->
-                <div class="absolute inset-0 bg-gradient-to-r from-destructive/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none" />
+            <!-- 数据备份与恢复 -->
+            <div class="relative overflow-hidden rounded-xl border bg-card">
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-gradient"
+                />
+
+                <div class="relative p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-medium text-muted-foreground">
+                                数据备份与恢复
+                            </h4>
+                            <p class="text-xs text-muted-foreground mt-1">
+                                导出或导入系统数据，包含所有配置和聊天记录
+                            </p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <!-- 导出按钮 -->
+                            <Button
+                                variant="outline"
+                                class="relative group hover:border-primary/50"
+                                :disabled="isExporting"
+                                @click="exportData"
+                            >
+                                <Download
+                                    class="h-4 w-4 mr-2 transition-transform group-hover:-translate-y-1"
+                                />
+                                导出
+                                <span
+                                    class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform"
+                                />
+                            </Button>
+
+                            <!-- 导入按钮 -->
+                            <div class="relative">
+                                <Button
+                                    variant="outline"
+                                    class="relative group hover:border-primary/50"
+                                    :disabled="isImporting"
+                                    @click="importData"
+                                >
+                                    <Upload
+                                        class="h-4 w-4 mr-2 transition-transform group-hover:translate-y-1"
+                                    />
+                                    导入
+                                    <span
+                                        class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform"
+                                    />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导入进度 -->
+                    <Transition
+                        enter-active-class="transition-all duration-300 ease-out"
+                        enter-from-class="opacity-0 transform translate-y-4"
+                        enter-to-class="opacity-100 transform translate-y-0"
+                        leave-active-class="transition-all duration-200 ease-in"
+                        leave-from-class="opacity-100"
+                        leave-to-class="opacity-0"
+                    >
+                        <div v-if="isImporting" class="space-y-2">
+                            <Progress :value="importProgress" class="h-1">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                                />
+                            </Progress>
+                            <p class="text-xs text-muted-foreground text-center animate-pulse">
+                                正在导入数据 {{ importProgress }}%
+                            </p>
+                        </div>
+                    </Transition>
+                </div>
+            </div>
+
+            <!-- 重置系统数据 -->
+            <div class="space-y-4">
+                <div
+                    class="relative p-6 rounded-lg border border-border bg-card hover:shadow-lg transition-all duration-300"
+                >
+                    <div class="flex items-center space-x-2 mb-2">
+                        <DatabaseIcon class="h-5 w-5 text-muted-foreground" />
+                        <div class="font-medium">重置系统数据</div>
+                    </div>
+                    <div class="text-sm text-muted-foreground mb-4">
+                        将重置所有本地数据到初始状态，包括聊天记录、模型配置、系统设置等
+                    </div>
+                    <Transition
+                        enter-active-class="transition-all duration-300"
+                        leave-active-class="transition-all duration-300"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div
+                            v-if="showTip"
+                            class="absolute left-6 text-xs text-destructive"
+                            style="top: 5rem"
+                        >
+                            {{ tipMessage }}
+                        </div>
+                    </Transition>
+                    <div class="flex justify-end">
+                        <Popover v-model:open="showResetConfirm">
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="destructive"
+                                    class="relative"
+                                    :disabled="isResetting || isDebouncing"
+                                >
+                                    <Loader2Icon v-if="isResetting" class="h-4 w-4 animate-spin" />
+                                    <RotateCcwIcon v-else class="h-4 w-4" />
+                                    <span class="ml-2">{{
+                                        isResetting ? '重置中...' : '重置系统'
+                                    }}</span>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent class="w-80">
+                                <div class="space-y-4">
+                                    <div class="font-medium">确认重置系统？</div>
+                                    <div class="text-sm text-muted-foreground">
+                                        此操作将清除所有本地数据并恢复到初始状态，包括：
+                                        <ul class="list-disc list-inside mt-2 space-y-1">
+                                            <li>所有的聊天记录</li>
+                                            <li>模型配置信息</li>
+                                            <li>系统个性化设置</li>
+                                        </ul>
+                                        此操作不可恢复！
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                        <Button variant="outline" @click="showResetConfirm = false"
+                                            >取消</Button
+                                        >
+                                        <Button
+                                            variant="destructive"
+                                            :disabled="isResetting"
+                                            @click="handleResetSystem"
+                                        >
+                                            确认重置
+                                        </Button>
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    <!-- 装饰性背景 -->
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-destructive/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none"
+                    />
+                </div>
             </div>
         </div>
     </div>
@@ -184,24 +271,23 @@ import { Button } from '@/components/ui/button';
 import { DARK_MODE, ThemeEnum } from '@/types';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { useCommonStore } from '@/store/common';
-import { TrashIcon, Loader2Icon, RotateCcwIcon, DatabaseIcon } from 'lucide-vue-next';
+import {
+    TrashIcon,
+    Loader2Icon,
+    RotateCcwIcon,
+    DatabaseIcon,
+    Download,
+    Upload,
+} from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import store from '@/hook/useStore';
 import { useModelStore } from '@/store/model';
 import { useBotStore } from '@/store/bot';
 import { useChatStore } from '@/store/chat';
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardFooter,
-} from '@/components/ui/card';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Progress } from '@/components/ui/progress';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { writeFile, readTextFile } from '@tauri-apps/plugin-fs';
 
 const { setDarkMode, darkMode } = useLightDarkSwitch();
 const { getThemeColor, setThemeColor, getFollowSystem, setFollowSystem } = useCommonStore();
@@ -216,6 +302,9 @@ const showResetConfirm = ref(false);
 const showTip = ref(false);
 const tipMessage = ref('');
 const followSystem = ref(false);
+const importProgress = ref(0);
+const isImporting = ref(false);
+const isExporting = ref(false);
 
 // 主题色选项
 const themeColors = [
@@ -253,7 +342,7 @@ const handleResetSystem = async () => {
 
     try {
         await store.clear();
-        
+
         const modelStore = useModelStore();
         const botStore = useBotStore();
         const chatStore = useChatStore();
@@ -293,8 +382,8 @@ const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
 // 处理跟随系统选项变化
 const handleFollowSystemChange = async (checked: boolean) => {
     followSystem.value = checked;
-    await setFollowSystem(checked);  // 保存到 store
-    
+    await setFollowSystem(checked); // 保存到 store
+
     if (checked) {
         // 获取系统当前主题
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -303,7 +392,9 @@ const handleFollowSystemChange = async (checked: boolean) => {
         mediaQuery.addEventListener('change', handleSystemThemeChange);
     } else {
         // 移除系统主题变化监听
-        window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', handleSystemThemeChange);
+        window
+            .matchMedia('(prefers-color-scheme: dark)')
+            .removeEventListener('change', handleSystemThemeChange);
     }
 };
 
@@ -312,7 +403,7 @@ onMounted(() => {
     // 从 store 中获取跟随系统设置
     const commonStore = useCommonStore();
     followSystem.value = commonStore.getFollowSystem;
-    
+
     if (followSystem.value) {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         handleSystemThemeChange(mediaQuery);
@@ -323,9 +414,117 @@ onMounted(() => {
 // 在组件卸载时清理
 onUnmounted(() => {
     if (followSystem.value) {
-        window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', handleSystemThemeChange);
+        window
+            .matchMedia('(prefers-color-scheme: dark)')
+            .removeEventListener('change', handleSystemThemeChange);
     }
 });
+
+// 修改导出系统数据函数
+const exportData = async () => {
+    try {
+        isExporting.value = true;
+        const systemData = {
+            bots: await store.get('bots'),
+            chats: await store.get('chats'),
+            models: await store.get('suppliers'),
+            common: await store.get('common'),  // 添加 common store 数据
+            version: '1.0.0',
+            exportDate: new Date().toISOString(),
+        };
+
+        // 使用 dialog 插件选择保存位置
+        const savePath = await save({
+            filters: [
+                {
+                    name: '系统数据',
+                    extensions: ['json'],
+                },
+            ],
+            defaultPath: `ai-chat-backup-${new Date().toISOString().split('T')[0]}.json`,
+        });
+
+        if (savePath) {
+            await writeFile(
+                savePath,
+                new TextEncoder().encode(JSON.stringify(systemData, null, 2))
+            );
+
+            toast({
+                description: '系统数据已导出',
+                duration: 3000,
+            });
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        toast({
+            description: '导出失败，请重试',
+            variant: 'destructive',
+        });
+    } finally {
+        isExporting.value = false;
+    }
+};
+
+// 修改导入系统数据函数
+const importData = async () => {
+    try {
+        isImporting.value = true;
+        importProgress.value = 0;
+
+        const filePath = await open({
+            multiple: false,
+            filters: [
+                {
+                    name: '系统数据',
+                    extensions: ['json'],
+                },
+            ],
+        });
+
+        if (!filePath) return;
+
+        importProgress.value = 30;
+
+        const content = await readTextFile(filePath as string);
+        const data = JSON.parse(content);
+
+        if (!data.bots || !data.chats || !data.models || !data.common) {  // 检查 common 数据
+            throw new Error('无效的数据格式');
+        }
+
+        importProgress.value = 50;
+
+        // 更新数据，包括 common store
+        await Promise.all([
+            store.set('bots', data.bots),
+            store.set('chats', data.chats),
+            store.set('suppliers', data.models),
+            store.set('common', data.common),  // 添加 common store 数据
+        ]);
+
+        importProgress.value = 100;
+
+        toast({
+            description: '系统数据已导入，即将刷新页面',
+            duration: 3000,
+        });
+
+        // 重新加载页面以应用新数据
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    } catch (error) {
+        console.error('Import error:', error);
+        toast({
+            description: error instanceof Error ? error.message : '导入失败，请重试',
+            variant: 'destructive',
+        });
+    } finally {
+        isImporting.value = false;
+        importProgress.value = 0;
+    }
+};
 </script>
 
 <style scoped>
@@ -344,5 +543,22 @@ onUnmounted(() => {
 .radio-group[disabled] {
     opacity: 0.5;
     pointer-events: none;
+}
+
+.animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s linear infinite;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 </style>
