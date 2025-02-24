@@ -1,9 +1,7 @@
 <template>
     <Dialog :open="show" @update:open="(v) => emit('update:show', v)">
-        <DialogContent
-            class="sm:max-w-[500px] max-h-[90vh] overflow-y-auto custom-scrollbar overflow-x-hidden"
-        >
-            <DialogHeader>
+        <DialogContent class="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+            <DialogHeader class="shrink-0">
                 <DialogTitle
                     class="text-2xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent"
                 >
@@ -13,12 +11,12 @@
                     {{ isEdit ? '修改机器人的信息' : '创建一个新的机器人' }}
                 </DialogDescription>
             </DialogHeader>
-            <div class="overflow-y-auto pr-6 -mr-6">
-                <form @submit.prevent="handleSubmit" class="space-y-6">
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-4">
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-6 -mr-6">
+                <form @submit.prevent="handleSubmit" class="space-y-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-center space-x-4">
                             <div
-                                class="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center ring-2 ring-primary/20 cursor-pointer transition-all duration-300 hover:ring-primary/50 hover:shadow-lg hover:shadow-primary/20"
+                                class="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center cursor-pointer transition-all duration-300 hover:ring-primary/50 hover:shadow-lg hover:shadow-primary/20"
                                 @click="triggerFileInput"
                             >
                                 <img
@@ -29,23 +27,9 @@
                                 />
                                 <UserCircle2Icon v-else class="w-12 h-12 text-primary/40" />
                             </div>
-                            <div class="flex flex-col gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    class="group hover:border-primary/50 transition-all duration-300"
-                                    @click="triggerFileInput"
-                                >
-                                    <UploadIcon
-                                        class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform"
-                                    />
-                                    上传头像
-                                </Button>
-                                <p class="text-xs text-muted-foreground">推荐使用正方形图片</p>
-                            </div>
                         </div>
 
-                        <div class="bg-muted/30 rounded-lg p-4 space-y-4">
+                        <div class="rounded-lg p-4 space-y-4">
                             <div class="space-y-2">
                                 <Label for="name" class="text-sm font-medium">名称</Label>
                                 <Input
@@ -69,7 +53,7 @@
                             </div>
                         </div>
 
-                        <div class="bg-muted/30 rounded-lg p-4 space-y-4">
+                        <div class="rounded-lg p-4 space-y-4">
                             <div class="space-y-2">
                                 <Label
                                     for="prompt"
@@ -108,9 +92,7 @@
                 </form>
             </div>
 
-            <DialogFooter
-                class="sticky -bottom-6 bg-background/80 backdrop-blur-sm py-4 -mx-4 px-6 mt-4 border-t border-border/50"
-            >
+            <DialogFooter class="shrink-0 bg-background/80 backdrop-blur-sm">
                 <Button variant="outline" @click="emit('update:show', false)">取消</Button>
                 <Button type="submit" :disabled="!formData.name" @click="handleSubmit">
                     {{ isEdit ? '保存' : '创建' }}
