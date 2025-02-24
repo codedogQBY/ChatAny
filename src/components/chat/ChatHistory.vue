@@ -80,10 +80,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { PencilIcon, DownloadIcon, TrashIcon } from 'lucide-vue-next';
-import type { Session } from '@/store/chat';
+import type { Session } from '@/types';
 import { useToast } from '@/components/ui/toast/use-toast';
 
 const props = defineProps<{

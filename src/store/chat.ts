@@ -1,46 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import store from '@/hook/useStore';
 import { useBotStore } from './bot';
-import { useModelStore } from './model';
-
-export type MessageSender = 'user' | 'bot';
-
-export interface Message {
-    id: string;
-    sessionId: string;
-    chatId: string;
-    content: string;
-    sender: MessageSender;
-    status?: 'pending' | 'sent' | 'error';
-    metadata?: Record<string, any>;
-    createdAt: number;
-    updatedAt: number;
-}
-
-export interface Session {
-    id: string;
-    messages: Message[];
-    title: string;
-    createdAt: number;
-    updatedAt: number;
-}
-
-export interface Chat {
-    id: string;
-    name: string;
-    botId: string;
-    sessions: Session[];
-    createdAt: number;
-    updatedAt: number;
-    temperature: number;
-    maxTokens: number;
-    topP: number;
-    avatar?: string;
-    isDefault: boolean;
-    modelId?: string;
-}
+import type { Chat, Session, Message } from '@/types';
 
 export const useChatStore = defineStore('chat', () => {
     const chats = ref<Chat[]>([]);
@@ -48,7 +11,6 @@ export const useChatStore = defineStore('chat', () => {
     const currentSession = ref<Session | null>(null);
 
     const botStore = useBotStore();
-    const modelStore = useModelStore();
 
     // 创建一个新的会话
     const createSession = (botId: string, chatId: string, title: string = '新的会话'): Session => {
@@ -94,8 +56,9 @@ export const useChatStore = defineStore('chat', () => {
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
                     temperature: 0.7,
-                    maxTokens: 2000,
+                    maxTokens: 1280,
                     topP: 0.9,
+                    contextSize: 5,
                     avatar: bot.avatar,
                     isDefault: bot.isDefault,
                 };
@@ -145,7 +108,8 @@ export const useChatStore = defineStore('chat', () => {
                         createdAt: Date.now(),
                         updatedAt: Date.now(),
                         temperature: 0.7,
-                        maxTokens: 2000,
+                        maxTokens: 1280,
+                        contextSize: 5,
                         topP: 0.9,
                         avatar: bot.avatar,
                         isDefault: bot.isDefault,
@@ -250,12 +214,13 @@ export const useChatStore = defineStore('chat', () => {
             createdAt: Date.now(),
             updatedAt: Date.now(),
             temperature: 0.7,
-            maxTokens: 2000,
+            maxTokens: 1280,
+            contextSize: 5,
             topP: 0.9,
             avatar: bot.avatar,
             isDefault: bot.isDefault,
             modelId: bot.model?.supplierId
-                ? bot.model.supplierId + bot.model.modelId // 如果有指定模型，使用指定的模型
+                ? bot.model.modelId // 如果有指定模型，使用指定的模型
                 : undefined, // 否则等待用户选择
         };
 
@@ -272,14 +237,15 @@ export const useChatStore = defineStore('chat', () => {
             temperature: number;
             maxTokens: number;
             topP: number;
+            contextSize: number;
         }
     ) => {
         const chat = chats.value.find((c) => c.id === chatId);
         if (!chat) return;
-
         chat.temperature = settings.temperature;
         chat.maxTokens = settings.maxTokens;
         chat.topP = settings.topP;
+        chat.contextSize = settings.contextSize;
         chat.updatedAt = Date.now();
 
         await syncData();
@@ -359,7 +325,7 @@ export const useChatStore = defineStore('chat', () => {
 
         // 清空会话的消息
         session.messages = [];
-        
+
         // 更新时间戳
         session.updatedAt = Date.now();
         currentChat.value.updatedAt = Date.now();

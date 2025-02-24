@@ -302,6 +302,7 @@
             :temperature="chat.temperature"
             :max-tokens="chat.maxTokens"
             :top-p="chat.topP"
+            :context-size="chat.contextSize"
         />
 
         <!-- 添加删除确认对话框 -->
@@ -340,10 +341,10 @@ import {
 import TypewriterText from './TypewriterText.vue';
 import SessionSelector from '@/components/chat/SessionSelector.vue';
 import ChatHistory from '@/components/chat/ChatHistory.vue';
-import { Session, useChatStore } from '@/store/chat';
+import { useChatStore } from '@/store/chat';
 import ChatSettings from '@/components/chat/ChatSettings.vue';
 import DeleteSessionAlert from '@/components/chat/DeleteSessionAlert.vue';
-import type { Message, Chat } from '@/types';
+import type { Message, Chat, Session } from '@/types';
 import { useModelStore } from '@/store/model';
 import { useBotStore } from '@/store/bot';
 import {
@@ -379,15 +380,6 @@ const emit = defineEmits<{
     (e: 'create-session'): void;
     (e: 'rename-session', sessionId: string, title: string): void;
     (e: 'delete-session', sessionId: string): void;
-    (
-        e: 'update-settings',
-        settings: {
-            name: string;
-            temperature: number;
-            maxTokens: number;
-            topP: number;
-        }
-    ): void;
 }>();
 
 const inputMessage = ref('');
@@ -399,20 +391,6 @@ const { toast } = useToast();
 const isFocus = ref(false);
 const showSettings = ref(false);
 const showClearConfirm = ref(false);
-
-// 初始化设置值
-const defaultSettings = {
-    temperature: 0.7,
-    maxTokens: 2000,
-    topP: 0.9,
-};
-
-const settings = ref({
-    name: props.chat.name,
-    temperature: props.chat.temperature,
-    maxTokens: props.chat.maxTokens,
-    topP: props.chat.topP,
-});
 
 const chatStore = useChatStore();
 const modelStore = useModelStore();
@@ -594,30 +572,6 @@ const handleDeleteSession = (sessionId: string) => {
     }
 };
 
-// 导出会话
-const handleExportSession = () => {
-    if (!props.currentSession) return;
-    const content = props.chat.messages
-        .map((msg) => {
-            const time = new Date(msg.timestamp).toLocaleString();
-            return `### ${msg.sender.name} (${time})\n\n${msg.content}\n`;
-        })
-        .join('\n');
-
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${props.currentSession.title}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-        description: '会话已导出',
-        duration: 1000,
-    });
-};
-
 // 机器人设置
 const handleBotSettings = () => {
     emit('edit-bot');
@@ -635,7 +589,7 @@ const handleClearSession = () => {
 };
 
 const updateMessageStatus = (messageId: string | number, status: string) => {
-    const message = props.chat.messages.find((m) => m.id === messageId);
+    const message = props?.currentSession?.messages.find((m) => m.id === messageId);
     if (message) {
         message.status = status;
     }
@@ -683,10 +637,9 @@ watch(
 
 // 监听消息变化
 watch(
-    () => props.chat.messages,
-    (newMessages, oldMessages) => {
-        if (newMessages.length > oldMessages.length) {
-            const latestMessage = newMessages[newMessages.length - 1];
+    () => props?.currentSession?.messages,
+    (newMessages = [], oldMessages = []) => {
+        if (newMessages?.length > oldMessages?.length) {
             nextTick(() => {
                 scrollToBottom();
             });
@@ -707,8 +660,8 @@ onMounted(async () => {
         if (!bot) return;
 
         if (bot.isDefault) {
-            // 默认机器人使用自己的固定模型
-            selectedModel.value = bot?.model?.supplierId + bot?.model?.modelId;
+            // 默认机器人使用自己的固定模型a
+            selectedModel.value = bot?.model?.modelId!;
         } else {
             // 非默认机器人
             if (bot.model) {

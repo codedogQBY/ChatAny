@@ -60,40 +60,42 @@ export type Supplier = {
     isDefault: boolean;
 };
 
+export type MessageSender = 'user' | 'bot';
+
+export interface Message {
+    id: string;
+    sessionId: string;
+    chatId: string;
+    content: string;
+    sender: MessageSender;
+    status?: 'pending' | 'sent' | 'error';
+    metadata?: Record<string, any>;
+    createdAt: number;
+    updatedAt: number;
+}
+
 export interface Session {
     id: string;
+    messages: Message[];
     title: string;
     createdAt: number;
     updatedAt: number;
 }
 
-export interface Message {
-    id: string | number;
-    content: string;
-    sender: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    timestamp: Date;
-    isNew?: boolean;
-    status?: string;
-}
-
 export interface Chat {
     id: string;
     name: string;
-    avatar?: string;
-    messages: Message[];
+    botId: string;
     sessions: Session[];
+    createdAt: number;
+    updatedAt: number;
     temperature: number;
     maxTokens: number;
     topP: number;
-    botId: string;      // 固定指向某个机器人
-    modelId?: string;   // 当前使用的模型 ID
-    createdAt: number;
-    updatedAt: number;
+    contextSize: number;
+    avatar?: string;
     isDefault: boolean;
+    modelId?: string;
 }
 
 export interface Bot {
@@ -106,7 +108,7 @@ export interface Bot {
     prompt?: string;
     // 添加模型相关信息
     model?: {
-        supplierId: string;  // 供应商ID
-        modelId: string;     // 模型ID
+        supplierId: string; // 供应商ID
+        modelId: string; // 模型ID
     };
 }

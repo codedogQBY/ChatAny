@@ -21,7 +21,7 @@
                         <h1
                             class="text-xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent user-select-none"
                         >
-                            机器人
+                            AI Bot
                         </h1>
                     </div>
 
@@ -43,7 +43,11 @@
                     <!-- Bot List -->
 
                     <div class="flex-1 space-y-6 overflow-auto custom-scrollbar">
-                        <div v-for="section in botStore.sections" :key="section.letter" class="space-y-2">
+                        <div
+                            v-for="section in botStore.sections"
+                            :key="section.letter"
+                            class="space-y-2"
+                        >
                             <h2 class="text-sm font-medium text-muted-foreground px-2">
                                 {{ section.letter }}
                             </h2>
@@ -91,10 +95,12 @@
                                                 variant="ghost"
                                                 size="icon-xs"
                                                 class="opacity-0 transition-opacity"
-                                                :class="{'opacity-100': hoveredBotId === bot.id}"
+                                                :class="{ 'opacity-100': hoveredBotId === bot.id }"
                                                 @click.stop="handleDeleteBot(bot, $event)"
                                             >
-                                                <TrashIcon class="h-3 w-3 text-destructive/70 hover:text-destructive" />
+                                                <TrashIcon
+                                                    class="h-3 w-3 text-destructive/70 hover:text-destructive"
+                                                />
                                             </Button>
                                         </div>
                                     </div>
@@ -220,7 +226,9 @@
                                 <UsageChart
                                     :data="usageStore.getBotUsage(botStore.selectedBot?.id || '')"
                                     :year="usageStore.selectedYear"
-                                    :available-years="usageStore.getAvailableYears(botStore.selectedBot?.id || '')"
+                                    :available-years="
+                                        usageStore.getAvailableYears(botStore.selectedBot?.id || '')
+                                    "
                                     @update:year="usageStore.selectedYear = $event"
                                 />
                             </CardContent>
@@ -232,10 +240,7 @@
     </div>
 
     <!-- 添加对话框组件 -->
-    <BotDialog
-        v-model:show="showCreateDialog"
-        @submit="handleCreateBot"
-    />
+    <BotDialog v-model:show="showCreateDialog" @submit="handleCreateBot" />
 
     <BotDialog
         v-if="editingBot"
@@ -249,7 +254,8 @@
             <DialogHeader>
                 <DialogTitle>删除机器人</DialogTitle>
                 <DialogDescription>
-                    确定要删除 "{{ botToDelete?.name }}" 吗？此操作将同时删除与该机器人相关的所有聊天记录，且不可恢复。
+                    确定要删除 "{{ botToDelete?.name }}"
+                    吗？此操作将同时删除与该机器人相关的所有聊天记录，且不可恢复。
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -262,14 +268,20 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch, nextTick } from 'vue';
-import { MessageCircleMoreIcon, BoltIcon, WandIcon, SmilePlusIcon, Settings2Icon, TrashIcon } from 'lucide-vue-next';
+import {
+    MessageCircleMoreIcon,
+    BoltIcon,
+    WandIcon,
+    SmilePlusIcon,
+    TrashIcon,
+} from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UsageChart from './UsageChart.vue';
 import { useBotStore } from '@/store/bot';
 import { useUsageStore } from '@/store/usage';
 import BotDialog from '@/components/bot/BotDialog.vue';
-import type { Bot } from '@/store/bot';
+import type { Bot } from '@/types';
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/store/chat';
 import { useToast } from '@/components/ui/toast/use-toast';

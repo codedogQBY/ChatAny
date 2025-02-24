@@ -27,7 +27,6 @@
                 @cancel-quote="cancelQuote"
                 @select-session="handleSessionSelect"
                 @create-session="handleCreateSession"
-                @update-settings="handleUpdateSettings"
             />
             <div
                 v-else
@@ -54,7 +53,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useChatStore, type Message } from '@/store/chat';
+import { useChatStore } from '@/store/chat';
 import { useBotStore } from '@/store/bot';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
@@ -108,8 +107,8 @@ const currentChatData = computed(() => {
                     ? currentUser
                     : {
                           id: 'bot',
-                          name: chatStore.currentChat.name,
-                          avatar: bot?.avatar || '/placeholder.svg?height=40&width=40',
+                          name: chatStore?.currentChat?.name || 'Bot',
+                          avatar: bot?.avatar || '',
                       },
             timestamp: new Date(msg.createdAt),
             isNew: msg.sender === 'bot' && msg.status === 'pending',
@@ -117,6 +116,7 @@ const currentChatData = computed(() => {
         temperature: chatStore.currentChat.temperature,
         maxTokens: chatStore.currentChat.maxTokens,
         topP: chatStore.currentChat.topP,
+        contextSize: chatStore.currentChat.contextSize,
     };
 });
 
@@ -215,21 +215,6 @@ const handleCreateSession = async () => {
     // 提示创建成功
     toast({
         description: '新会话已创建',
-        duration: 1000,
-    });
-};
-
-const handleUpdateSettings = async (settings: {
-    name: string;
-    temperature: number;
-    maxTokens: number;
-    topP: number;
-}) => {
-    if (!chatStore.currentChat) return;
-
-    await chatStore.updateChatSettings(chatStore.currentChat.id, settings);
-    toast({
-        description: '设置已更新',
         duration: 1000,
     });
 };

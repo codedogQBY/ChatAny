@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -19,6 +18,7 @@ const props = defineProps<{
     chatId: string;
     temperature: number;
     maxTokens: number;
+    contextSize: number;
     topP: number;
 }>();
 
@@ -33,7 +33,10 @@ const settings = ref({
     temperature: [props.temperature],
     maxTokens: [props.maxTokens],
     topP: [props.topP],
+    contextSize: [props.contextSize],
 });
+
+console.log('settings', settings);
 
 watch(
     () => props.open,
@@ -43,6 +46,7 @@ watch(
                 temperature: [props.temperature],
                 maxTokens: [props.maxTokens],
                 topP: [props.topP],
+                contextSize: [props.contextSize],
             };
         }
     }
@@ -52,10 +56,10 @@ const saveSettings = () => {
     // 确保值在有效范围内
     const validatedSettings = {
         temperature: Math.min(Math.max(settings.value.temperature[0], 0), 2),
-        maxTokens: Math.min(Math.max(settings.value.maxTokens[0], 100), 4000),
+        maxTokens: Math.min(Math.max(settings.value.maxTokens[0], 100), 8192),
         topP: Math.min(Math.max(settings.value.topP[0], 0), 1),
+        contextSize: Math.min(Math.max(settings.value.contextSize[0], 0), 20),
     };
-
     chatStore.updateChatSettings(props.chatId, validatedSettings);
     emit('update:open', false);
     toast({
@@ -122,6 +126,22 @@ const saveSettings = () => {
                             class="w-full"
                         />
                         <p class="text-xs text-muted-foreground">控制生成文本的新颖程度</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <Label>上下文数量</Label>
+                            <span class="text-sm text-muted-foreground w-12 text-right">
+                                {{ settings.contextSize[0] }}
+                            </span>
+                        </div>
+                        <Slider
+                            v-model="settings.contextSize"
+                            :min="0"
+                            :max="20"
+                            :step="1"
+                            class="w-full"
+                        />
+                        <p class="text-xs text-muted-foreground">携带的上下文数量</p>
                     </div>
                 </div>
             </div>
