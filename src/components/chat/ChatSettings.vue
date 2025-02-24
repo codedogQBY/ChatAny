@@ -36,8 +36,6 @@ const settings = ref({
     contextSize: [props.contextSize],
 });
 
-console.log('settings', settings);
-
 watch(
     () => props.open,
     (newValue) => {

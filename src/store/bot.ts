@@ -279,7 +279,6 @@ export const useBotStore = defineStore('bot', () => {
     // 更新机器人的模型
     const updateBotModel = async (botId: string, supplierId: string, modelId: string) => {
         for (const section of sections.value) {
-            console.log(section);
             const bot = section.bots.find((b) => b.id === botId);
             if (bot && !bot.isDefault) {
                 // 只允许更新非默认机器人的模型
@@ -287,7 +286,6 @@ export const useBotStore = defineStore('bot', () => {
                     supplierId,
                     modelId,
                 };
-                console.log(bot.model);
                 await syncData(); // 确保保存到本地存储
                 break;
             }
