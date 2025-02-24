@@ -1,7 +1,7 @@
 <template>
     <div class="flex h-full w-full">
         <!-- 左侧会话列表 -->
-        <div class="w-48 shrink-0 border-r border-border bg-background/50">
+        <div class="w-64 shrink-0 border-r border-border bg-background/50">
             <div class="p-4 border-b border-border">
                 <h3 class="text-lg font-semibold">会话历史</h3>
             </div>
@@ -15,12 +15,12 @@
                         <div
                             v-for="session in group.sessions"
                             :key="session.id"
-                            class="group relative flex items-center py-1.5 cursor-pointer transition-all duration-200 ease-in-out"
+                            class="group relative flex items-center py-1.5 cursor-pointer transition-all duration-200 ease-in-out px-2"
                             @click="selectSession(session.id)"
                         >
                             <div
                                 :class="[
-                                    'flex items-center px-2 py-1.5 cursor-pointer rounded-lg transition-all duration-300 w-full',
+                                    'flex items-center px-4 py-1.5 cursor-pointer rounded-lg transition-all duration-300 w-full',
                                     currentSession?.id === session.id
                                         ? 'bg-primary/20 shadow-lg scale-105'
                                         : 'hover:bg-primary/10',

@@ -144,7 +144,7 @@
                     @blur="setInputFocus(false)"
                 />
                 <!-- 工具栏 -->
-                <div class="flex items-center space-x-1 justify-between border-none px-2 py-1">
+                <div class="flex items-center justify-between border-none px-2 py-1">
                     <div class="flex items-center space-x-1">
                         <!-- 只有非默认机器人才显示模型选择器 -->
                         <Select
@@ -193,7 +193,7 @@
                                         <ImageIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>查看最后图片</TooltipContent>
+                                <TooltipContent>上传图片</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                         <TooltipProvider>
@@ -229,16 +229,6 @@
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>快捷键</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" @click="openSettings">
-                                        <SettingsIcon class="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>设置</TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
@@ -445,16 +435,13 @@ const availableModels = computed(() => {
     if (!models) return [];
 
     // 直接返回所有模型，按组分类
-    const groupedModels = models.reduce(
-        (acc, model) => {
-            if (!acc[model.groupName]) {
-                acc[model.groupName] = [];
-            }
-            acc[model.groupName].push(model);
-            return acc;
-        },
-        {} as Record<string, typeof models>
-    );
+    const groupedModels = models.reduce((acc, model) => {
+        if (!acc[model.groupName]) {
+            acc[model.groupName] = [];
+        }
+        acc[model.groupName].push(model);
+        return acc;
+    }, {} as Record<string, typeof models>);
 
     return Object.entries(groupedModels).map(([groupName, models]) => ({
         name: groupName,
