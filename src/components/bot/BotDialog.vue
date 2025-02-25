@@ -194,6 +194,7 @@ const handleFileChange = async (event: Event) => {
 
         const { writeFile, exists, mkdir } = await import('@tauri-apps/plugin-fs');
         const { appDataDir } = await import('@tauri-apps/api/path');
+        const { convertFileSrc } = await import('@tauri-apps/api/core');
         const { v4: uuidv4 } = await import('uuid');
 
         const avatarPath = commonStore.getAvatarPath || (await appDataDir()) + '/avatars';
@@ -211,7 +212,7 @@ const handleFileChange = async (event: Event) => {
 
         await writeFile(filePath, uint8Array);
 
-        formData.value.avatar = `file://${filePath}`;
+        formData.value.avatar = `${convertFileSrc(filePath)}`;
 
         toast({
             description: '头像上传成功',
