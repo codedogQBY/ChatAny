@@ -13,7 +13,7 @@
         </div>
 
         <!-- 聊天列表 -->
-        <div class="flex-1 overflow-y-auto py-4 px-2">
+        <div class="flex-1 overflow-auto py-4 px-2 custom-scrollbar">
             <TransitionGroup name="chat-list" tag="div" class="space-y-2">
                 <div
                     v-for="chat in chatsWithAvatar"

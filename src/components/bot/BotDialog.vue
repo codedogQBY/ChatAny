@@ -197,10 +197,10 @@ const handleFileChange = async (event: Event) => {
         const { convertFileSrc } = await import('@tauri-apps/api/core');
         const { v4: uuidv4 } = await import('uuid');
 
-        const avatarPath = commonStore.getAvatarPath || (await appDataDir()) + '/avatars';
+        const avatarPath = commonStore.getImagePath || (await appDataDir()) + '/images';
         if (!(await exists(avatarPath))) {
             await mkdir(avatarPath, { recursive: true });
-            await commonStore.setAvatarPath(avatarPath);
+            await commonStore.setImagePath(avatarPath);
         }
 
         const fileExt = file.name.split('.').pop() || 'png';

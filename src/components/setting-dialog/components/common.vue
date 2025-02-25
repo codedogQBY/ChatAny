@@ -97,12 +97,24 @@
         <!-- 系统数据 -->
         <div class="space-y-6">
             <h3 class="text-lg font-medium">系统数据</h3>
-
-            <!-- 头像存储目录 -->
-            <div class="space-y-2">
-                <div class="text-lg font-medium">头像存储目录</div>
-                <div class="flex items-center space-x-2">
-                    <Input v-model="avatarPath" readonly class="flex-1 bg-muted/50" />
+            <Card>
+                <CardHeader>
+                    <CardTitle class="text-base font-medium flex items-center">
+                        <ImagesIcon class="h-5 w-5 mr-2 text-muted-foreground" />
+                        图片存储</CardTitle
+                    >
+                    <CardDescription class="text-sm text-muted-foreground"
+                        >所有图片将保存在此目录中</CardDescription
+                    >
+                </CardHeader>
+                <CardContent class="flex items-center space-x-2">
+                    <Input
+                        v-model="imagePath"
+                        readonly
+                        class="flex-1 bg-muted/50 outline-none focus:border-none focus:outline-none"
+                    />
+                </CardContent>
+                <CardFooter class="flex items-center space-x-2 justify-end">
                     <Button variant="outline" @click="openAvatarFolder">
                         <FolderOpenIcon class="h-4 w-4 mr-2" />
                         打开目录
@@ -111,9 +123,8 @@
                         <FolderIcon class="h-4 w-4 mr-2" />
                         更改目录
                     </Button>
-                </div>
-                <div class="text-sm text-muted-foreground">机器人头像将保存在此目录中</div>
-            </div>
+                </CardFooter>
+            </Card>
 
             <!-- 数据备份与恢复 -->
             <div class="relative overflow-hidden rounded-xl border bg-card">
@@ -277,6 +288,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
     Select,
     SelectContent,
     SelectGroup,
@@ -289,7 +308,6 @@ import { DARK_MODE, ThemeEnum } from '@/types';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { useCommonStore } from '@/store/common';
 import {
-    TrashIcon,
     Loader2Icon,
     RotateCcwIcon,
     DatabaseIcon,
@@ -297,6 +315,7 @@ import {
     Upload,
     FolderOpenIcon,
     FolderIcon,
+    ImagesIcon,
 } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import store from '@/hook/useStore';
@@ -310,14 +329,8 @@ import { writeFile, readTextFile } from '@tauri-apps/plugin-fs';
 import { Input } from '@/components/ui/input';
 
 const { setDarkMode, darkMode } = useLightDarkSwitch();
-const {
-    getThemeColor,
-    setThemeColor,
-    getFollowSystem,
-    setFollowSystem,
-    getAvatarPath,
-    setAvatarPath,
-} = useCommonStore();
+const { getThemeColor, setThemeColor, setFollowSystem, getImagePath, setImagePath } =
+    useCommonStore();
 const { toast } = useToast();
 
 const theme = ref(darkMode.value);
@@ -332,7 +345,7 @@ const followSystem = ref(false);
 const importProgress = ref(0);
 const isImporting = ref(false);
 const isExporting = ref(false);
-const avatarPath = ref('');
+const imagePath = ref('');
 
 // 主题色选项
 const themeColors = [
@@ -439,23 +452,23 @@ onMounted(async () => {
     }
 
     // 获取头像路径
-    avatarPath.value = commonStore.getAvatarPath;
+    imagePath.value = commonStore.getImagePath;
 
     // 如果路径为空，初始化它
-    if (!avatarPath.value) {
+    if (!imagePath.value) {
         try {
             const { appDataDir } = await import('@tauri-apps/api/path');
             const { mkdir, exists } = await import('@tauri-apps/plugin-fs');
 
             const appDirPath = await appDataDir();
-            const newPath = `${appDirPath}/avatars`;
+            const newPath = `${appDirPath}/images`;
 
             if (!(await exists(newPath))) {
                 await mkdir(newPath, { recursive: true });
             }
 
-            avatarPath.value = newPath;
-            await commonStore.setAvatarPath(newPath);
+            imagePath.value = newPath;
+            await commonStore.setImagePath(newPath);
         } catch (error) {
             console.error('初始化头像路径失败:', error);
         }
@@ -583,7 +596,7 @@ const openAvatarFolder = async () => {
     try {
         // 修复：使用正确的 shell.open API
         const { open } = await import('@tauri-apps/plugin-shell');
-        await open(avatarPath.value);
+        await open(imagePath.value);
     } catch (error) {
         console.error('打开文件夹失败:', error);
         toast({
@@ -614,8 +627,8 @@ const changeAvatarFolder = async () => {
             }
 
             // 更新路径
-            avatarPath.value = newPath;
-            await setAvatarPath(newPath);
+            imagePath.value = newPath;
+            await setImagePath(newPath);
 
             toast({
                 description: '头像存储目录已更新',

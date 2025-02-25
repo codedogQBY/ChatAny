@@ -9,7 +9,7 @@ interface CommonState {
     themeColor: ThemeEnum;
     sessionMode: SessionModeEnum;
     followSystem: boolean;
-    avatarPath: string;
+    imagePath: string;
 }
 
 const defaultState: CommonState = {
@@ -18,7 +18,7 @@ const defaultState: CommonState = {
     themeColor: ThemeEnum.GREEN,
     sessionMode: SessionModeEnum.LEFT,
     followSystem: false,
-    avatarPath: '',
+    imagePath: '',
 };
 
 export const useCommonStore = defineStore('common', () => {
@@ -27,14 +27,14 @@ export const useCommonStore = defineStore('common', () => {
     const themeColor = ref<ThemeEnum>(defaultState.themeColor);
     const sessionMode = ref<SessionModeEnum>(defaultState.sessionMode);
     const followSystem = ref<boolean>(defaultState.followSystem);
-    const avatarPath = ref<string>(defaultState.avatarPath);
+    const imagePath = ref<string>(defaultState.imagePath);
 
     const getLanguage = computed(() => language.value);
     const getDarkMode = computed(() => darkMode.value);
     const getThemeColor = computed(() => themeColor.value);
     const getSessionMode = computed(() => sessionMode.value);
     const getFollowSystem = computed(() => followSystem.value);
-    const getAvatarPath = computed(() => avatarPath.value);
+    const getImagePath = computed(() => imagePath.value);
 
     // 同步数据到本地存储
     const syncData = async () => {
@@ -44,7 +44,7 @@ export const useCommonStore = defineStore('common', () => {
             themeColor: themeColor.value,
             sessionMode: sessionMode.value,
             followSystem: followSystem.value,
-            avatarPath: avatarPath.value,
+            imagePath: imagePath.value,
         });
     };
 
@@ -57,7 +57,7 @@ export const useCommonStore = defineStore('common', () => {
             themeColor.value = savedState.themeColor;
             sessionMode.value = savedState.sessionMode;
             followSystem.value = savedState.followSystem;
-            avatarPath.value = savedState.avatarPath;
+            imagePath.value = savedState.imagePath;
         } else {
             language.value = defaultState.language;
             darkMode.value = defaultState.darkMode;
@@ -65,20 +65,20 @@ export const useCommonStore = defineStore('common', () => {
             sessionMode.value = defaultState.sessionMode;
             followSystem.value = defaultState.followSystem;
 
-            // 初始化头像存储路径
+            // 初始化图片存储路径
             try {
                 const { appDataDir } = await import('@tauri-apps/api/path');
                 const appDirPath = await appDataDir();
-                avatarPath.value = `${appDirPath}/avatars`;
+                imagePath.value = `${appDirPath}/images`;
 
                 // 确保目录存在
                 const { mkdir, exists } = await import('@tauri-apps/plugin-fs');
-                if (!(await exists(avatarPath.value))) {
-                    await mkdir(avatarPath.value, { recursive: true });
+                if (!(await exists(imagePath.value))) {
+                    await mkdir(imagePath.value, { recursive: true });
                 }
             } catch (error) {
-                console.error('初始化头像路径失败:', error);
-                avatarPath.value = '';
+                console.error('初始化图片路径失败:', error);
+                imagePath.value = '';
             }
 
             await syncData();
@@ -127,8 +127,8 @@ export const useCommonStore = defineStore('common', () => {
         await syncData();
     };
 
-    const setAvatarPath = async (val: string) => {
-        avatarPath.value = val;
+    const setImagePath = async (val: string) => {
+        imagePath.value = val;
         await syncData();
     };
 
@@ -138,13 +138,13 @@ export const useCommonStore = defineStore('common', () => {
         getThemeColor,
         getSessionMode,
         getFollowSystem,
-        getAvatarPath,
+        getImagePath,
         setLanguage,
         setDarkMode,
         setThemeColor,
         setSessionMode,
         setFollowSystem,
-        setAvatarPath,
+        setImagePath,
         initializeStore,
     };
 });
