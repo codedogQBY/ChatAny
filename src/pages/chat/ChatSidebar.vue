@@ -35,7 +35,9 @@
                         </Avatar>
                         <div class="ml-3 flex-1 min-w-0">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-sm font-medium truncate max-w-[calc(100%-4rem)]">{{ chat.name }}</h3>
+                                <h3 class="text-sm font-medium truncate max-w-[calc(100%-4rem)]">
+                                    {{ chat.name }}
+                                </h3>
                                 <span
                                     v-if="chat.lastMessage"
                                     class="text-xs text-muted-foreground ml-1 message-time shrink-0 w-14 text-right"
@@ -43,8 +45,13 @@
                                     {{ chat.lastMessage.time }}
                                 </span>
                             </div>
-                            <p v-if="chat.lastMessage" class="text-xs line-clamp-2 text-muted-foreground w-full mt-1 leading-4">
-                                <span v-if="chat.lastMessage.isUser" class="text-primary">你：</span>
+                            <p
+                                v-if="chat.lastMessage"
+                                class="text-xs line-clamp-2 text-muted-foreground w-full mt-1 leading-4"
+                            >
+                                <span v-if="chat.lastMessage.isUser" class="text-primary"
+                                    >你：</span
+                                >
                                 <span v-else class="text-foreground/70">{{ chat.name }}：</span>
                                 {{ chat.lastMessage.content }}
                             </p>
@@ -82,7 +89,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MessageCirclePlusIcon, MessageCircleMoreIcon } from 'lucide-vue-next';
 import { useBotStore } from '@/store/bot';
-import type { Chat } from '@/store/chat';
+import type { Chat } from '@/types';
 import { formatMessageTime } from '@/utils/time';
 
 const botStore = useBotStore();
