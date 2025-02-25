@@ -57,7 +57,7 @@
                                 {{ message.content }}
                             </div>
                             <div class="mt-2 text-xs opacity-50">
-                                {{ new Date(message.timestamp).toLocaleTimeString() }}
+                                {{ formatMessageTime(message.timestamp) }}
                             </div>
                         </div>
                         <div class="flex items-center space-x-1 invisible group-hover:visible">
@@ -98,7 +98,7 @@
                                 {{ message.content }}
                             </div>
                             <div class="mt-2 text-xs opacity-50">
-                                {{ new Date(message.timestamp).toLocaleTimeString() }}
+                                {{ formatMessageTime(message.timestamp) }}
                             </div>
                         </div>
                         <Avatar class="mb-2">
@@ -356,6 +356,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { formatMessageTime } from '@/utils/time';
 
 const props = defineProps<{
     chat: Chat;

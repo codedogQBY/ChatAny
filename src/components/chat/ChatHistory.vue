@@ -30,7 +30,7 @@
                                     <div class="flex items-center justify-between">
                                         <h3 class="font-medium truncate">{{ session.title }}</h3>
                                         <span class="text-sm text-muted-foreground ml-2 shrink-0">
-                                            {{ formatTime(session.updatedAt) }}
+                                            {{ formatMessageTime(session.updatedAt) }}
                                         </span>
                                     </div>
                                     <p class="text-sm text-muted-foreground truncate mt-1">
@@ -64,7 +64,7 @@
                                     {{ message.sender === 'user' ? 'You' : botName }}
                                 </span>
                                 <span class="text-xs text-muted-foreground">
-                                    {{ formatTime(message.createdAt) }}
+                                    {{ formatMessageTime(message.createdAt) }}
                                 </span>
                             </div>
                             <div class="mt-1 text-sm">
@@ -82,6 +82,7 @@
 import { computed } from 'vue';
 import type { Session } from '@/types';
 import { useToast } from '@/components/ui/toast/use-toast';
+import { formatMessageTime, formatDate } from '@/utils/time';
 
 const props = defineProps<{
     sessions: Session[];
@@ -161,7 +162,7 @@ const handleExport = () => {
     const content = props.currentSession.messages
         .map((msg) => {
             const sender = msg.sender === 'user' ? 'You' : props.botName;
-            const time = formatTime(msg.createdAt);
+            const time = formatMessageTime(msg.createdAt);
             return `### ${sender} (${time})\n\n${msg.content}\n`;
         })
         .join('\n');
@@ -183,22 +184,6 @@ const handleExport = () => {
 const getLastMessage = (session: Session) => {
     const lastMessage = session.messages[session.messages.length - 1];
     return lastMessage ? lastMessage.content : '无消息';
-};
-
-const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
-
-const formatDate = (timestamp?: number) => {
-    if (!timestamp) return '';
-    return new Date(timestamp).toLocaleDateString([], {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
 };
 </script>
 

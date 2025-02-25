@@ -29,31 +29,30 @@
                                 : 'hover:bg-primary/10',
                         ]"
                     >
-                        <Avatar class="h-10 w-10 shrink-0">
+                        <Avatar class="h-8 w-8 shrink-0">
                             <AvatarImage :src="chat.avatar" :alt="chat.name" />
                             <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
                         </Avatar>
                         <div class="ml-3 flex-1 min-w-0">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-sm font-medium truncate">{{ chat.name }}</h3>
-                                <span v-if="chat.lastMessage" class="text-xs text-muted-foreground ml-2">
+                                <h3 class="text-sm font-medium truncate max-w-[calc(100%-4rem)]">{{ chat.name }}</h3>
+                                <span
+                                    v-if="chat.lastMessage"
+                                    class="text-xs text-muted-foreground ml-1 message-time shrink-0 w-14 text-right"
+                                >
                                     {{ chat.lastMessage.time }}
                                 </span>
                             </div>
-                            <p v-if="chat.lastMessage" class="text-xs truncate text-muted-foreground">
+                            <p v-if="chat.lastMessage" class="text-xs line-clamp-2 text-muted-foreground w-full mt-1 leading-4">
                                 <span v-if="chat.lastMessage.isUser" class="text-primary">你：</span>
                                 <span v-else class="text-foreground/70">{{ chat.name }}：</span>
                                 {{ chat.lastMessage.content }}
                             </p>
-                            <p v-else class="text-xs truncate text-muted-foreground">
+                            <p v-else class="text-xs truncate text-muted-foreground w-full mt-1">
                                 {{ chat.description }}
                             </p>
                         </div>
-                        <Badge
-                            v-if="chat.unreadCount"
-                            variant="destructive"
-                            class="ml-2 shrink-0"
-                        >
+                        <Badge v-if="chat.unreadCount" variant="destructive" class="ml-2 shrink-0">
                             {{ chat.unreadCount }}
                         </Badge>
                     </div>
@@ -84,6 +83,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCirclePlusIcon, MessageCircleMoreIcon } from 'lucide-vue-next';
 import { useBotStore } from '@/store/bot';
 import type { Chat } from '@/store/chat';
+import { formatMessageTime } from '@/utils/time';
 
 const botStore = useBotStore();
 
@@ -100,23 +100,24 @@ defineEmits<{
 // 获取带有头像和最后消息的聊天列表，并按最后更新时间排序
 const chatsWithAvatar = computed(() => {
     return props.chats
-        .map(chat => {
+        .map((chat) => {
             const bot = botStore.sections
-                .flatMap(section => section.bots)
-                .find(bot => bot.id === chat.botId);
-            
+                .flatMap((section) => section.bots)
+                .find((bot) => bot.id === chat.botId);
+
             // 获取最后一条消息
             const lastSession = chat.sessions[chat.sessions.length - 1];
             const lastMessage = lastSession?.messages[lastSession.messages.length - 1];
-            
-            const lastMessagePreview = lastMessage ? {
-                content: lastMessage.content.slice(0, 50) + (lastMessage.content.length > 50 ? '...' : ''),
-                isUser: lastMessage.sender === 'user',
-                time: new Date(lastMessage.createdAt).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                }),
-            } : null;
+
+            const lastMessagePreview = lastMessage
+                ? {
+                      content:
+                          lastMessage.content.slice(0, 100) +
+                          (lastMessage.content.length > 100 ? '...' : ''),
+                      isUser: lastMessage.sender === 'user',
+                      time: formatMessageTime(lastMessage.createdAt, 'compact'),
+                  }
+                : null;
 
             return {
                 ...chat,
@@ -140,5 +141,11 @@ const chatsWithAvatar = computed(() => {
 .chat-list-leave-to {
     opacity: 0;
     transform: translateY(20px) scale(0.95);
+}
+
+.message-time {
+    font-variant-numeric: tabular-nums; /* 确保数字宽度一致 */
+    letter-spacing: -0.2px; /* 稍微紧凑一点 */
+    white-space: nowrap; /* 防止时间换行 */
 }
 </style>
