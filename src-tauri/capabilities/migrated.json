@@ -96,6 +96,10 @@
     "fs:scope-appcache-recursive",
     "fs:scope-appcache",
     "fs:scope-appcache-index",
-    "shell:default"
+    "shell:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$APP"},{"path": "$APPCACHE"},{"path": "$APPCONFIG"},{"path": "$APPDATA"},{"path": "$APPLOCALDATA"},{"path": "APPLOG"},{"path": "$DATA"}]
+    }
   ]
 }

@@ -26,6 +26,14 @@
                                     class="w-full h-full object-cover"
                                 />
                                 <UserCircle2Icon v-else class="w-12 h-12 text-primary/40" />
+
+                                <input
+                                    type="file"
+                                    ref="fileInputRef"
+                                    class="hidden"
+                                    accept="image/*"
+                                    @change="handleFileChange"
+                                />
                             </div>
                         </div>
 
@@ -116,8 +124,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { UserCircle2Icon, UploadIcon, WandIcon, MessageSquareIcon } from 'lucide-vue-next';
+import { UserCircle2Icon, WandIcon, MessageSquareIcon } from 'lucide-vue-next';
 import type { Bot } from '@/types';
+import { useCommonStore } from '@/store/common';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 const props = defineProps<{
     show: boolean;
@@ -130,6 +140,8 @@ const emit = defineEmits<{
 }>();
 
 const isEdit = computed(() => !!props.bot);
+const commonStore = useCommonStore();
+const { toast } = useToast();
 
 const initialFormData = {
     name: '',
@@ -140,6 +152,8 @@ const initialFormData = {
 };
 
 const formData = ref({ ...initialFormData });
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const isUploading = ref(false);
 
 watch(
     () => props.bot,
@@ -166,21 +180,55 @@ watch(
     }
 );
 
-const fileInput = ref<HTMLInputElement>();
-
 const triggerFileInput = () => {
-    fileInput.value?.click();
+    fileInputRef.value?.click();
 };
 
 const handleFileChange = async (event: Event) => {
     const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
+    if (!input.files?.length) return;
+
+    try {
+        isUploading.value = true;
         const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            formData.value.avatar = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
+
+        const { writeFile, exists, mkdir } = await import('@tauri-apps/plugin-fs');
+        const { appDataDir } = await import('@tauri-apps/api/path');
+        const { v4: uuidv4 } = await import('uuid');
+
+        const avatarPath = commonStore.getAvatarPath || (await appDataDir()) + '/avatars';
+        if (!(await exists(avatarPath))) {
+            await mkdir(avatarPath, { recursive: true });
+            await commonStore.setAvatarPath(avatarPath);
+        }
+
+        const fileExt = file.name.split('.').pop() || 'png';
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `${avatarPath}/${fileName}`;
+
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        await writeFile(filePath, uint8Array);
+
+        formData.value.avatar = `file://${filePath}`;
+
+        toast({
+            description: '头像上传成功',
+            duration: 2000,
+        });
+    } catch (error) {
+        console.error('上传头像失败:', error);
+        toast({
+            description: '上传头像失败，请重试',
+            variant: 'destructive',
+            duration: 3000,
+        });
+    } finally {
+        isUploading.value = false;
+        if (fileInputRef.value) {
+            fileInputRef.value.value = '';
+        }
     }
 };
 

@@ -98,6 +98,23 @@
         <div class="space-y-6">
             <h3 class="text-lg font-medium">系统数据</h3>
 
+            <!-- 头像存储目录 -->
+            <div class="space-y-2">
+                <div class="text-lg font-medium">头像存储目录</div>
+                <div class="flex items-center space-x-2">
+                    <Input v-model="avatarPath" readonly class="flex-1 bg-muted/50" />
+                    <Button variant="outline" @click="openAvatarFolder">
+                        <FolderOpenIcon class="h-4 w-4 mr-2" />
+                        打开目录
+                    </Button>
+                    <Button variant="outline" @click="changeAvatarFolder">
+                        <FolderIcon class="h-4 w-4 mr-2" />
+                        更改目录
+                    </Button>
+                </div>
+                <div class="text-sm text-muted-foreground">机器人头像将保存在此目录中</div>
+            </div>
+
             <!-- 数据备份与恢复 -->
             <div class="relative overflow-hidden rounded-xl border bg-card">
                 <div
@@ -278,6 +295,8 @@ import {
     DatabaseIcon,
     Download,
     Upload,
+    FolderOpenIcon,
+    FolderIcon,
 } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import store from '@/hook/useStore';
@@ -288,9 +307,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Progress } from '@/components/ui/progress';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { writeFile, readTextFile } from '@tauri-apps/plugin-fs';
+import { Input } from '@/components/ui/input';
 
 const { setDarkMode, darkMode } = useLightDarkSwitch();
-const { getThemeColor, setThemeColor, getFollowSystem, setFollowSystem } = useCommonStore();
+const {
+    getThemeColor,
+    setThemeColor,
+    getFollowSystem,
+    setFollowSystem,
+    getAvatarPath,
+    setAvatarPath,
+} = useCommonStore();
 const { toast } = useToast();
 
 const theme = ref(darkMode.value);
@@ -305,6 +332,7 @@ const followSystem = ref(false);
 const importProgress = ref(0);
 const isImporting = ref(false);
 const isExporting = ref(false);
+const avatarPath = ref('');
 
 // 主题色选项
 const themeColors = [
@@ -399,7 +427,7 @@ const handleFollowSystemChange = async (checked: boolean) => {
 };
 
 // 在组件挂载时初始化
-onMounted(() => {
+onMounted(async () => {
     // 从 store 中获取跟随系统设置
     const commonStore = useCommonStore();
     followSystem.value = commonStore.getFollowSystem;
@@ -408,6 +436,29 @@ onMounted(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         handleSystemThemeChange(mediaQuery);
         mediaQuery.addEventListener('change', handleSystemThemeChange);
+    }
+
+    // 获取头像路径
+    avatarPath.value = commonStore.getAvatarPath;
+
+    // 如果路径为空，初始化它
+    if (!avatarPath.value) {
+        try {
+            const { appDataDir } = await import('@tauri-apps/api/path');
+            const { mkdir, exists } = await import('@tauri-apps/plugin-fs');
+
+            const appDirPath = await appDataDir();
+            const newPath = `${appDirPath}/avatars`;
+
+            if (!(await exists(newPath))) {
+                await mkdir(newPath, { recursive: true });
+            }
+
+            avatarPath.value = newPath;
+            await commonStore.setAvatarPath(newPath);
+        } catch (error) {
+            console.error('初始化头像路径失败:', error);
+        }
     }
 });
 
@@ -428,7 +479,7 @@ const exportData = async () => {
             bots: await store.get('bots'),
             chats: await store.get('chats'),
             models: await store.get('suppliers'),
-            common: await store.get('common'),  // 添加 common store 数据
+            common: await store.get('common'), // 添加 common store 数据
             version: '1.0.0',
             exportDate: new Date().toISOString(),
         };
@@ -489,7 +540,8 @@ const importData = async () => {
         const content = await readTextFile(filePath as string);
         const data = JSON.parse(content);
 
-        if (!data.bots || !data.chats || !data.models || !data.common) {  // 检查 common 数据
+        if (!data.bots || !data.chats || !data.models || !data.common) {
+            // 检查 common 数据
             throw new Error('无效的数据格式');
         }
 
@@ -500,7 +552,7 @@ const importData = async () => {
             store.set('bots', data.bots),
             store.set('chats', data.chats),
             store.set('suppliers', data.models),
-            store.set('common', data.common),  // 添加 common store 数据
+            store.set('common', data.common), // 添加 common store 数据
         ]);
 
         importProgress.value = 100;
@@ -523,6 +575,58 @@ const importData = async () => {
     } finally {
         isImporting.value = false;
         importProgress.value = 0;
+    }
+};
+
+// 打开头像文件夹
+const openAvatarFolder = async () => {
+    try {
+        // 修复：使用正确的 shell.open API
+        const { open } = await import('@tauri-apps/plugin-shell');
+        await open(avatarPath.value);
+    } catch (error) {
+        console.error('打开文件夹失败:', error);
+        toast({
+            description: '打开文件夹失败',
+            variant: 'destructive',
+        });
+    }
+};
+
+// 更改头像文件夹
+const changeAvatarFolder = async () => {
+    try {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const { mkdir, exists } = await import('@tauri-apps/plugin-fs');
+
+        const selected = await open({
+            directory: true,
+            multiple: false,
+            title: '选择头像存储目录',
+        });
+
+        if (selected) {
+            const newPath = selected as string;
+
+            // 确保目录存在
+            if (!(await exists(newPath))) {
+                await mkdir(newPath, { recursive: true });
+            }
+
+            // 更新路径
+            avatarPath.value = newPath;
+            await setAvatarPath(newPath);
+
+            toast({
+                description: '头像存储目录已更新',
+            });
+        }
+    } catch (error) {
+        console.error('更改目录失败:', error);
+        toast({
+            description: '更改目录失败',
+            variant: 'destructive',
+        });
     }
 };
 </script>

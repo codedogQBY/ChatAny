@@ -188,6 +188,11 @@ export const useBotStore = defineStore('bot', () => {
             selectedBot.value = updatedBot;
         }
 
+        // 如果更新了头像，确保使用新的头像路径
+        if (updates.avatar && updates.avatar.startsWith('file://')) {
+            // 头像已经是文件路径，不需要额外处理
+        }
+
         await syncData();
         return updatedBot;
     };
