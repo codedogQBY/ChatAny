@@ -91,6 +91,12 @@
                                     @update:modelValue="handleUpdateModelName($event, group, model)"
                                     >{{ model.name }}</TextInput
                                 >
+                                <TextInput
+                                    class="mr-2"
+                                    :modelValue="model.id"
+                                    @update:modelValue="handleUpdateModelId($event, group, model)"
+                                    >{{ model.id }}</TextInput
+                                >
                                 <div v-for="skill in model.skills" :key="skill">
                                     <TooltipProvider>
                                         <Tooltip>
@@ -191,6 +197,7 @@ const {
     updateModelName,
     removeModel,
     updateSupplierConfig,
+    updateModelId,
 } = useModelStore();
 
 const props = defineProps<{
@@ -263,6 +270,10 @@ const handleUpdateModelGroupName = (groupName: string, group: ModelGroup) => {
 // 更新模型名称
 const handleUpdateModelName = (name: string, group: ModelGroup, model: Model) => {
     updateModelName(props.model, group, model, name);
+};
+
+const handleUpdateModelId = (id: string, group: ModelGroup, model: Model) => {
+    updateModelId(props.model, group, model, id);
 };
 
 // 处理API地址变更

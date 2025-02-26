@@ -29,105 +29,89 @@
         </div>
 
         <!-- 聊天内容区域 -->
-        <div class="flex-1 overflow-y-auto p-6" ref="chatContainer">
-            <TransitionGroup name="message" tag="div" class="space-y-6">
-                <div
-                    v-for="message in chat.messages"
-                    :key="message.id"
-                    class="group flex items-end space-x-2 message-item"
-                    :class="message.sender.id === user.id ? 'justify-end' : 'justify-start'"
-                >
-                    <template v-if="message.sender.id !== user.id">
-                        <Avatar class="mb-2">
-                            <AvatarImage :src="message.sender.avatar" :alt="message.sender.name" />
-                            <AvatarFallback>{{ message.sender.name[0] }}</AvatarFallback>
-                        </Avatar>
-                        <div
-                            class="relative text-sm max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-card text-card-foreground rounded-bl-sm"
-                        >
-                            <TypewriterText
-                                v-if="message.sender.id !== user.id && message.status === 'pending'"
-                                :content="message.content"
-                                :key="message.id"
-                                :typing-speed="30"
-                                :start-delay="300"
-                                @typing-complete="updateMessageStatus(message.id, 'sent')"
-                            />
-                            <div v-else class="w-full break-words whitespace-pre-wrap leading-6">
-                                {{ message.content }}
+        <div class="flex-1 overflow-y-auto px-4 py-6" ref="chatContainer">
+            <div class="max-w-4xl mx-auto">
+                <TransitionGroup name="message" tag="div" class="space-y-8">
+                    <div
+                        v-for="message in currentSession?.messages"
+                        :key="message.id"
+                        class="group flex items-start space-x-3 message-item"
+                        :class="message.sender === 'user' ? 'justify-end' : 'justify-start'"
+                    >
+                        <template v-if="message.sender !== 'user'">
+                            <Avatar class="mt-0.5 flex-shrink-0">
+                                <AvatarImage :src="chat.avatar" :alt="chat.name" />
+                                <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
+                            </Avatar>
+                            <div class="flex flex-col max-w-[75%] relative group">
+                                <div class="text-sm text-muted-foreground mb-1 flex items-center">
+                                    <span>{{ chat.name }}</span>
+                                </div>
+                                <div>
+                                    <MessageItem :message="message" />
+                                    <div class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                                        <span>{{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}</span>
+                                        <div class="message-actions flex space-x-1 ml-2">
+                                            <button @click="copyMessage(message.content)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                                <CopyIcon class="w-3.5 h-3.5" />
+                                            </button>
+                                            <button @click="setQuotedMessage(message)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                                <ReplyIcon class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mt-2 text-xs opacity-50">
-                                {{ formatMessageTime(message.timestamp) }}
+                        </template>
+                        <template v-else>
+                            <div class="flex flex-col items-end max-w-[75%] relative group">
+                                <div class="text-sm text-muted-foreground mb-1 self-end flex items-center">
+                                    <span>{{ userName }}</span>
+                                </div>
+                                <div>
+                                    <div
+                                        class="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-4 hover:shadow-md transition-shadow duration-200"
+                                    >
+                                        <p class="whitespace-pre-wrap">{{ message.content }}</p>
+                                    </div>
+                                    <div class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end">
+                                        <div class="message-actions flex space-x-1 mr-2">
+                                            <button @click="copyMessage(message.content)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                                <CopyIcon class="w-3.5 h-3.5" />
+                                            </button>
+                                            <button @click="setQuotedMessage(message)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                                <ReplyIcon class="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                        <span>{{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex items-center space-x-1 invisible group-hover:visible">
-                            <div
-                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
-                                @click="copyMessage(message.content)"
-                            >
-                                <CopyIcon class="h-3 w-3" />
-                            </div>
-                            <div
-                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
-                                @click="$emit('quote-message', message)"
-                            >
-                                <QuoteIcon class="h-3 w-3" />
-                            </div>
-                        </div>
-                    </template>
-
-                    <template v-else>
-                        <div class="flex items-center space-x-1 invisible group-hover:visible">
-                            <div
-                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
-                                @click="copyMessage(message.content)"
-                            >
-                                <CopyIcon class="h-3 w-3" />
-                            </div>
-                            <div
-                                class="p-1 rounded-sm bg-transparent hover:bg-primary/10 transition-colors duration-200 ease-in-out cursor-pointer"
-                                @click="$emit('quote-message', message)"
-                            >
-                                <QuoteIcon class="h-3 w-3" />
-                            </div>
-                        </div>
-                        <div
-                            class="relative max-w-[80%] rounded-2xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl bg-primary text-primary-foreground rounded-br-sm"
-                        >
-                            <div class="w-full break-words whitespace-pre-wrap text-sm leading-6">
-                                {{ message.content }}
-                            </div>
-                            <div class="mt-2 text-xs opacity-50">
-                                {{ formatMessageTime(message.timestamp) }}
-                            </div>
-                        </div>
-                        <Avatar class="mb-2">
-                            <AvatarImage :src="user.avatar" :alt="user.name" />
-                            <AvatarFallback>{{ user.name[0] }}</AvatarFallback>
-                        </Avatar>
-                    </template>
-                </div>
-            </TransitionGroup>
+                            <Avatar class="mt-0.5 flex-shrink-0">
+                                <AvatarImage v-if="userAvatar" :src="userAvatar" :alt="userName || '用户'" />
+                                <AvatarFallback>{{ userName && userName.length > 0 ? userName[0] : '?' }}</AvatarFallback>
+                            </Avatar>
+                        </template>
+                    </div>
+                </TransitionGroup>
+            </div>
         </div>
 
         <!-- 底部输入区域 -->
-        <div class="p-4 bg-card/50 backdrop-blur-sm">
-            <!-- 引用消息展示 -->
-            <div
-                v-if="quotedMessage"
-                class="mb-2 p-3 bg-muted rounded-lg text-sm flex items-center justify-between"
-            >
-                <div class="flex items-center space-x-2">
-                    <QuoteIcon class="h-4 w-4 text-muted-foreground" />
-                    <span class="text-muted-foreground line-clamp-1">{{
-                        quotedMessage.content
-                    }}</span>
+        <div class="border-t border-border bg-card/50 backdrop-blur-sm px-4 py-3">
+            <!-- 引用消息显示 -->
+            <Transition name="slide-up">
+                <div v-if="quotedMessage" class="mb-3 p-3 bg-muted rounded-lg flex items-start justify-between shadow-sm">
+                    <div class="flex-1">
+                        <div class="text-xs text-muted-foreground mb-1">引用消息</div>
+                        <div class="line-clamp-2 text-sm">{{ quotedMessage.content }}</div>
+                    </div>
+                    <button @click="cancelQuote" class="p-1 hover:bg-background rounded-full">
+                        <XIcon class="w-4 h-4" />
+                    </button>
                 </div>
-                <Button variant="ghost" size="icon" class="h-6 w-6" @click="$emit('cancel-quote')">
-                    <XIcon class="h-4 w-4" />
-                </Button>
-            </div>
-
+            </Transition>
+            
             <!-- 输入框 -->
             <div
                 :class="`relative rounded-xl border ${
@@ -139,7 +123,7 @@
                     placeholder="输入消息..."
                     :rows="1"
                     class="resize-none overflow-auto w-full flex-1 bg-transparent p-3 pb-1.5 text-sm outline-none ring-0 placeholder:text-gray-500 border-none mb-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-                    @keydown.enter.prevent="sendMessage"
+                    @keydown="handleKeyDown"
                     @focus="setInputFocus(true)"
                     @blur="setInputFocus(false)"
                 />
@@ -258,7 +242,7 @@
                         </TooltipProvider>
 
                         <Button
-                            @click="sendMessage"
+                            @click="handleSendMessage"
                             :disabled="!inputMessage.trim()"
                             class="rounded-full"
                             size="icon"
@@ -337,6 +321,7 @@ import {
     CommandIcon,
     SendIcon,
     GlobeIcon,
+    ReplyIcon,
 } from 'lucide-vue-next';
 import TypewriterText from './TypewriterText.vue';
 import SessionSelector from '@/components/chat/SessionSelector.vue';
@@ -357,6 +342,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { formatMessageTime } from '@/utils/time';
+import { serviceManager } from '@/core/services';
+import MessageItem from './components/MessageItem.vue';
 
 const props = defineProps<{
     chat: Chat;
@@ -414,13 +401,16 @@ const availableModels = computed(() => {
     if (!models) return [];
 
     // 直接返回所有模型，按组分类
-    const groupedModels = models.reduce((acc, model) => {
-        if (!acc[model.groupName]) {
-            acc[model.groupName] = [];
-        }
-        acc[model.groupName].push(model);
-        return acc;
-    }, {} as Record<string, typeof models>);
+    const groupedModels = models.reduce(
+        (acc, model) => {
+            if (!acc[model.groupName]) {
+                acc[model.groupName] = [];
+            }
+            acc[model.groupName].push(model);
+            return acc;
+        },
+        {} as Record<string, typeof models>
+    );
 
     return Object.entries(groupedModels).map(([groupName, models]) => ({
         name: groupName,
@@ -436,11 +426,191 @@ const setInputFocus = (value: boolean) => {
     isFocus.value = value;
 };
 
-const sendMessage = () => {
+const handleSendMessage = () => {
     if (inputMessage.value.trim()) {
-        emit('send-message', inputMessage.value);
+        // 保存消息内容并清空输入框
+        const messageContent = inputMessage.value.trim();
         inputMessage.value = '';
+        
+        // 发送消息内容而不是事件对象
+        sendMessage(messageContent);
         scrollToBottom();
+    }
+};
+
+// 处理键盘事件
+const handleKeyDown = (event: KeyboardEvent) => {
+    // 检查是否按下 Enter 键且没有按下 Shift 键
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // 阻止默认行为
+        handleSendMessage();
+    }
+};
+
+const sendMessage = async (content: string) => {
+    if (!chatStore.currentChat?.id || !chatStore.currentSession?.id) return;
+
+    try {
+        // 自动选择默认模型
+        if (!selectedModel.value && modelStore.getAllModels.length > 0) {
+            selectedModel.value = modelStore.getAllModels[0].id;
+            console.log('已自动选择默认模型:', selectedModel.value);
+        }
+        
+        // 检查是否选择了模型
+        if (!selectedModel.value) {
+            throw new Error('请先选择一个模型');
+        }
+
+        console.log('当前选择的模型ID:', selectedModel.value);
+        
+        // 获取当前供应商信息
+        let supplierName = '';
+        
+        // 从模型信息中获取供应商
+        const modelInfo = modelStore.getAllModels.find(m => m.id === selectedModel.value);
+        if (modelInfo) {
+            supplierName = modelInfo.supplierId;
+        } else if (selectedModel.value.includes('/')) {
+            // 从ID格式中提取
+            supplierName = selectedModel.value.split('/')[0];
+        } else {
+            supplierName = selectedModel.value;
+        }
+        
+        const supplier = modelStore.suppliers.find(s => s.name === supplierName);
+        if (!supplier) {
+            throw new Error(`找不到供应商: ${supplierName}`);
+        }
+
+        // 添加用户消息
+        await chatStore.addMessage({
+            content,
+            chatId: chatStore.currentChat.id,
+            sessionId: chatStore.currentSession.id,
+            sender: 'user',
+            status: 'sent',
+        });
+        
+        // 确保视图更新
+        await nextTick();
+        
+        // 获取服务
+        const service = await serviceManager.getService(chatStore.currentChat, supplier);
+        
+        // 添加机器人消息（状态为加载中）
+        const pendingMessage = await chatStore.addMessage({
+            content: '',
+            chatId: chatStore.currentChat.id,
+            sessionId: chatStore.currentSession.id,
+            sender: 'assistant',
+            status: 'loading',
+        });
+
+        // 确保视图更新并滚动到底部
+        await nextTick();
+        scrollToBottom();
+        
+        // 获取历史消息
+        const history = chatStore.currentSession.messages.slice(-20);
+        
+        // 使用流式响应
+        const usesStream = true;
+        
+        if (usesStream) {
+            try {
+                // 创建一个强引用
+                const pendingMessageRef = pendingMessage;
+                console.log('启动流式响应, 消息ID:', pendingMessageRef.id);
+                
+                // 延迟一小段时间再切换到streaming状态，确保loading动画显示
+                setTimeout(async () => {
+                    // 确保消息还存在
+                    if (pendingMessageRef) {
+                        const updatedMessage = JSON.parse(JSON.stringify(pendingMessageRef));
+                        updatedMessage.status = 'streaming';
+                        updatedMessage.content = ''; // 确保内容为空，避免显示垃圾字符
+                        await chatStore.replaceMessage(pendingMessageRef.id, updatedMessage);
+                        await nextTick();
+                    }
+                }, 800); // 给骨架屏800ms的显示时间
+                
+                // 流式处理
+                const finalContent = await service.sendMessageStream(
+                    content,
+                    history,
+                    async (updatedContent) => {
+                        if (pendingMessageRef) {
+                            console.log('收到流式更新，长度:', updatedContent.length);
+                            const streamingMessage = JSON.parse(JSON.stringify(pendingMessageRef));
+                            streamingMessage.content = updatedContent;
+                            streamingMessage.status = 'streaming';
+                            
+                            await chatStore.replaceMessage(pendingMessageRef.id, streamingMessage);
+                            await nextTick();
+                            scrollToBottom();
+                        }
+                    }
+                );
+                
+                // 响应完成后，更新状态为sent
+                if (pendingMessageRef) {
+                    console.log('流式响应完成，总长度:', finalContent.length);
+                    const completedMessage = JSON.parse(JSON.stringify(pendingMessageRef));
+                    completedMessage.content = finalContent;
+                    completedMessage.status = 'sent';
+                    
+                    await chatStore.replaceMessage(pendingMessageRef.id, completedMessage);
+                    await chatStore.syncData(); // 最后一次保存
+                    await nextTick();
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error('流式响应失败:', error);
+                
+                if (pendingMessage) {
+                    const errorMessage = JSON.parse(JSON.stringify(pendingMessage));
+                    errorMessage.content = `响应生成失败: ${error.message || '未知错误'}`;
+                    errorMessage.status = 'error';
+                    
+                    await chatStore.replaceMessage(pendingMessage.id, errorMessage);
+                    await chatStore.syncData();
+                    await nextTick();
+                    scrollToBottom();
+                }
+            }
+        } else {
+            // 非流式响应
+            try {
+                const response = await service.sendMessage(content, history);
+                if (pendingMessage) {
+                    pendingMessage.content = response;
+                    pendingMessage.status = 'sent';
+                    await chatStore.syncData();
+                }
+            } catch (error) {
+                console.error('非流式响应失败:', error);
+                if (pendingMessage) {
+                    pendingMessage.content = '响应生成失败，请稍后再试。';
+                    pendingMessage.status = 'error';
+                    await chatStore.syncData();
+                }
+            }
+        }
+        
+        // 最后确保滚动到底部
+        await nextTick();
+        if (chatContainer.value) {
+            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+        }
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        // 显示错误提示
+        toast({
+            title: '发送失败',
+            description: error instanceof Error ? error.message : '未知错误',
+            variant: 'destructive',
+        });
     }
 };
 
@@ -448,17 +618,16 @@ const copyMessage = async (content: string) => {
     try {
         await navigator.clipboard.writeText(content);
         toast({
-            title: '已复制',
-            description: '消息内容已复制到剪贴板',
-            duration: 1000,
+            description: '消息已复制到剪贴板',
+            duration: 2000
         });
-    } catch (err) {
-        console.error('Failed to copy text: ', err);
+    } catch (error) {
+        console.error('复制失败:', error);
         toast({
             title: '复制失败',
             description: '无法复制消息内容',
             variant: 'destructive',
-            duration: 1000,
+            duration: 2000
         });
     }
 };
@@ -527,78 +696,58 @@ const toggleHistory = () => {
     showHistory.value = !showHistory.value;
 };
 
-const scrollToBottom = () => {
-    if (chatContainer.value) {
-        // 直接设置 scrollTop 为最大值
-        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+// 安全的滚动到底部函数
+const scrollToBottom = async () => {
+    await nextTick();
+    try {
+        if (chatContainer.value) {
+            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+        }
+    } catch (error) {
+        console.error('滚动到底部失败:', error);
     }
 };
 
-const handleCreateSession = async () => {
-    if (!chatStore.currentChat) return;
+// 在组件挂载和更新时使用
+onMounted(() => {
+    setTimeout(scrollToBottom, 100); // 稍微延迟确保 DOM 已更新
+});
 
-    const newSession = await chatStore.createSession(
-        chatStore.currentChat.botId,
-        chatStore.currentChat.id,
-        `新的会话 ${chatStore.currentChat.sessions.length + 1}`
-    );
+// 监听消息变化
+watch(
+    () => chatStore.currentSession?.messages,
+    () => {
+        setTimeout(scrollToBottom, 50);
+    },
+    { deep: true }
+);
 
-    chatStore.currentChat.sessions.push(newSession);
-    await chatStore.selectSession(newSession.id);
-    await chatStore.syncData();
+// 添加用户名和头像的默认值
+const userName = ref('用户'); // 添加默认用户名
+const userAvatar = ref('/src/assets/placeholder.svg'); // 修正占位图像路径
 
-    toast({
-        description: '新会话已创建',
-        duration: 1000,
-    });
-};
-
-// 重命名会话
-const handleRenameSession = (sessionId: string) => {
-    if (!props.currentSession) return;
-    const newTitle = prompt('请输入新的会话名称', props.currentSession.title);
-    if (newTitle && newTitle !== props.currentSession.title) {
-        emit('rename-session', sessionId, newTitle);
+// 确保模型选择初始化
+onMounted(async () => {
+    // 获取用户名和头像
+    const storedUserName = localStorage.getItem('userName') || '用户';
+    userName.value = storedUserName;
+    
+    // 获取用户头像
+    const storedUserAvatar = localStorage.getItem('userAvatar') || '/src/assets/placeholder.svg';
+    userAvatar.value = storedUserAvatar;
+    
+    // 默认选择第一个可用模型
+    if (!selectedModel.value && modelStore.getAllModels.length > 0) {
+        selectedModel.value = modelStore.getAllModels[0].id;
+        console.log('已自动选择默认模型:', selectedModel.value);
     }
-};
-
-// 删除会话
-const handleDeleteSession = (sessionId: string) => {
-    if (confirm('确定要删除这个会话吗？此操作不可恢复。')) {
-        emit('delete-session', sessionId);
-        toast({
-            description: '会话已删除',
-            duration: 1000,
-        });
-    }
-};
-
-// 机器人设置
-const handleBotSettings = () => {
-    emit('edit-bot');
-};
-
-// 清空会话
-const handleClearSession = () => {
-    if (confirm('确定要清空当前会话的所有消息吗？此操作不可恢复。')) {
-        emit('clear-history');
-        toast({
-            description: '会话已清空',
-            duration: 1000,
-        });
-    }
-};
-
-const updateMessageStatus = (messageId: string | number, status: string) => {
-    const message = props?.currentSession?.messages.find((m) => m.id === messageId);
-    if (message) {
-        message.status = status;
-    }
-};
+});
 
 // 处理模型变更
 const handleModelChange = async (modelId: string) => {
     if (!modelId) return;
+    
+    console.log('模型变更为:', modelId);
 
     // 更新选中的模型
     selectedModel.value = modelId;
@@ -608,18 +757,32 @@ const handleModelChange = async (modelId: string) => {
         .flatMap((section) => section.bots)
         .find((bot) => bot.id === props.chat.botId);
 
-    if (!bot || bot.isDefault) return; // 默认机器人不允许更改模型
+    if (!bot) return;
 
     // 找到对应的供应商和模型
     const model = modelStore.getAllModels.find((m) => m.id === modelId);
 
-    if (!model) return;
+    if (!model) {
+        console.warn('找不到模型信息:', modelId);
+        return;
+    }
+    
+    console.log('更新聊天模型为:', modelId, '供应商:', model.supplierId, '模型ID:', model.modelId);
 
-    // 更新机器人的模型信息
-    await botStore.updateBotModel(bot.id, model.supplierId, model.id);
+    // 更新机器人的模型信息（如果不是默认机器人）
+    if (!bot.isDefault) {
+        await botStore.updateBotModel(bot.id, model.supplierId, model.modelId);
+    }
 
-    // 更新聊天的模型设置
+    // 更新聊天的模型设置 - 这个必须更新，即使是默认机器人
     await chatStore.updateChatModel(props.chat.id, modelId);
+
+    // 在页面刚加载时，如果是默认机器人，确保模型ID被正确设置到聊天对象中
+    if (bot.isDefault && bot.model?.modelId && selectedModel.value) {
+        // 默认机器人需要手动更新聊天的模型ID
+        console.log('更新默认机器人的聊天模型ID:', selectedModel.value);
+        await chatStore.updateChatModel(props.chat.id, selectedModel.value);
+    }
 };
 
 watch(networkEnabled, (newValue) => {
@@ -638,50 +801,28 @@ watch(
 
 // 监听消息变化
 watch(
-    () => props?.currentSession?.messages,
-    (newMessages = [], oldMessages = []) => {
-        if (newMessages?.length > oldMessages?.length) {
-            nextTick(() => {
-                scrollToBottom();
-            });
-        }
+    () => chatStore.currentSession?.messages,
+    () => {
+        nextTick(() => scrollToBottom());
     },
     { deep: true }
 );
 
-// 初始化时设置选中的模型
-onMounted(async () => {
-    try {
-        await Promise.all([modelStore.initializeStore(), botStore.initializeStore()]);
+const onCopyMessage = (content: string) => {
+    copyMessage(content);
+};
 
-        const bot = botStore.sections
-            .flatMap((section) => section.bots)
-            .find((bot) => bot.id === props.chat.botId);
+const setQuotedMessage = (message: Message) => {
+    emit('quote-message', message);
+    toast({
+        description: '已添加引用',
+        duration: 2000
+    });
+};
 
-        if (!bot) return;
-
-        if (bot.isDefault) {
-            // 默认机器人使用自己的固定模型a
-            selectedModel.value = bot?.model?.modelId!;
-        } else {
-            // 非默认机器人
-            if (bot.model) {
-                // 如果机器人已有选择的模型，使用该模型
-                selectedModel.value = bot.model.modelId;
-            } else if (availableModels.value?.length > 0) {
-                // 只有在没有选择模型时，才设置第一个可用模型
-                const firstGroup = availableModels.value[0];
-                if (firstGroup.models.length > 0) {
-                    const firstModel = firstGroup.models[0];
-                    selectedModel.value = firstModel.id;
-                    await handleModelChange(firstModel.id);
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Failed to initialize stores:', error);
-    }
-});
+const cancelQuote = () => {
+    emit('cancel-quote');
+};
 </script>
 
 <style scoped>

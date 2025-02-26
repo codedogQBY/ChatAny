@@ -40,7 +40,7 @@
                         <SmilePlusIcon />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top" class="text-xs"> 新增大模型 </TooltipContent>
+                <TooltipContent side="top" class="text-xs"> 新增服务商 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
     </div>

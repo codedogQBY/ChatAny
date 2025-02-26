@@ -183,10 +183,13 @@ export const useChatStore = defineStore('chat', () => {
 
         const message = currentSession.value.messages.find((m) => m.id === messageId);
         if (message) {
+            console.log(`更新消息状态: ${messageId} -> ${status}`);
             message.status = status;
             message.updatedAt = Date.now();
             await syncData();
+            return true;
         }
+        return false;
     };
 
     // 通过 botId 获取或创建 chat
@@ -350,6 +353,21 @@ export const useChatStore = defineStore('chat', () => {
         await syncData();
     };
 
+    // 替换消息（完全替换对象以解决响应式更新问题）
+    const replaceMessage = async (messageId: string, newMessage: Message) => {
+        if (!currentChat.value || !currentSession.value) return false;
+        
+        const index = currentSession.value.messages.findIndex(m => m.id === messageId);
+        if (index === -1) return false;
+        
+        // 直接替换整个对象
+        currentSession.value.messages.splice(index, 1, newMessage);
+        console.log(`替换消息 ${messageId} 成功，新状态:`, newMessage.status);
+        
+        // 触发视图更新，但不调用syncData来减少IO负担
+        return true;
+    };
+
     return {
         chats,
         currentChat,
@@ -368,5 +386,6 @@ export const useChatStore = defineStore('chat', () => {
         deleteChatsByBotId,
         clearSessionMessages,
         updateChatModel,
+        replaceMessage,
     };
 });

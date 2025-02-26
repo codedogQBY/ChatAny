@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>用户头像占位图</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#EEEEEE" x="0" y="0" width="80" height="80" rx="40"></rect>
+        <g transform="translate(16.000000, 16.000000)" fill="#AAAAAA">
+            <path d="M24,48 C37.254834,48 48,37.254834 48,24 C48,10.745166 37.254834,0 24,0 C10.745166,0 0,10.745166 0,24 C0,37.254834 10.745166,48 24,48 Z M24,44 C12.954305,44 4,35.045695 4,24 C4,12.954305 12.954305,4 24,4 C35.045695,4 44,12.954305 44,24 C44,35.045695 35.045695,44 24,44 Z"></path>
+            <circle cx="24" cy="17" r="6"></circle>
+            <path d="M36,36 C36,29.372583 30.627417,24 24,24 C17.372583,24 12,29.372583 12,36 L36,36 Z"></path>
+        </g>
+    </g>
+</svg> 
