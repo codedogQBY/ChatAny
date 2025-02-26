@@ -49,13 +49,25 @@
                                 </div>
                                 <div>
                                     <MessageItem :message="message" />
-                                    <div class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
-                                        <span>{{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}</span>
+                                    <div
+                                        class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center"
+                                    >
+                                        <span>{{
+                                            message.createdAt
+                                                ? formatMessageTime(message.createdAt)
+                                                : ''
+                                        }}</span>
                                         <div class="message-actions flex space-x-1 ml-2">
-                                            <button @click="copyMessage(message.content)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                            <button
+                                                @click="copyMessage(message.content)"
+                                                class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                            >
                                                 <CopyIcon class="w-3.5 h-3.5" />
                                             </button>
-                                            <button @click="setQuotedMessage(message)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                            <button
+                                                @click="setQuotedMessage(message)"
+                                                class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                            >
                                                 <ReplyIcon class="w-3.5 h-3.5" />
                                             </button>
                                         </div>
@@ -65,7 +77,9 @@
                         </template>
                         <template v-else>
                             <div class="flex flex-col items-end max-w-[75%] relative group">
-                                <div class="text-sm text-muted-foreground mb-1 self-end flex items-center">
+                                <div
+                                    class="text-sm text-muted-foreground mb-1 self-end flex items-center"
+                                >
                                     <span>{{ userName }}</span>
                                 </div>
                                 <div>
@@ -74,22 +88,40 @@
                                     >
                                         <p class="whitespace-pre-wrap">{{ message.content }}</p>
                                     </div>
-                                    <div class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end">
+                                    <div
+                                        class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end"
+                                    >
                                         <div class="message-actions flex space-x-1 mr-2">
-                                            <button @click="copyMessage(message.content)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                            <button
+                                                @click="copyMessage(message.content)"
+                                                class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                            >
                                                 <CopyIcon class="w-3.5 h-3.5" />
                                             </button>
-                                            <button @click="setQuotedMessage(message)" class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
+                                            <button
+                                                @click="setQuotedMessage(message)"
+                                                class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                            >
                                                 <ReplyIcon class="w-3.5 h-3.5" />
                                             </button>
                                         </div>
-                                        <span>{{ message.createdAt ? formatMessageTime(message.createdAt) : '' }}</span>
+                                        <span>{{
+                                            message.createdAt
+                                                ? formatMessageTime(message.createdAt)
+                                                : ''
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
                             <Avatar class="mt-0.5 flex-shrink-0">
-                                <AvatarImage v-if="userAvatar" :src="userAvatar" :alt="userName || '用户'" />
-                                <AvatarFallback>{{ userName && userName.length > 0 ? userName[0] : '?' }}</AvatarFallback>
+                                <AvatarImage
+                                    v-if="userAvatar"
+                                    :src="userAvatar"
+                                    :alt="userName || '用户'"
+                                />
+                                <AvatarFallback>{{
+                                    userName && userName.length > 0 ? userName[0] : '?'
+                                }}</AvatarFallback>
                             </Avatar>
                         </template>
                     </div>
@@ -101,7 +133,10 @@
         <div class="border-t border-border bg-card/50 backdrop-blur-sm px-4 py-3">
             <!-- 引用消息显示 -->
             <Transition name="slide-up">
-                <div v-if="quotedMessage" class="mb-3 p-3 bg-muted rounded-lg flex items-start justify-between shadow-sm">
+                <div
+                    v-if="quotedMessage"
+                    class="mb-3 p-3 bg-muted rounded-lg flex items-start justify-between shadow-sm"
+                >
                     <div class="flex-1">
                         <div class="text-xs text-muted-foreground mb-1">引用消息</div>
                         <div class="line-clamp-2 text-sm">{{ quotedMessage.content }}</div>
@@ -111,7 +146,7 @@
                     </button>
                 </div>
             </Transition>
-            
+
             <!-- 输入框 -->
             <div
                 :class="`relative rounded-xl border ${
@@ -242,12 +277,14 @@
                         </TooltipProvider>
 
                         <Button
-                            @click="handleSendMessage"
-                            :disabled="!inputMessage.trim()"
-                            class="rounded-full"
+                            variant="default"
                             size="icon"
+                            @click="sendUserMessage"
+                            :disabled="!canSendMessage || isLoading"
+                            class="rounded-full w-10 h-10 flex-shrink-0"
                         >
-                            <SendIcon class="h-4 w-4" />
+                            <LoaderCircleIcon v-if="isLoading" class="h-5 w-5 animate-spin" />
+                            <SendIcon v-else class="h-5 w-5" />
                         </Button>
                     </div>
                 </div>
@@ -311,7 +348,6 @@ import { useToast } from '@/components/ui/toast/use-toast';
 import {
     ClockIcon,
     SettingsIcon,
-    QuoteIcon,
     XIcon,
     CopyIcon,
     CameraIcon,
@@ -322,8 +358,8 @@ import {
     SendIcon,
     GlobeIcon,
     ReplyIcon,
+    LoaderCircleIcon,
 } from 'lucide-vue-next';
-import TypewriterText from './TypewriterText.vue';
 import SessionSelector from '@/components/chat/SessionSelector.vue';
 import ChatHistory from '@/components/chat/ChatHistory.vue';
 import { useChatStore } from '@/store/chat';
@@ -343,7 +379,7 @@ import {
 } from '@/components/ui/select';
 import { formatMessageTime } from '@/utils/time';
 import { serviceManager } from '@/core/services';
-import MessageItem from './components/MessageItem.vue';
+import MessageItem from './MessageItem.vue';
 
 const props = defineProps<{
     chat: Chat;
@@ -431,7 +467,7 @@ const handleSendMessage = () => {
         // 保存消息内容并清空输入框
         const messageContent = inputMessage.value.trim();
         inputMessage.value = '';
-        
+
         // 发送消息内容而不是事件对象
         sendMessage(messageContent);
         scrollToBottom();
@@ -456,19 +492,19 @@ const sendMessage = async (content: string) => {
             selectedModel.value = modelStore.getAllModels[0].id;
             console.log('已自动选择默认模型:', selectedModel.value);
         }
-        
+
         // 检查是否选择了模型
         if (!selectedModel.value) {
             throw new Error('请先选择一个模型');
         }
 
         console.log('当前选择的模型ID:', selectedModel.value);
-        
+
         // 获取当前供应商信息
         let supplierName = '';
-        
+
         // 从模型信息中获取供应商
-        const modelInfo = modelStore.getAllModels.find(m => m.id === selectedModel.value);
+        const modelInfo = modelStore.getAllModels.find((m) => m.id === selectedModel.value);
         if (modelInfo) {
             supplierName = modelInfo.supplierId;
         } else if (selectedModel.value.includes('/')) {
@@ -477,8 +513,8 @@ const sendMessage = async (content: string) => {
         } else {
             supplierName = selectedModel.value;
         }
-        
-        const supplier = modelStore.suppliers.find(s => s.name === supplierName);
+
+        const supplier = modelStore.suppliers.find((s) => s.name === supplierName);
         if (!supplier) {
             throw new Error(`找不到供应商: ${supplierName}`);
         }
@@ -491,13 +527,13 @@ const sendMessage = async (content: string) => {
             sender: 'user',
             status: 'sent',
         });
-        
+
         // 确保视图更新
         await nextTick();
-        
+
         // 获取服务
         const service = await serviceManager.getService(chatStore.currentChat, supplier);
-        
+
         // 添加机器人消息（状态为加载中）
         const pendingMessage = await chatStore.addMessage({
             content: '',
@@ -510,19 +546,19 @@ const sendMessage = async (content: string) => {
         // 确保视图更新并滚动到底部
         await nextTick();
         scrollToBottom();
-        
+
         // 获取历史消息
         const history = chatStore.currentSession.messages.slice(-20);
-        
+
         // 使用流式响应
         const usesStream = true;
-        
+
         if (usesStream) {
             try {
                 // 创建一个强引用
                 const pendingMessageRef = pendingMessage;
                 console.log('启动流式响应, 消息ID:', pendingMessageRef.id);
-                
+
                 // 延迟一小段时间再切换到streaming状态，确保loading动画显示
                 setTimeout(async () => {
                     // 确保消息还存在
@@ -534,7 +570,7 @@ const sendMessage = async (content: string) => {
                         await nextTick();
                     }
                 }, 800); // 给骨架屏800ms的显示时间
-                
+
                 // 流式处理
                 const finalContent = await service.sendMessageStream(
                     content,
@@ -545,21 +581,21 @@ const sendMessage = async (content: string) => {
                             const streamingMessage = JSON.parse(JSON.stringify(pendingMessageRef));
                             streamingMessage.content = updatedContent;
                             streamingMessage.status = 'streaming';
-                            
+
                             await chatStore.replaceMessage(pendingMessageRef.id, streamingMessage);
                             await nextTick();
                             scrollToBottom();
                         }
                     }
                 );
-                
+
                 // 响应完成后，更新状态为sent
                 if (pendingMessageRef) {
                     console.log('流式响应完成，总长度:', finalContent.length);
                     const completedMessage = JSON.parse(JSON.stringify(pendingMessageRef));
                     completedMessage.content = finalContent;
                     completedMessage.status = 'sent';
-                    
+
                     await chatStore.replaceMessage(pendingMessageRef.id, completedMessage);
                     await chatStore.syncData(); // 最后一次保存
                     await nextTick();
@@ -567,12 +603,12 @@ const sendMessage = async (content: string) => {
                 }
             } catch (error) {
                 console.error('流式响应失败:', error);
-                
+
                 if (pendingMessage) {
                     const errorMessage = JSON.parse(JSON.stringify(pendingMessage));
                     errorMessage.content = `响应生成失败: ${error.message || '未知错误'}`;
                     errorMessage.status = 'error';
-                    
+
                     await chatStore.replaceMessage(pendingMessage.id, errorMessage);
                     await chatStore.syncData();
                     await nextTick();
@@ -597,7 +633,7 @@ const sendMessage = async (content: string) => {
                 }
             }
         }
-        
+
         // 最后确保滚动到底部
         await nextTick();
         if (chatContainer.value) {
@@ -619,7 +655,7 @@ const copyMessage = async (content: string) => {
         await navigator.clipboard.writeText(content);
         toast({
             description: '消息已复制到剪贴板',
-            duration: 2000
+            duration: 2000,
         });
     } catch (error) {
         console.error('复制失败:', error);
@@ -627,7 +663,7 @@ const copyMessage = async (content: string) => {
             title: '复制失败',
             description: '无法复制消息内容',
             variant: 'destructive',
-            duration: 2000
+            duration: 2000,
         });
     }
 };
@@ -731,11 +767,11 @@ onMounted(async () => {
     // 获取用户名和头像
     const storedUserName = localStorage.getItem('userName') || '用户';
     userName.value = storedUserName;
-    
+
     // 获取用户头像
     const storedUserAvatar = localStorage.getItem('userAvatar') || '/src/assets/placeholder.svg';
     userAvatar.value = storedUserAvatar;
-    
+
     // 默认选择第一个可用模型
     if (!selectedModel.value && modelStore.getAllModels.length > 0) {
         selectedModel.value = modelStore.getAllModels[0].id;
@@ -746,7 +782,7 @@ onMounted(async () => {
 // 处理模型变更
 const handleModelChange = async (modelId: string) => {
     if (!modelId) return;
-    
+
     console.log('模型变更为:', modelId);
 
     // 更新选中的模型
@@ -766,7 +802,7 @@ const handleModelChange = async (modelId: string) => {
         console.warn('找不到模型信息:', modelId);
         return;
     }
-    
+
     console.log('更新聊天模型为:', modelId, '供应商:', model.supplierId, '模型ID:', model.modelId);
 
     // 更新机器人的模型信息（如果不是默认机器人）
@@ -816,7 +852,7 @@ const setQuotedMessage = (message: Message) => {
     emit('quote-message', message);
     toast({
         description: '已添加引用',
-        duration: 2000
+        duration: 2000,
     });
 };
 
