@@ -202,13 +202,15 @@
                                     <Card
                                         class="relative overflow-hidden backdrop-blur-sm border-primary/20"
                                     >
-                                        <CardContent class="p-6">
+                                        <CardContent class="p-6 max-h-80 overflow-y-auto">
                                             <div
                                                 class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
                                             ></div>
-                                            <div class="relative text-lg">
-                                                {{ botStore.selectedBot.prompt }}
-                                            </div>
+                                            <MarkdownViewer
+                                                :content="botStore.selectedBot.prompt"
+                                                class="relative text-lg"
+                                            >
+                                            </MarkdownViewer>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -293,6 +295,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog';
+import MarkdownViewer from '@/components/common/MarkdownViewer.vue';
 
 const botStore = useBotStore();
 const usageStore = useUsageStore();
