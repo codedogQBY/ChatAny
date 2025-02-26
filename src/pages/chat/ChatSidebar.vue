@@ -18,8 +18,9 @@
                 <div
                     v-for="chat in chatsWithAvatar"
                     :key="chat.id"
-                    @click="$emit('select-chat', chat.id)"
+                    @click="handleChatSelect(chat.id)"
                     class="group relative px-3"
+                    :class="{ 'cursor-not-allowed': disabled }"
                 >
                     <div
                         :class="[
@@ -91,15 +92,18 @@ import { MessageCirclePlusIcon, MessageCircleMoreIcon } from 'lucide-vue-next';
 import { useBotStore } from '@/store/bot';
 import type { Chat } from '@/types';
 import { formatMessageTime } from '@/utils/time';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 const botStore = useBotStore();
+const { toast } = useToast();
 
 const props = defineProps<{
     chats: Chat[];
     selectedChatId?: string;
+    disabled?: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'add-chat'): void;
     (e: 'select-chat', chatId: string): void;
 }>();
@@ -136,6 +140,21 @@ const chatsWithAvatar = computed(() => {
         })
         .sort((a, b) => b.lastUpdateTime - a.lastUpdateTime); // 按时间降序排序
 });
+
+// 处理聊天选择，添加禁用检查
+const handleChatSelect = (chatId: string) => {
+    if (props.disabled) {
+        // 如果禁用，显示提示而不是执行切换
+        toast({
+            title: '无法切换聊天',
+            description: '当前正在生成回复，请等待完成后再切换',
+            variant: 'destructive',
+            duration: 800,
+        });
+        return; // 确保不执行emit
+    }
+    emit('select-chat', chatId);
+};
 </script>
 
 <style scoped>
@@ -154,5 +173,17 @@ const chatsWithAvatar = computed(() => {
     font-variant-numeric: tabular-nums; /* 确保数字宽度一致 */
     letter-spacing: -0.2px; /* 稍微紧凑一点 */
     white-space: nowrap; /* 防止时间换行 */
+}
+
+/* 添加滑入效果 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.3s ease-out;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translate(-50%, 20px);
 }
 </style>

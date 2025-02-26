@@ -17,6 +17,12 @@
             <MarkdownViewer :content="message.content" />
         </div>
         <div
+            v-else-if="message.status === 'streaming'"
+            class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
+        >
+            <MarkdownViewer :content="displayContent" />
+        </div>
+        <div
             v-else
             class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
         >
@@ -26,9 +32,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, ref, onMounted, watch } from 'vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue';
+import TypewriterText from '@/components/common/TypewriterText.vue';
 
 const props = defineProps({
     message: {
@@ -39,6 +46,17 @@ const props = defineProps({
 
 const emit = defineEmits(['copy', 'quote']);
 const { toast } = useToast();
+
+// 用于打字机效果的计算属性
+const displayContent = ref('');
+const isTyping = ref(false);
+
+// 监听消息内容变化
+watch(() => props.message.content, (newContent) => {
+    if (props.message.status === 'streaming') {
+        displayContent.value = newContent;
+    }
+}, { immediate: true });
 
 // 复制消息内容
 const copyContent = async () => {
@@ -112,5 +130,11 @@ const quoteMessage = () => {
     100% {
         background-position: -200% 0;
     }
+}
+
+.typing-message::after,
+.typing-cursor-container,
+.typing-cursor {
+    display: none !important;
 }
 </style>

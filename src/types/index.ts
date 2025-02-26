@@ -60,28 +60,34 @@ export type Supplier = {
     isDefault: boolean;
 };
 
-export type MessageSender = 'user' | 'bot';
+// 消息状态类型
+export type MessageStatus = 'sent' | 'loading' | 'streaming' | 'error' | 'pending';
 
+// 消息发送者类型
+export type MessageSender = 'user' | 'assistant' | 'bot';
+
+// 消息数据结构
 export interface Message {
     id: string;
     sessionId: string;
     chatId: string;
     content: string;
     sender: MessageSender;
-    status?: 'pending' | 'sent' | 'error';
-    metadata?: Record<string, any>;
+    status: MessageStatus;
     createdAt: number;
     updatedAt: number;
 }
 
+// 会话数据结构
 export interface Session {
     id: string;
-    messages: Message[];
     title: string;
+    messages: Message[];
     createdAt: number;
     updatedAt: number;
 }
 
+// 聊天数据结构
 export interface Chat {
     id: string;
     name: string;
@@ -94,7 +100,7 @@ export interface Chat {
     topP: number;
     contextSize: number;
     avatar?: string;
-    isDefault: boolean;
+    isDefault?: boolean;
     modelId?: string;
 }
 

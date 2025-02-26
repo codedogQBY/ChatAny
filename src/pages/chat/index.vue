@@ -6,6 +6,7 @@
                 :chats="chatStore.chats"
                 :selectedChatId="chatStore.currentChat?.id"
                 @select-chat="selectChat"
+                :disabled="isGenerating"
             />
         </div>
 
@@ -27,6 +28,7 @@
                 @cancel-quote="cancelQuote"
                 @select-session="handleSessionSelect"
                 @create-session="handleCreateSession"
+                @generation-status-change="handleGenerationStatusChange"
             />
             <div
                 v-else
@@ -59,6 +61,7 @@ import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
+import { v4 as uuidv4 } from 'uuid';
 
 const chatStore = useChatStore();
 const botStore = useBotStore();
@@ -120,6 +123,8 @@ const currentChatData = computed(() => {
     };
 });
 
+const isGenerating = ref(false);
+
 const selectChat = async (chatId: string) => {
     await chatStore.selectChat(chatId);
 };
@@ -127,25 +132,72 @@ const selectChat = async (chatId: string) => {
 const sendMessage = async (content: string) => {
     if (!chatStore.currentChat?.id || !chatStore.currentSession?.id) return;
 
-    // 先添加用户消息
-    await chatStore.addMessage({
-        content,
-        chatId: chatStore.currentChat.id,
-        sessionId: chatStore.currentSession.id,
-        sender: 'user',
-        status: 'sent',
-    });
+    // 设置加载状态
+    isGenerating.value = true;
+    console.log('设置isGenerating为true'); // 调试日志
 
-    // 模拟AI回复
-    setTimeout(async () => {
+    try {
+        // 先添加用户消息
         await chatStore.addMessage({
-            content: '这是一个 AI 生成的回复，将会以打字机效果显示。',
-            chatId: chatStore.currentChat!.id,
-            sessionId: chatStore.currentSession!.id,
-            sender: 'bot',
-            status: 'pending', // 使用 pending 状态来触发打字机效果
+            content,
+            chatId: chatStore.currentChat.id,
+            sessionId: chatStore.currentSession.id,
+            sender: 'user',
+            status: 'sent',
         });
-    }, 1000);
+
+        // 添加AI消息占位符
+        const messageId = uuidv4();
+        const aiMessage = {
+            id: messageId,
+            content: '',
+            chatId: chatStore.currentChat.id,
+            sessionId: chatStore.currentSession.id,
+            sender: 'bot',
+            status: 'streaming', // 使用streaming状态
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+        };
+
+        await chatStore.addMessage(aiMessage);
+
+        // 模拟打字效果
+        const fullReply = '这是一个 AI 生成的回复，将会以打字机效果显示。';
+        let currentText = '';
+
+        // 逐字添加文本
+        for (let i = 0; i < fullReply.length; i++) {
+            currentText += fullReply[i];
+            // 更新消息内容，但保持streaming状态
+            await chatStore.replaceMessage(messageId, {
+                ...aiMessage,
+                content: currentText,
+                updatedAt: Date.now(),
+            });
+            // 添加随机延迟来模拟打字速度
+            await new Promise((r) => setTimeout(r, 50 + Math.random() * 50));
+        }
+
+        // 完成后更新状态
+        await chatStore.replaceMessage(messageId, {
+            ...aiMessage,
+            content: fullReply,
+            status: 'sent',
+            updatedAt: Date.now(),
+        });
+    } catch (error) {
+        console.error('消息生成出错:', error);
+        toast({
+            title: '错误',
+            description: '生成回复时出现错误',
+            variant: 'destructive',
+            duration: 3000,
+        });
+    } finally {
+        // 确保在任何情况下都重置状态
+        isGenerating.value = false;
+        console.log('设置isGenerating为false'); // 调试日志
+    }
 };
 
 const toggleNetwork = (enabled: boolean) => {
@@ -217,6 +269,12 @@ const handleCreateSession = async () => {
         description: '新会话已创建',
         duration: 1000,
     });
+};
+
+// 处理生成状态变化
+const handleGenerationStatusChange = (status: boolean) => {
+    console.log('接收生成状态变化:', status); // 调试日志
+    isGenerating.value = status;
 };
 </script>
 

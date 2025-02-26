@@ -16,13 +16,24 @@
                     :current-session="currentSession"
                     @select="chatStore.selectSession($event)"
                     @create="handleCreateSession"
+                    :disabled="isLoading"
                 />
             </div>
             <div class="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" @click="toggleHistory">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    @click="handleHistoryClick"
+                    :class="{ 'opacity-50': isLoading }"
+                >
                     <ClockIcon class="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" @click="showSettings = true">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    @click="handleSettingsClick"
+                    :class="{ 'opacity-50': isLoading }"
+                >
                     <SettingsIcon class="h-5 w-5" />
                 </Button>
             </div>
@@ -141,7 +152,11 @@
                         <div class="text-xs text-muted-foreground mb-1">引用消息</div>
                         <div class="line-clamp-2 text-sm">{{ quotedMessage.content }}</div>
                     </div>
-                    <button @click="cancelQuote" class="p-1 hover:bg-background rounded-full">
+                    <button
+                        @click="cancelQuote"
+                        class="p-1 hover:bg-background rounded-full"
+                        :disabled="isLoading"
+                    >
                         <XIcon class="w-4 h-4" />
                     </button>
                 </div>
@@ -161,6 +176,7 @@
                     @keydown="handleKeyDown"
                     @focus="setInputFocus(true)"
                     @blur="setInputFocus(false)"
+                    :disabled="isLoading"
                 />
                 <!-- 工具栏 -->
                 <div class="flex items-center justify-between border-none px-2 py-1">
@@ -170,6 +186,7 @@
                             v-if="!isDefaultBot"
                             v-model="selectedModel"
                             @update:modelValue="handleModelChange"
+                            :disabled="isLoading"
                         >
                             <SelectTrigger class="w-[140px] h-8 hover:bg-accent">
                                 <SelectValue placeholder="选择模型" />
@@ -198,7 +215,12 @@
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" @click="screenshot">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="screenshot"
+                                        :disabled="isLoading"
+                                    >
                                         <CameraIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -208,7 +230,12 @@
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" @click="viewLastImage">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="viewLastImage"
+                                        :disabled="isLoading"
+                                    >
                                         <ImageIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -222,6 +249,7 @@
                                         variant="ghost"
                                         size="icon"
                                         @click="confirmDeleteSession"
+                                        :disabled="isLoading"
                                     >
                                         <TrashIcon class="h-4 w-4" />
                                     </Button>
@@ -232,7 +260,12 @@
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" @click="managePlugins">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="managePlugins"
+                                        :disabled="isLoading"
+                                    >
                                         <PlugIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -243,7 +276,12 @@
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <Button variant="ghost" size="icon" @click="showShortcuts">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        @click="showShortcuts"
+                                        :disabled="isLoading"
+                                    >
                                         <CommandIcon class="h-4 w-4" />
                                     </Button>
                                 </TooltipTrigger>
@@ -267,6 +305,7 @@
                                         <Switch
                                             v-model:checked="networkEnabled"
                                             class="data-[state=checked]:bg-primary"
+                                            :disabled="isLoading"
                                         />
                                     </div>
                                 </TooltipTrigger>
@@ -279,11 +318,10 @@
                         <Button
                             variant="default"
                             size="icon"
-                            @click="sendUserMessage"
-                            :disabled="!canSendMessage || isLoading"
                             class="rounded-full w-10 h-10 flex-shrink-0"
-                        >
-                            <LoaderCircleIcon v-if="isLoading" class="h-5 w-5 animate-spin" />
+                            :disabled="!canSendMessage || isLoading"
+                            @click="sendMessage"
+                            ><LoaderCircleIcon v-if="isLoading" class="h-5 w-5 animate-spin" />
                             <SendIcon v-else class="h-5 w-5" />
                         </Button>
                     </div>
@@ -393,17 +431,18 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: 'send-message', message: string): void;
+    (e: 'send-message', content: string): void;
     (e: 'toggle-network', enabled: boolean): void;
     (e: 'clear-history'): void;
     (e: 'edit-bot'): void;
     (e: 'view-history'): void;
-    (e: 'quote-message', message: Message): void;
+    (e: 'quote-message', message: any): void;
     (e: 'cancel-quote'): void;
     (e: 'select-session', sessionId: string): void;
     (e: 'create-session'): void;
     (e: 'rename-session', sessionId: string, title: string): void;
     (e: 'delete-session', sessionId: string): void;
+    (e: 'generation-status-change', status: boolean): void;
 }>();
 
 const inputMessage = ref('');
@@ -419,6 +458,9 @@ const showClearConfirm = ref(false);
 const chatStore = useChatStore();
 const modelStore = useModelStore();
 const botStore = useBotStore();
+
+// 添加此变量以跟踪是否正在加载
+const isLoading = ref(false);
 
 // 判断是否为默认机器人
 const isDefaultBot = computed(() => {
@@ -487,6 +529,9 @@ const sendMessage = async (content: string) => {
     if (!chatStore.currentChat?.id || !chatStore.currentSession?.id) return;
 
     try {
+        // 设置加载状态
+        isLoading.value = true;
+
         // 自动选择默认模型
         if (!selectedModel.value && modelStore.getAllModels.length > 0) {
             selectedModel.value = modelStore.getAllModels[0].id;
@@ -614,6 +659,9 @@ const sendMessage = async (content: string) => {
                     await nextTick();
                     scrollToBottom();
                 }
+            } finally {
+                // 完成后重置加载状态
+                isLoading.value = false;
             }
         } else {
             // 非流式响应
@@ -631,6 +679,9 @@ const sendMessage = async (content: string) => {
                     pendingMessage.status = 'error';
                     await chatStore.syncData();
                 }
+            } finally {
+                // 完成后重置加载状态
+                isLoading.value = false;
             }
         }
 
@@ -647,6 +698,8 @@ const sendMessage = async (content: string) => {
             description: error instanceof Error ? error.message : '未知错误',
             variant: 'destructive',
         });
+        // 异常时也要重置加载状态
+        isLoading.value = false;
     }
 };
 
@@ -859,6 +912,53 @@ const setQuotedMessage = (message: Message) => {
 const cancelQuote = () => {
     emit('cancel-quote');
 };
+
+// 修改计算属性以在加载时禁用发送按钮
+const canSendMessage = computed(() => {
+    return inputMessage.value.trim().length > 0 && !isLoading.value;
+});
+
+// 修改历史记录点击事件
+const handleHistoryClick = () => {
+    if (isLoading.value) {
+        toast({
+            title: '无法打开历史记录',
+            description: '请等待当前消息生成完成',
+            variant: 'destructive',
+            duration: 2000,
+        });
+        return; // 阻止打开操作
+    }
+    toggleHistory();
+};
+
+// 修改设置点击事件
+const handleSettingsClick = () => {
+    if (isLoading.value) {
+        toast({
+            title: '无法打开设置',
+            description: '请等待当前消息生成完成',
+            variant: 'destructive',
+            duration: 800,
+        });
+        return; // 阻止打开操作
+    }
+    showSettings.value = true;
+};
+
+const alertGenerating = () => {
+    toast({
+        title: '请稍候',
+        description: '正在生成消息，请等待完成',
+        duration: 800,
+    });
+};
+
+// 监听isLoading变化并发射事件
+watch(isLoading, (newValue) => {
+    console.log('发射生成状态变化:', newValue); // 调试日志
+    emit('generation-status-change', newValue);
+});
 </script>
 
 <style scoped>
@@ -885,5 +985,17 @@ textarea {
 .slide-up-enter-from,
 .slide-up-leave-to {
     transform: translateY(100%);
+}
+
+/* 修改禁用状态样式，更微妙 */
+button:disabled,
+select:disabled,
+textarea:disabled {
+    opacity: 0.8;
+}
+
+button:disabled::before,
+button.disabled::before {
+    content: none;
 }
 </style>
