@@ -85,18 +85,56 @@
                     <CardContent class="space-y-2">
                         <div class="mb-2" v-for="model in group.models" :key="model.id">
                             <div class="flex items-center relative space-x-2">
-                                <TextInput
-                                    class="mr-2"
-                                    :modelValue="model.name"
-                                    @update:modelValue="handleUpdateModelName($event, group, model)"
-                                    >{{ model.name }}</TextInput
-                                >
-                                <TextInput
-                                    class="mr-2"
-                                    :modelValue="model.id"
-                                    @update:modelValue="handleUpdateModelId($event, group, model)"
-                                    >{{ model.id }}</TextInput
-                                >
+                                <div class="font-medium text-sm cursor-pointer">
+                                    <Popover>
+                                        <PopoverTrigger>
+                                            {{ model.name }}
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            class="p-3 bg-white rounded-lg shadow-lg min-w-[260px]"
+                                        >
+                                            <div class="space-y-2.5">
+                                                <!-- 模型名称 -->
+                                                <div class="items-center">
+                                                    <span
+                                                        class="text-gray-500 text-sm min-w-[70px] mr-4"
+                                                        >模型名称:</span
+                                                    >
+                                                    <TextInput
+                                                        class="text-gray-700 border-0 focus:ring-1 focus:ring-blue-400 text-sm"
+                                                        :modelValue="model.name"
+                                                        @update:modelValue="
+                                                            handleUpdateModelName(
+                                                                $event,
+                                                                group,
+                                                                model
+                                                            )
+                                                        "
+                                                    />
+                                                </div>
+
+                                                <!-- 模型 ID -->
+                                                <div class="items-center">
+                                                    <span
+                                                        class="text-gray-500 text-sm min-w-[70px] mr-4"
+                                                        >模型 ID:</span
+                                                    >
+                                                    <TextInput
+                                                        class="text-gray-700 border-0 focus:ring-1 focus:ring-blue-400 text-sm"
+                                                        :modelValue="model.id"
+                                                        @update:modelValue="
+                                                            handleUpdateModelId(
+                                                                $event,
+                                                                group,
+                                                                model
+                                                            )
+                                                        "
+                                                    />
+                                                </div>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
                                 <div v-for="skill in model.skills" :key="skill">
                                     <TooltipProvider>
                                         <Tooltip>

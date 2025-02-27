@@ -17,17 +17,8 @@
             v-model="editedText"
             @keyup.enter="saveChanges"
             @blur="saveChanges"
-            class="inline-block w-24 h-auto p-0 text-sm bg-transparent border-none focus:ring-0 focus:border-primary font-[inherit] leading-none"
+            class="inline-block w-auto max-w-48 h-auto p-0 text-sm bg-transparent border-none focus:ring-0 focus:border-primary font-[inherit] leading-none"
         />
-        <Button
-            v-if="showEditHint && !isEditing"
-            @click="startEditing"
-            variant="ghost"
-            size="icon"
-            class="absolute top-1/2 -right-5 -translate-y-1/2 h-6 w-6 p-0.5 opacity-50 hover:opacity-100"
-        >
-            <Pencil class="h-4 w-4" />
-        </Button>
     </span>
 </template>
 
