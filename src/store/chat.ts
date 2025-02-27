@@ -61,6 +61,7 @@ export const useChatStore = defineStore('chat', () => {
                     contextSize: 5,
                     avatar: bot.avatar,
                     isDefault: bot.isDefault,
+                    modelId: bot.model?.modelId,
                 };
             })
         );
@@ -113,6 +114,7 @@ export const useChatStore = defineStore('chat', () => {
                         topP: 0.9,
                         avatar: bot.avatar,
                         isDefault: bot.isDefault,
+                        modelId: bot.model?.modelId,
                     };
                     return chat;
                 });
@@ -356,14 +358,14 @@ export const useChatStore = defineStore('chat', () => {
     // 替换消息（完全替换对象以解决响应式更新问题）
     const replaceMessage = async (messageId: string, newMessage: Message) => {
         if (!currentChat.value || !currentSession.value) return false;
-        
-        const index = currentSession.value.messages.findIndex(m => m.id === messageId);
+
+        const index = currentSession.value.messages.findIndex((m) => m.id === messageId);
         if (index === -1) return false;
-        
+
         // 直接替换整个对象
         currentSession.value.messages.splice(index, 1, newMessage);
         console.log(`替换消息 ${messageId} 成功，新状态:`, newMessage.status);
-        
+
         // 触发视图更新，但不调用syncData来减少IO负担
         return true;
     };

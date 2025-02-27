@@ -15,7 +15,7 @@ const contentHash = ref<string>('');
 const getContentHash = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash = (hash << 5) - hash + str.charCodeAt(i);
         hash |= 0; // Convert to 32bit integer
     }
     return hash.toString();
@@ -27,11 +27,11 @@ const updateContent = async () => {
     if (newHash === contentHash.value && html.value) {
         return; // 内容未更改，跳过渲染
     }
-    
+
     contentHash.value = newHash;
     // 渲染Markdown内容
     html.value = markdownRenderer.render(props.content);
-    
+
     // 使用setTimeout确保DOM完全更新
     setTimeout(async () => {
         if (containerRef.value) {
@@ -61,8 +61,6 @@ onMounted(async () => {
 
 .markdown-viewer :deep(.mermaid-container) {
     background: #f8f9fa;
-    padding: 1rem;
-    margin: 1rem 0;
     border-radius: 8px;
     overflow-x: auto;
 }

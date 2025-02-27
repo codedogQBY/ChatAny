@@ -6,21 +6,13 @@
         >
             <div class="flex flex-col space-y-2">
                 <div class="skeleton-line w-3/4"></div>
-                <div class="skeleton-line w-1/2"></div>
-                <div class="skeleton-line w-5/6"></div>
             </div>
         </div>
         <div
             v-else-if="message.status === 'error'"
             class="message-content error hover:shadow-md transition-shadow duration-200 bg-destructive/10"
         >
-            <MarkdownViewer :content="message.content" />
-        </div>
-        <div
-            v-else-if="message.status === 'streaming'"
-            class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
-        >
-            <MarkdownViewer :content="displayContent" />
+            {{ message.content }}
         </div>
         <div
             v-else
@@ -33,9 +25,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, onMounted, watch } from 'vue';
-import { useToast } from '@/components/ui/toast/use-toast';
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue';
-import TypewriterText from '@/components/common/TypewriterText.vue';
 
 const props = defineProps({
     message: {
@@ -45,50 +35,20 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['copy', 'quote']);
-const { toast } = useToast();
 
 // 用于打字机效果的计算属性
 const displayContent = ref('');
-const isTyping = ref(false);
 
 // 监听消息内容变化
-watch(() => props.message.content, (newContent) => {
-    if (props.message.status === 'streaming') {
-        displayContent.value = newContent;
-    }
-}, { immediate: true });
-
-// 复制消息内容
-const copyContent = async () => {
-    try {
-        // 获取纯文本内容
-        const plainText = props.message.content;
-        await navigator.clipboard.writeText(plainText);
-        toast({
-            title: '已复制',
-            description: '消息内容已复制到剪贴板',
-            duration: 2000,
-        });
-        emit('copy', plainText);
-    } catch (error) {
-        console.error('复制失败:', error);
-        toast({
-            title: '复制失败',
-            description: '无法复制消息内容',
-            variant: 'destructive',
-            duration: 2000,
-        });
-    }
-};
-
-// 引用消息
-const quoteMessage = () => {
-    emit('quote', props.message);
-    toast({
-        description: '已添加引用',
-        duration: 2000,
-    });
-};
+watch(
+    () => props.message.content,
+    (newContent) => {
+        if (props.message.status === 'streaming') {
+            displayContent.value = newContent;
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <style scoped>
@@ -111,7 +71,6 @@ const quoteMessage = () => {
 }
 
 .message-content.loading {
-    min-height: 80px;
     min-width: 250px;
 }
 
@@ -130,11 +89,5 @@ const quoteMessage = () => {
     100% {
         background-position: -200% 0;
     }
-}
-
-.typing-message::after,
-.typing-cursor-container,
-.typing-cursor {
-    display: none !important;
 }
 </style>
