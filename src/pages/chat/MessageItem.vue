@@ -15,6 +15,12 @@
             {{ message.content }}
         </div>
         <div
+            v-else-if="message.status === 'streaming'"
+            class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
+        >
+            <MarkdownViewer :content="displayContent" />
+        </div>
+        <div
             v-else
             class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
         >
@@ -39,15 +45,23 @@ const emit = defineEmits(['copy', 'quote']);
 // 用于打字机效果的计算属性
 const displayContent = ref('');
 
-// 监听消息内容变化
+// 同时监听消息内容和状态变化
 watch(
-    () => props.message.content,
-    (newContent) => {
-        if (props.message.status === 'streaming') {
+    () => [props.message.content, props.message.status],
+    ([newContent, newStatus]) => {
+        console.log('消息状态更新:', newStatus, '内容长度:', newContent?.length || 0);
+
+        if (newStatus === 'streaming') {
+            displayContent.value = newContent;
+        } else if (newStatus === 'error') {
+            // 确保错误状态下显示错误消息
+            displayContent.value = newContent;
+        } else if (newStatus === 'sent') {
+            // 发送完成状态
             displayContent.value = newContent;
         }
     },
-    { immediate: true }
+    { immediate: true, deep: true }
 );
 </script>
 
@@ -58,7 +72,6 @@ watch(
 }
 
 .message-content {
-    white-space: pre-wrap;
     position: relative;
     border-radius: 0.75rem;
     padding: 1rem;

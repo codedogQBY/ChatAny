@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import pinyin from 'pinyin';
 import store from '@/hook/useStore';
 import { useModelStore } from './model';
-import type { ModelGroup, Bot } from '@/types';
+import type { Bot } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const useBotStore = defineStore('bot', () => {
@@ -57,7 +57,7 @@ export const useBotStore = defineStore('bot', () => {
                 group.models.forEach((model) => {
                     const letter = getFirstLetter(model.name);
                     const bot: Bot = {
-                        id: supplier.name + model.id, // 保持这种构造方式
+                        id: supplier.name + '/' + model.id, // 保持这种构造方式
                         name: model.name,
                         description: model.description || '',
                         prologue: `您好，我是${model.name}，有什么可以帮助您的吗？`,
