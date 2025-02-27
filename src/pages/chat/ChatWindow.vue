@@ -479,13 +479,18 @@ const availableModels = computed(() => {
     if (!models) return [];
 
     // 直接返回所有模型，按组分类
-    const groupedModels = models.reduce((acc, model) => {
-        if (!acc[model.groupName]) {
-            acc[model.groupName] = [];
-        }
-        acc[model.groupName].push(model);
-        return acc;
-    }, {} as Record<string, typeof models>);
+    const groupedModels = models.reduce(
+        (acc, model) => {
+            if (!acc[model.groupName]) {
+                acc[model.groupName] = [];
+            }
+            acc[model.groupName].push(model);
+            return acc;
+        },
+        {} as Record<string, typeof models>
+    );
+
+    console.log(`groupedModels`, groupedModels);
 
     return Object.entries(groupedModels).map(([groupName, models]) => ({
         name: groupName,
@@ -598,12 +603,12 @@ const sendMessage = async (content: string) => {
             // 在try块之前声明变量
             let streamingTimeout;
             let hasError = false;
-            
+
             try {
                 // 创建一个强引用
                 const pendingMessageRef = pendingMessage;
                 console.log('启动流式响应, 消息ID:', pendingMessageRef.id);
-                
+
                 // 延迟一小段时间再切换到streaming状态，确保loading动画显示
                 streamingTimeout = setTimeout(async () => {
                     // 确保消息还存在且没有发生错误
@@ -647,10 +652,10 @@ const sendMessage = async (content: string) => {
                 }
             } catch (error) {
                 console.error('流式响应失败:', error);
-                
+
                 // 标记发生了错误
                 hasError = true;
-                
+
                 if (pendingMessage) {
                     const errorMessage = JSON.parse(JSON.stringify(pendingMessage));
                     errorMessage.content = `响应生成失败: ${error || '未知错误'}`;
@@ -665,7 +670,7 @@ const sendMessage = async (content: string) => {
                 if (streamingTimeout) {
                     clearTimeout(streamingTimeout);
                 }
-                
+
                 // 完成后重置加载状态
                 isLoading.value = false;
             }

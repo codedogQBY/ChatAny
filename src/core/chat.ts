@@ -135,7 +135,6 @@ export class ChatService {
         }
     }
 
-    // 修改流式响应函数，确保回调更频繁地被调用
     async sendMessageStream(
         message: string,
         context: Message[] = [],
@@ -145,19 +144,19 @@ export class ChatService {
             // 构建消息历史 (与sendMessage相同)
             const messages = [];
 
-            if (this.options.baseURL?.includes('deepseek')) {
-                messages.push({
-                    role: 'system',
-                    content: '你是一个有帮助的助手。',
-                });
-            }
-
             messages.push(
                 ...context.map((msg) => ({
                     role: msg.sender === 'user' ? 'user' : 'assistant',
                     content: msg.content,
                 }))
             );
+
+            if (messages[0].role === 'assistant') {
+                // 删除第一个助手消息,默认开场白不计入
+                messages.shift();
+            }
+
+            console.log('消息列表', messages);
 
             messages.push({
                 role: 'user',
@@ -172,6 +171,8 @@ export class ChatService {
 
             // 与sendMessage中相同的模型名称处理
             let modelName = this.options.model;
+
+            console.log('当前使用的模型:', modelName);
 
             // 构建请求体
             let requestBody: any = {
