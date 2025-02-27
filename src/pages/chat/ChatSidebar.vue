@@ -85,10 +85,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { MessageCirclePlusIcon, MessageCircleMoreIcon } from 'lucide-vue-next';
+import { MessageCircleMoreIcon } from 'lucide-vue-next';
 import { useBotStore } from '@/store/bot';
 import type { Chat } from '@/types';
 import { formatMessageTime } from '@/utils/time';

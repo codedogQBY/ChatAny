@@ -417,7 +417,7 @@ import {
 } from '@/components/ui/select';
 import { formatMessageTime } from '@/utils/time';
 import { serviceManager } from '@/core/services';
-import MessageItem from './MessageItem.vue';
+import MessageItem from '../../components/chat/MessageItem.vue';
 
 const props = defineProps<{
     chat: Chat;
