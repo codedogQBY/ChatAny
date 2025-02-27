@@ -278,22 +278,22 @@ export const useModelStore = defineStore('model', () => {
     // 初始化数据
     const initializeStore = async () => {
         // 从存储中获取供应商
-        const storedSuppliers = await store.get('suppliers') || [];
-        
+        const storedSuppliers = ((await store.get('suppliers')) as Array<Supplier>) || [];
+
         if (storedSuppliers.length > 0) {
             suppliers.value = storedSuppliers;
         } else {
             suppliers.value = defaultSuppliers;
         }
-        
+
         // 检查供应商的 API 密钥
-        suppliers.value.forEach(supplier => {
+        suppliers.value.forEach((supplier) => {
             if (!supplier.apiKey || supplier.apiKey.trim() === '') {
                 console.warn(`供应商 ${supplier.name} 的 API 密钥为空`);
                 supplier.apiKey = ''; // 确保至少有一个空字符串而不是 undefined
             }
         });
-        
+
         return suppliers.value;
     };
 

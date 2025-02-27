@@ -59,31 +59,6 @@ export class ChatService {
 
             // 根据供应商调整模型名称
             let modelName = this.options.model;
-            if (baseUrl.includes('deepseek')) {
-                if (modelName === 'deepseek-chat' || modelName === 'deepseek-reasoner') {
-                    // 已经是正确格式，不需要修改
-                    console.log('模型名称已经是正确格式');
-                } else if (modelName.includes('/')) {
-                    // 处理格式为 "deepseek/deepseek-reasoner" 的情况
-                    const parts = modelName.split('/');
-                    if (parts.length > 1) {
-                        modelName = parts[1]; // 使用第二部分
-                        console.log('从 supplier/model 格式提取模型名称:', modelName);
-                    }
-                } else if (modelName.startsWith('deepseek') && modelName.includes('deepseek-')) {
-                    // 处理 "deepseekdeepseek-reasoner" 这种错误格式
-                    if (modelName.includes('deepseek-reasoner')) {
-                        modelName = 'deepseek-reasoner';
-                        console.log('从错误格式中提取 deepseek-reasoner');
-                    } else if (modelName.includes('deepseek-chat')) {
-                        modelName = 'deepseek-chat';
-                        console.log('从错误格式中提取 deepseek-chat');
-                    }
-                }
-
-                console.log('最终使用的 DeepSeek 模型名称:', modelName);
-            }
-
             // 构建请求体，根据不同的 API 供应商调整格式
             let requestBody: any = {
                 model: modelName,
@@ -93,10 +68,7 @@ export class ChatService {
                 top_p: this.options.topP ?? 1,
             };
 
-            // 为 DeepSeek 添加 stream 参数
-            if (baseUrl.includes('deepseek')) {
-                requestBody.stream = false;
-            }
+            requestBody.stream = false;
 
             console.log('发送请求到:', baseUrl);
             console.log('请求体:', JSON.stringify(requestBody, null, 2));
@@ -158,7 +130,7 @@ export class ChatService {
             }
 
             // 其他错误也使用模拟响应
-            console.log('未知错误，使用模拟响应模式:', error.message);
+            console.log('未知错误，使用模拟响应模式:', error);
             return this.simulateResponse(message);
         }
     }
@@ -200,14 +172,6 @@ export class ChatService {
 
             // 与sendMessage中相同的模型名称处理
             let modelName = this.options.model;
-            if (baseUrl.includes('deepseek')) {
-                if (modelName.includes('/')) {
-                    const parts = modelName.split('/');
-                    if (parts.length > 1) {
-                        modelName = parts[1];
-                    }
-                }
-            }
 
             // 构建请求体
             let requestBody: any = {

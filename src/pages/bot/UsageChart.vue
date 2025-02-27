@@ -224,22 +224,4 @@ const formatDate = (dateString: string) => {
         year: 'numeric',
     });
 };
-
-// 模拟数据
-const mockUsageData = [
-  { date: '2024-01', count: 45 },
-  { date: '2024-02', count: 32 },
-  { date: '2024-03', count: 67 },
-  { date: '2024-04', count: 89 },
-  { date: '2024-05', count: 54 },
-  { date: '2024-06', count: 78 },
-  { date: '2024-07', count: 92 },
-  { date: '2024-08', count: 45 },
-  { date: '2024-09', count: 67 },
-  { date: '2024-10', count: 89 },
-  { date: '2024-11', count: 76 },
-  { date: '2024-12', count: 98 },
-];
-
-const currentYear = new Date().getFullYear();
 </script>

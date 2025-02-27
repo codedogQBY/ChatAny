@@ -58,7 +58,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlusIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
-import type { Session } from '@/store/chat';
+import type { Session } from '@/types';
 import SessionGroup from './SessionGroup.vue';
 import { useChatStore } from '@/store/chat';
 

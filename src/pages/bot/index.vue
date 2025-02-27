@@ -202,7 +202,7 @@
                                     <Card
                                         class="relative overflow-hidden backdrop-blur-sm border-primary/20"
                                     >
-                                        <CardContent class="p-6 max-h-80 overflow-y-auto">
+                                        <CardContent class="p-6 max-h-128 overflow-y-auto">
                                             <div
                                                 class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"
                                             ></div>

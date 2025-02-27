@@ -479,16 +479,13 @@ const availableModels = computed(() => {
     if (!models) return [];
 
     // 直接返回所有模型，按组分类
-    const groupedModels = models.reduce(
-        (acc, model) => {
-            if (!acc[model.groupName]) {
-                acc[model.groupName] = [];
-            }
-            acc[model.groupName].push(model);
-            return acc;
-        },
-        {} as Record<string, typeof models>
-    );
+    const groupedModels = models.reduce((acc, model) => {
+        if (!acc[model.groupName]) {
+            acc[model.groupName] = [];
+        }
+        acc[model.groupName].push(model);
+        return acc;
+    }, {} as Record<string, typeof models>);
 
     return Object.entries(groupedModels).map(([groupName, models]) => ({
         name: groupName,
@@ -644,20 +641,18 @@ const sendMessage = async (content: string) => {
                     await chatStore.replaceMessage(pendingMessageRef.id, completedMessage);
                     await chatStore.syncData(); // 最后一次保存
                     await nextTick();
-                    scrollToBottom();
                 }
             } catch (error) {
                 console.error('流式响应失败:', error);
 
                 if (pendingMessage) {
                     const errorMessage = JSON.parse(JSON.stringify(pendingMessage));
-                    errorMessage.content = `响应生成失败: ${error.message || '未知错误'}`;
+                    errorMessage.content = `响应生成失败: ${error || '未知错误'}`;
                     errorMessage.status = 'error';
 
                     await chatStore.replaceMessage(pendingMessage.id, errorMessage);
                     await chatStore.syncData();
                     await nextTick();
-                    scrollToBottom();
                 }
             } finally {
                 // 完成后重置加载状态

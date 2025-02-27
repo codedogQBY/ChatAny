@@ -3,16 +3,16 @@ import { ref, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PencilIcon, TrashIcon } from 'lucide-vue-next';
-import type { Session } from '@/store/chat';
+import type { Session } from '@/types';
 import { useChatStore } from '@/store/chat';
 import { useToast } from '@/components/ui/toast/use-toast';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
 } from '@/components/ui/dialog';
 
 const props = defineProps<{
@@ -37,7 +37,9 @@ const startEdit = (session: Session, event: Event) => {
     editingId.value = session.id;
     editingTitle.value = session.title;
     nextTick(() => {
-        const input = document.querySelector(`input[data-session-id="${session.id}"]`) as HTMLInputElement;
+        const input = document.querySelector(
+            `input[data-session-id="${session.id}"]`
+        ) as HTMLInputElement;
         if (input) {
             input.focus();
             input.setSelectionRange(input.value.length, input.value.length);
@@ -109,7 +111,7 @@ const handleDeleteConfirm = async () => {
             :class="[
                 chatStore.currentSession?.id === session.id
                     ? 'bg-primary/10 text-primary hover:bg-primary/15'
-                    : 'hover:bg-accent hover:text-accent-foreground'
+                    : 'hover:bg-accent hover:text-accent-foreground',
             ]"
             @click="emit('select', session.id)"
         >
@@ -153,20 +155,14 @@ const handleDeleteConfirm = async () => {
         <DialogContent class="sm:max-w-[300px]">
             <DialogHeader>
                 <DialogTitle>删除会话</DialogTitle>
-                <DialogDescription>
-                    确定要删除这个会话吗？此操作不可恢复。
-                </DialogDescription>
+                <DialogDescription> 确定要删除这个会话吗？此操作不可恢复。 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <Button variant="outline" @click="showDeleteAlert = false">取消</Button>
-                <Button 
-                    variant="destructive" 
-                    @click="handleDeleteConfirm"
-                    @click.stop
-                >
+                <Button variant="destructive" @click="handleDeleteConfirm" @click.stop>
                     删除
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-</template> 
+</template>
