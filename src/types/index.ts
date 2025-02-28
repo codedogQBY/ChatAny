@@ -30,13 +30,9 @@ export enum SessionModeEnum {
     Flank = 'flank',
 }
 
-// 模型相关
-export type Skill = 'inference' | 'online' | 'image' | 'plugin';
-
 export type Model = {
     id: string;
     name: string;
-    skills: Skill[];
     description?: string;
     extraConfig?: Record<keyof any, any>;
 };

@@ -85,10 +85,15 @@
                     <CardContent class="space-y-2">
                         <div class="mb-2" v-for="model in group.models" :key="model.id">
                             <div class="flex items-center relative space-x-2">
-                                <div class="font-medium text-sm cursor-pointer">
+                                <span>
+                                    {{ model.name }}
+                                </span>
+                                <div>
                                     <Popover>
                                         <PopoverTrigger>
-                                            {{ model.name }}
+                                            <Settings
+                                                class="h-4 w-4 mt-1 cursor-pointer hover:text-gray-400"
+                                            />
                                         </PopoverTrigger>
                                         <PopoverContent
                                             class="p-3 bg-white rounded-lg shadow-lg min-w-[260px]"
@@ -135,57 +140,6 @@
                                         </PopoverContent>
                                     </Popover>
                                 </div>
-                                <div v-for="skill in model.skills" :key="skill">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <component
-                                                    :is="skillInfo[skill].icon"
-                                                    class="h-4 w-4 cursor-pointer text-primary"
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent side="bottom" class="text-xs">
-                                                {{ skillInfo[skill].label }}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
-                                <div>
-                                    <Popover>
-                                        <PopoverTrigger>
-                                            <Settings
-                                                class="h-4 w-4 mt-1 cursor-pointer hover:text-gray-400"
-                                            />
-                                        </PopoverTrigger>
-                                        <PopoverContent>
-                                            <div class="p-2">
-                                                <div class="font-bold mb-2">模型设置</div>
-                                                <div class="flex space-x-1">
-                                                    <div
-                                                        v-for="skill in allSkills"
-                                                        :key="skill"
-                                                        class="flex items-center"
-                                                    >
-                                                        <Checkbox
-                                                            :checked="model.skills.includes(skill)"
-                                                            @update:checked="
-                                                                handleChangeSkill(
-                                                                    group,
-                                                                    model,
-                                                                    skill
-                                                                )
-                                                            "
-                                                        >
-                                                        </Checkbox>
-                                                        <span class="ml-2">
-                                                            {{ skillInfo[skill].label }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
                                 <div class="absolute right-0">
                                     <CircleMinusIcon
                                         @click="handleDeleteModel(model, group)"
@@ -206,12 +160,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Supplier, Model, ModelGroup, Skill } from '@/types';
+import { Supplier, Model, ModelGroup } from '@/types';
 import {
-    GlobeIcon,
-    Blocks,
-    ImageIcon,
-    Siren,
     Settings,
     EyeIcon,
     EyeOffIcon,
@@ -227,7 +177,6 @@ import TextInput from '@/components/setting-dialog/components/model/text-input.v
 import { useModelStore } from '@/store/model';
 
 const {
-    changeModelSkill,
     removeModelGroup,
     addModel,
     addModelGroup,
@@ -242,38 +191,8 @@ const props = defineProps<{
     model: Supplier;
 }>();
 
-type SkillInfo = {
-    icon: any;
-    label: string;
-};
-
-const allSkills: Skill[] = ['inference', 'online', 'plugin', 'image'];
-
 // 是否显示 API 密钥
 const showApiKey = ref(false);
-
-const skillInfo: Record<Skill, SkillInfo> = {
-    inference: {
-        icon: Siren,
-        label: '推理',
-    },
-    online: {
-        icon: GlobeIcon,
-        label: '联网',
-    },
-    plugin: {
-        icon: Blocks,
-        label: '插件',
-    },
-    image: {
-        icon: ImageIcon,
-        label: '图片',
-    },
-};
-
-const handleChangeSkill = (group: ModelGroup, model: Model, skill: Skill) => {
-    changeModelSkill(props.model, group, model, skill);
-};
 
 // 展示/隐藏 API 密钥
 const toggleShowApiKey = () => {

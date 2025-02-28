@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { Skill, Model, ModelGroup, Supplier } from '@/types';
+import { Model, ModelGroup, Supplier } from '@/types';
 import { v4 as uuidV4 } from 'uuid';
 import store from '@/hook/useStore';
 import { useChatStore } from '@/store/chat';
@@ -24,12 +24,10 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'deepseek-reasoner',
                         name: 'DeepSeek-R1',
-                        skills: ['inference', 'online', 'plugin'],
                     },
                     {
                         id: 'deepseek-chat',
                         name: 'DeepSeek-V3',
-                        skills: ['inference', 'online', 'plugin'],
                     },
                 ],
             },
@@ -52,13 +50,11 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'deepseek-ai/DeepSeek-R1',
                         name: 'deepseek-ai/DeepSeek-R1',
-                        skills: [],
                     },
                     {
                         description: '',
                         id: 'deepseek-ai/DeepSeek-V3',
                         name: 'DeepSeek-V3',
-                        skills: [],
                     },
                 ],
             },
@@ -69,7 +65,6 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'Qwen2.5-7B-Instruct',
                         name: 'Qwen2.5-7B-Instruct',
-                        skills: [],
                     },
                 ],
             },
@@ -80,7 +75,6 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'BAAI/bge-m3',
                         name: 'BAAI/bge-m3',
-                        skills: [],
                     },
                 ],
             },
@@ -103,12 +97,10 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'gpt-4o',
                         name: 'GPT-4o',
-                        skills: [],
                     },
                     {
                         id: 'gpt-4o-mini',
                         name: 'GPT-4o-mini',
-                        skills: [],
                     },
                 ],
             },
@@ -119,12 +111,10 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'o1-mini',
                         name: 'o1-mini',
-                        skills: [],
                     },
                     {
                         id: 'o1-preview',
                         name: 'o1-preview',
-                        skills: [],
                     },
                 ],
             },
@@ -147,7 +137,6 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'claude-3-5-sonnet-latest',
                         name: 'Claude 3.5 Sonnet',
-                        skills: [],
                     },
                 ],
             },
@@ -158,17 +147,14 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'claude-3-opus-latest',
                         name: 'Claude 3 Opus',
-                        skills: [],
                     },
                     {
                         id: 'claude-3-sonnet-20240229',
                         name: 'Claude 3 Sonnet',
-                        skills: [],
                     },
                     {
                         id: 'claude-3-haiku-20240307',
                         name: 'Claude 3 Haiku',
-                        skills: [],
                     },
                 ],
             },
@@ -191,7 +177,6 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'moonshot-v1-auto',
                         name: 'moonshot-v1-auto',
-                        skills: [],
                     },
                 ],
             },
@@ -214,7 +199,6 @@ const defaultSuppliers: Supplier[] = [
                     {
                         id: 'GLM-Zero-Preview',
                         name: 'GLM-Zero-Preview',
-                        skills: [],
                     },
                 ],
             },
@@ -297,64 +281,28 @@ export const useModelStore = defineStore('model', () => {
         return suppliers.value;
     };
 
-    // 修改模型技能组
-    const changeModelSkill = async (
-        supplier: Supplier,
-        group: ModelGroup,
-        model: Model,
-        skill: Skill
-    ) => {
-        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
-        if (supplierIndex === -1) return;
-
-        const groupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
-            (item) => item.id === group.id
-        );
-        if (groupIndex === -1) return;
-
-        const modelIndex = suppliers.value[supplierIndex].modelGroup[groupIndex].models.findIndex(
-            (item) => item.id === model.id
-        );
-        if (modelIndex === -1) return;
-
-        const currentModel =
-            suppliers.value[supplierIndex].modelGroup[groupIndex].models[modelIndex];
-
-        // 如果技能已存在则移除,否则添加
-        if (currentModel.skills.includes(skill)) {
-            currentModel.skills = currentModel.skills.filter((s) => s !== skill);
-        } else {
-            currentModel.skills.push(skill);
-        }
-
-        // 强制更新引用以触发响应式
-        suppliers.value = [...suppliers.value];
-        await syncData();
-    };
-
     // 删除模型组中的模型
     const removeModel = async (model: Supplier, modelGroup: ModelGroup, Supplier: Model) => {
-        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        const smallModelIndex = suppliers.value[modelIndex].modelGroup[
+        const modelIndex = suppliers.value[supplierIndex].modelGroup[
             modelGroupIndex
         ].models.findIndex((item) => item.id === Supplier.id);
-        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.splice(smallModelIndex, 1);
+        suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models.splice(modelIndex, 1);
         await syncData();
     };
 
-    // 新增模型组中的小模型
+    // 新增模型组中的模型
     const addModel = (model: Supplier, modelGroup: ModelGroup) => {
-        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === model.name);
+        const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.push({
+        suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models.push({
             id: `new-${uuidV4().slice(0, 8)}`,
             name: '新模型',
-            skills: [],
             description: '',
         });
         syncData();
@@ -398,16 +346,16 @@ export const useModelStore = defineStore('model', () => {
         model: Model,
         name: string
     ) => {
-        const modelIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
-        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
+        const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        const skillIndex = suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.findIndex(
-            (item) => item.id === model.id
-        );
+        const modelIndex = suppliers.value[supplierIndex].modelGroup[
+            modelGroupIndex
+        ].models.findIndex((item) => item.id === model.id);
 
         // 更新模型名称
-        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models[skillIndex].name = name;
+        suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models[modelIndex].name = name;
         await syncData();
 
         // 获取 chatStore 和 botStore 实例
@@ -448,16 +396,16 @@ export const useModelStore = defineStore('model', () => {
         model: Model,
         id: string
     ) => {
-        const modelIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
-        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
+        const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        const skillIndex = suppliers.value[modelIndex].modelGroup[modelGroupIndex].models.findIndex(
-            (item) => item.id === model.id
-        );
+        const modelIndex = suppliers.value[supplierIndex].modelGroup[
+            modelGroupIndex
+        ].models.findIndex((item) => item.id === model.id);
 
         // 更新模型id
-        suppliers.value[modelIndex].modelGroup[modelGroupIndex].models[skillIndex].id = id;
+        suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models[modelIndex].id = id;
         await syncData();
     };
 
@@ -478,7 +426,6 @@ export const useModelStore = defineStore('model', () => {
         suppliers,
         getSuppliers,
         getAllModels,
-        changeModelSkill,
         removeModel,
         initializeStore,
         addModel,
