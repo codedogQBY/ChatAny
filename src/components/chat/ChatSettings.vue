@@ -136,7 +136,7 @@ const saveSettings = () => {
                             v-model="settings.contextSize"
                             :min="0"
                             :max="20"
-                            :step="1"
+                            :step="2"
                             class="w-full"
                         />
                         <p class="text-xs text-muted-foreground">携带的上下文数量</p>

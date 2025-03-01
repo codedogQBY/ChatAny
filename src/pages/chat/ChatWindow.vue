@@ -566,6 +566,9 @@ const sendMessage = async (content: string) => {
             throw new Error(`找不到供应商: ${supplierName}`);
         }
 
+        // 获取历史消息
+        const history = chatStore.currentSession.messages.slice(-chatStore.currentChat.contextSize);
+
         // 添加用户消息
         await chatStore.addMessage({
             content,
@@ -593,9 +596,6 @@ const sendMessage = async (content: string) => {
 
         // 确保视图更新并滚动到底部
         await nextTick();
-
-        // 获取历史消息
-        const history = chatStore.currentSession.messages.slice(-20);
 
         // 使用流式响应
         const usesStream = true;
