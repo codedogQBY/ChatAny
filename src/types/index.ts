@@ -68,6 +68,8 @@ export interface Message {
     sessionId: string;
     chatId: string;
     content: string;
+    // 思考内容
+    thinkContent?: string;
     sender: MessageSender;
     status: MessageStatus;
     createdAt: number;

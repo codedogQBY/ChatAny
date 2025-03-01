@@ -588,6 +588,7 @@ const sendMessage = async (content: string) => {
             sessionId: chatStore.currentSession.id,
             sender: 'assistant',
             status: 'loading',
+            thinkContent: '',
         });
 
         // 确保视图更新并滚动到底部
@@ -815,7 +816,7 @@ onMounted(() => {
 
 // 监听消息变化
 watch(
-    () => chatStore.currentSession?.messages,
+    () => chatStore.currentSession?.messages.length,
     () => {
         setTimeout(scrollToBottom, 50);
     },
@@ -897,15 +898,6 @@ watch(
         scrollToBottom();
     },
     { immediate: true }
-);
-
-// 监听消息变化
-watch(
-    () => chatStore.currentSession?.messages,
-    () => {
-        nextTick(() => scrollToBottom());
-    },
-    { deep: true }
 );
 
 const onCopyMessage = (content: string) => {

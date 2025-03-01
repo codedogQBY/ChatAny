@@ -1,11 +1,13 @@
 <template>
     <div class="message-item relative">
         <div
-            v-if="message.status === 'loading'"
+            v-if="message.status === 'loading' || !message.content"
             class="message-content loading bg-secondary/20 hover:shadow-md transition-shadow duration-200"
         >
             <div class="flex flex-col space-y-2">
-                <div class="skeleton-line w-3/4"></div>
+                <div class="skeleton-line w-2/3"></div>
+                <div class="skeleton-line w-full"></div>
+                <div class="skeleton-line w-1/3"></div>
             </div>
         </div>
         <div
@@ -84,7 +86,7 @@ watch(
 }
 
 .message-content.loading {
-    min-width: 250px;
+    min-width: 200px;
 }
 
 .skeleton-line {
