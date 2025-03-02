@@ -26,8 +26,6 @@
                 @view-history="viewHistory"
                 @quote-message="setQuotedMessage"
                 @cancel-quote="cancelQuote"
-                @select-session="handleSessionSelect"
-                @create-session="handleCreateSession"
                 @generation-status-change="handleGenerationStatusChange"
             />
             <div
@@ -239,36 +237,6 @@ const setQuotedMessage = (message: WindowMessage) => {
 
 const cancelQuote = () => {
     quotedMessage.value = null;
-};
-
-const handleSessionSelect = async (sessionId: string) => {
-    await chatStore.selectSession(sessionId);
-};
-
-const handleCreateSession = async () => {
-    if (!chatStore.currentChat) return;
-
-    // 创建新会话
-    const newSession = await chatStore.createSession(
-        chatStore.currentChat.botId,
-        chatStore.currentChat.id,
-        `新的会话 ${chatStore.currentChat.sessions.length + 1}`
-    );
-
-    // 添加到当前聊天的会话列表
-    chatStore.currentChat.sessions.push(newSession);
-
-    // 选择新会话
-    await chatStore.selectSession(newSession.id);
-
-    // 同步数据
-    await chatStore.syncData();
-
-    // 提示创建成功
-    toast({
-        description: '新会话已创建',
-        duration: 1000,
-    });
 };
 
 // 处理生成状态变化

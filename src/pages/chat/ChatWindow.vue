@@ -1,43 +1,12 @@
 <template>
     <div class="flex flex-col h-full bg-gradient-to-br from-background to-background/80">
         <!-- 顶部标题栏 -->
-        <div
-            data-tauri-drag-region
-            class="flex items-center justify-between px-2 py-2 bg-card/50 backdrop-blur-sm border-b border-border/50"
-        >
-            <div class="flex items-center space-x-3">
-                <Avatar>
-                    <AvatarImage :src="chat.avatar" :alt="chat.name" />
-                    <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
-                </Avatar>
-                <h2 class="text-xl font-semibold text-foreground">{{ chat.name }}</h2>
-                <SessionSelector
-                    :sessions="chat.sessions"
-                    :current-session="currentSession"
-                    @select="chatStore.selectSession($event)"
-                    @create="handleCreateSession"
-                    :disabled="isLoading"
-                />
-            </div>
-            <div class="flex items-center space-x-2">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    @click="handleHistoryClick"
-                    :class="{ 'opacity-50': isLoading }"
-                >
-                    <ClockIcon class="h-5 w-5" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    @click="handleSettingsClick"
-                    :class="{ 'opacity-50': isLoading }"
-                >
-                    <SettingsIcon class="h-5 w-5" />
-                </Button>
-            </div>
-        </div>
+        <chat-window-header
+            :chat="chat"
+            :user="user"
+            :current-session="currentSession"
+            :is-loading="isLoading"
+        ></chat-window-header>
 
         <!-- 聊天内容区域 -->
         <div class="flex-1 overflow-y-auto px-4 py-6" ref="chatContainer">
@@ -328,49 +297,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 历史记录抽屉 -->
-        <Drawer v-model:open="showHistory" @close="showHistory = false">
-            <DrawerContent class="!w-[calc(100%-16rem)]" position="right">
-                <div class="flex h-full">
-                    <!-- 顶部关闭按钮 -->
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="absolute right-4 top-4 z-50"
-                        @click="toggleHistory"
-                    >
-                        <XIcon class="h-5 w-5" />
-                    </Button>
-
-                    <ChatHistory
-                        :sessions="chat.sessions"
-                        :current-session="currentSession"
-                        :bot-name="chat.name"
-                        :bot-avatar="chat.avatar || ''"
-                        :user-avatar="user.avatar"
-                        @select="chatStore.selectSession($event)"
-                    />
-                </div>
-            </DrawerContent>
-        </Drawer>
-
-        <ChatSettings
-            v-model:open="showSettings"
-            :chat-id="chat.id"
-            :temperature="chat.temperature"
-            :max-tokens="chat.maxTokens"
-            :top-p="chat.topP"
-            :context-size="chat.contextSize"
-        />
-
-        <!-- 添加删除确认对话框 -->
-        <DeleteSessionAlert
-            v-model:open="showClearConfirm"
-            title="删除当前会话"
-            description="确定要删除当前会话吗？此操作将删除所有聊天记录且不可恢复。"
-            @confirm="handleClearConfirm"
-        />
     </div>
 </template>
 
@@ -384,8 +310,6 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { useToast } from '@/components/ui/toast/use-toast';
 import {
-    ClockIcon,
-    SettingsIcon,
     XIcon,
     CopyIcon,
     CameraIcon,
@@ -398,7 +322,6 @@ import {
     ReplyIcon,
     LoaderCircleIcon,
 } from 'lucide-vue-next';
-import SessionSelector from '@/components/chat/SessionSelector.vue';
 import ChatHistory from '@/components/chat/ChatHistory.vue';
 import { useChatStore } from '@/store/chat';
 import ChatSettings from '@/components/chat/ChatSettings.vue';
@@ -418,6 +341,7 @@ import {
 import { formatMessageTime } from '@/utils/time';
 import { serviceManager } from '@/core/services';
 import MessageItem from '../../components/chat/MessageItem.vue';
+import ChatWindowHeader from '@/components/chat/ChatWindowHeader.vue';
 
 const props = defineProps<{
     chat: Chat;
@@ -438,22 +362,15 @@ const emit = defineEmits<{
     (e: 'view-history'): void;
     (e: 'quote-message', message: any): void;
     (e: 'cancel-quote'): void;
-    (e: 'select-session', sessionId: string): void;
-    (e: 'create-session'): void;
-    (e: 'rename-session', sessionId: string, title: string): void;
-    (e: 'delete-session', sessionId: string): void;
     (e: 'generation-status-change', status: boolean): void;
 }>();
 
 const inputMessage = ref('');
 const networkEnabled = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
-const showHistory = ref(false);
 const { toast } = useToast();
 // 是否聚焦输入框
 const isFocus = ref(false);
-const showSettings = ref(false);
-const showClearConfirm = ref(false);
 
 const chatStore = useChatStore();
 const modelStore = useModelStore();
@@ -748,28 +665,10 @@ const viewLastImage = () => {
 };
 
 const confirmDeleteSession = () => {
-    showClearConfirm.value = true;
-};
-
-const handleClearConfirm = async () => {
-    if (!props.currentSession) return;
-
-    try {
-        // 删除当前会话
-        await chatStore.deleteSession(props.currentSession.id);
-        showClearConfirm.value = false;
-
-        toast({
-            description: '会话已删除',
-            duration: 2000,
-        });
-    } catch (error) {
-        toast({
-            description: '会话删除失败，请稍后重试',
-            variant: 'destructive',
-            duration: 2000,
-        });
-    }
+    toast({
+        description: '删除会话功能即将推出',
+        duration: 1000,
+    });
 };
 
 const managePlugins = () => {
@@ -784,17 +683,6 @@ const showShortcuts = () => {
         description: '快捷键功能即将推出',
         duration: 1000,
     });
-};
-
-const openSettings = () => {
-    toast({
-        description: '设置功能即将推出',
-        duration: 1000,
-    });
-};
-
-const toggleHistory = () => {
-    showHistory.value = !showHistory.value;
 };
 
 // 安全的滚动到底部函数
@@ -900,10 +788,6 @@ watch(
     { immediate: true }
 );
 
-const onCopyMessage = (content: string) => {
-    copyMessage(content);
-};
-
 const setQuotedMessage = (message: Message) => {
     emit('quote-message', message);
     toast({
@@ -920,42 +804,6 @@ const cancelQuote = () => {
 const canSendMessage = computed(() => {
     return inputMessage.value.trim().length > 0 && !isLoading.value;
 });
-
-// 修改历史记录点击事件
-const handleHistoryClick = () => {
-    if (isLoading.value) {
-        toast({
-            title: '无法打开历史记录',
-            description: '请等待当前消息生成完成',
-            variant: 'destructive',
-            duration: 2000,
-        });
-        return; // 阻止打开操作
-    }
-    toggleHistory();
-};
-
-// 修改设置点击事件
-const handleSettingsClick = () => {
-    if (isLoading.value) {
-        toast({
-            title: '无法打开设置',
-            description: '请等待当前消息生成完成',
-            variant: 'destructive',
-            duration: 800,
-        });
-        return; // 阻止打开操作
-    }
-    showSettings.value = true;
-};
-
-const alertGenerating = () => {
-    toast({
-        title: '请稍候',
-        description: '正在生成消息，请等待完成',
-        duration: 800,
-    });
-};
 
 // 监听isLoading变化并发射事件
 watch(isLoading, (newValue) => {

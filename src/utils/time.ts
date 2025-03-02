@@ -39,7 +39,7 @@ export function formatMessageTime(timestamp: number, format: 'default' | 'compac
             : `${weekdays[messageDate.getDay()]} ${timeStr}`;
     } else {
         // 更早的消息显示完整日期
-        const dateStr = `${messageDate.getFullYear()}/${messageDate.getMonth() + 1}/${messageDate.getDate()}`;
+        const dateStr = `${messageDate.getMonth() + 1}/${messageDate.getDate()}`;
         return format === 'compact' ? `${dateStr}·${timeStr}` : `${dateStr} ${timeStr}`;
     }
 }
