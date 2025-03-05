@@ -97,6 +97,7 @@ const isGenerating = ref(false);
 
 const selectChat = async (chatId: string) => {
     await chatStore.selectChat(chatId);
+    chatStore.cancelQuote();
 };
 
 // 处理生成状态变化

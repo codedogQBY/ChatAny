@@ -41,7 +41,6 @@ export const useBotStore = defineStore('bot', () => {
 
     // 根据botId 获取bot
     function getBotByBotId(botId: string): Bot | undefined {
-        console.log('botId', botId);
         for (const section of sections.value) {
             const bot = section.bots.find((b) => b.id === botId);
             if (bot) {

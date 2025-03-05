@@ -1,5 +1,6 @@
 import type { Chat, Message } from '@/types';
 import { useBotStore } from '@/store/bot';
+import { useChatStore } from '@/store/chat';
 
 export interface ChatOptions {
     temperature?: number;
@@ -168,11 +169,26 @@ export class ChatService {
                 // 删除第一个助手消息,默认开场白不计入
                 messages.shift();
             }
+            const chatStore = useChatStore();
 
-            messages.push({
-                role: 'user',
-                content: message,
-            });
+            // 引用消息
+            if (chatStore.quotedMessage) {
+                messages.push({
+                    role: 'user',
+                    content: `
+                        user quoted message start
+                        ${chatStore.quotedMessage.content}
+                        user quoted message end
+                        ------------
+                        ${message}
+                        `,
+                });
+            } else {
+                messages.push({
+                    role: 'user',
+                    content: message,
+                });
+            }
 
             // 处理baseURL
             let baseUrl = this.options.baseURL || 'https://api.openai.com';
@@ -205,6 +221,9 @@ export class ChatService {
                 },
                 body: JSON.stringify(requestBody),
             });
+
+            // 清除原来的引用
+            chatStore.cancelQuote();
 
             if (!response.ok) {
                 const errorData = await response
