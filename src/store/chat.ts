@@ -346,7 +346,6 @@ export const useChatStore = defineStore('chat', () => {
 
         // 只更新 chat 的模型设置，不改变 botId
         chat.modelId = modelId; // 需要在 Chat 类型中添加 modelId 字段
-        chat.updatedAt = Date.now();
 
         // 更新当前会话
         if (currentChat.value?.id === chatId) {

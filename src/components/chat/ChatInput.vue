@@ -37,7 +37,7 @@
                     <!-- 只有非默认机器人才显示模型选择器 -->
                     <Select
                         v-if="!isDefaultBot"
-                        v-model="selectedModel"
+                        v-model="selectedModelId"
                         @update:modelValue="handleModelChange"
                         :disabled="isLoading"
                     >
@@ -173,7 +173,7 @@
                         size="icon"
                         class="rounded-full w-10 h-10 flex-shrink-0"
                         :disabled="!canSendMessage"
-                        @click="sendMessage"
+                        @click="handleSendMessage"
                         ><LoaderCircleIcon v-if="isLoading" class="h-5 w-5 animate-spin" />
                         <SendIcon v-else class="h-5 w-5" />
                     </Button>
@@ -237,6 +237,7 @@ const emit = defineEmits<{
 const isFocus = ref(false);
 // 当前选中的模型
 const selectedModel = ref('');
+const selectedModelId = ref('');
 const inputMessage = ref('');
 const networkEnabled = ref(false);
 
@@ -296,7 +297,7 @@ const sendMessage = async (content: string) => {
 
         // 自动选择默认模型
         if (!selectedModel.value && modelStore.getAllModels.length > 0) {
-            selectedModel.value = modelStore.getAllModels[0].id;
+            selectedModel.value = modelStore.getAllModels[0].modelId;
             console.log('已自动选择默认模型:', selectedModel.value);
         }
 
@@ -305,20 +306,20 @@ const sendMessage = async (content: string) => {
             throw new Error('请先选择一个模型');
         }
 
-        console.log('当前选择的模型ID:', selectedModel.value);
+        console.log('当前选择的模型:', selectedModel.value);
 
         // 获取当前供应商信息
         let supplierName = '';
 
         // 从模型信息中获取供应商
-        const modelInfo = modelStore.getAllModels.find((m) => m.id === selectedModel.value);
+        const modelInfo = modelStore.getAllModels.find((m) => m.id === selectedModelId.value);
         if (modelInfo) {
             supplierName = modelInfo.supplierId;
-        } else if (selectedModel.value.includes('/')) {
+        } else if (selectedModelId.value.includes('/')) {
             // 从ID格式中提取
-            supplierName = selectedModel.value.split('/')[0];
+            supplierName = selectedModelId.value.split('/')[0];
         } else {
-            supplierName = selectedModel.value;
+            supplierName = selectedModelId.value;
         }
 
         const supplier = modelStore.suppliers.find((s) => s.name === supplierName);
@@ -337,9 +338,6 @@ const sendMessage = async (content: string) => {
             sender: 'user',
             status: 'sent',
         });
-
-        // 确保视图更新
-        await nextTick();
 
         // 获取服务
         const service = await serviceManager.getService(chatStore.currentChat, supplier);
@@ -499,11 +497,6 @@ const setInputFocus = (value: boolean) => {
 const handleModelChange = async (modelId: string) => {
     if (!modelId) return;
 
-    console.log('模型变更为:', modelId);
-
-    // 更新选中的模型
-    selectedModel.value = modelId;
-
     // 获取当前机器人
     const bot = botStore.sections
         .flatMap((section) => section.bots)
@@ -518,21 +511,11 @@ const handleModelChange = async (modelId: string) => {
         console.warn('找不到模型信息:', modelId);
         return;
     }
-
-    console.log('更新聊天模型为:', modelId, '供应商:', model.supplierId, '模型ID:', model.modelId);
-
+    selectedModel.value = model.modelId;
+    selectedModelId.value = modelId;
     // 更新机器人的模型信息（如果不是默认机器人）
     if (!bot.isDefault) {
         await botStore.updateBotModel(bot.id, model.supplierId, model.modelId);
-    }
-
-    // 更新聊天的模型设置 - 这个必须更新，即使是默认机器人
-    await chatStore.updateChatModel(props.chat.id, modelId);
-
-    // 在页面刚加载时，如果是默认机器人，确保模型ID被正确设置到聊天对象中
-    if (bot.isDefault && bot.model?.modelId && selectedModel.value) {
-        // 默认机器人需要手动更新聊天的模型ID
-        console.log('更新默认机器人的聊天模型ID:', selectedModel.value);
         await chatStore.updateChatModel(props.chat.id, selectedModel.value);
     }
 };
@@ -575,8 +558,8 @@ const showShortcuts = () => {
 onMounted(() => {
     // 默认选择第一个可用模型
     if (!selectedModel.value && modelStore.getAllModels.length > 0) {
-        selectedModel.value = modelStore.getAllModels[0].id;
-        console.log('已自动选择默认模型:', selectedModel.value);
+        selectedModel.value = modelStore.getAllModels[0].modelId;
+        selectedModelId.value = modelStore.getAllModels[0].id;
     }
 });
 </script>
