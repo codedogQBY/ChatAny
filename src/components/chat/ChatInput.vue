@@ -255,6 +255,8 @@ const isDefaultBot = computed(() => {
         .flatMap((section) => section.bots)
         .find((bot) => bot.id === props.chat.botId);
 
+    console.log(botStore.sections.flatMap((section) => section.bots));
+    console.log(bot);
     return bot?.isDefault ?? true;
 });
 // 获取所有可用的模型

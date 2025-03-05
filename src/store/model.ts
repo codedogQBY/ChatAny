@@ -37,6 +37,7 @@ const defaultSuppliers: Supplier[] = [
     },
     {
         apiDocUrl: 'https://docs.siliconflow.cn/introduction',
+        apiKeyUrl: 'https://cloud.siliconflow.cn/account/ak',
         apiKey: '',
         apiUrl: 'https://api.siliconflow.cn',
         isDefault: true,
@@ -49,7 +50,7 @@ const defaultSuppliers: Supplier[] = [
                 models: [
                     {
                         id: 'deepseek-ai/DeepSeek-R1',
-                        name: 'deepseek-ai/DeepSeek-R1',
+                        name: 'DeepSeek-R1',
                     },
                     {
                         description: '',
@@ -63,18 +64,8 @@ const defaultSuppliers: Supplier[] = [
                 id: 'e82a60ad-5a6d-42ca-aec5-2ba5c0b3fa39',
                 models: [
                     {
-                        id: 'Qwen2.5-7B-Instruct',
-                        name: 'Qwen2.5-7B-Instruct',
-                    },
-                ],
-            },
-            {
-                groupName: 'BAAI',
-                id: 'ed2ede01-8fcd-4435-9cd7-86c1ad360071',
-                models: [
-                    {
-                        id: 'BAAI/bge-m3',
-                        name: 'BAAI/bge-m3',
+                        id: 'Qwen/Qwen2.5-7B-Instruct',
+                        name: 'Qwen/Qwen2.5-7B-Instruct',
                     },
                 ],
             },
@@ -84,6 +75,7 @@ const defaultSuppliers: Supplier[] = [
     },
     {
         apiDocUrl: 'https://platform.openai.com/docs',
+        apiKeyUrl: 'https://platform.openai.com/api-keys',
         apiKey: '',
         apiUrl: 'https://api.openai.com',
         isDefault: true,
@@ -164,6 +156,7 @@ const defaultSuppliers: Supplier[] = [
     },
     {
         apiDocUrl: 'https://platform.moonshot.cn',
+        apiKeyUrl: 'https://platform.moonshot.cn/console/api-keys',
         apiKey: '',
         apiUrl: 'https://api.moonshot.cn/v1',
         isDefault: true,
@@ -186,6 +179,7 @@ const defaultSuppliers: Supplier[] = [
     },
     {
         apiDocUrl: 'https://bigmodel.cn/dev/api',
+        apiKeyUrl: 'https://open.bigmodel.cn/usercenter/proj-mgmt/apikeys',
         apiKey: '',
         apiUrl: 'https://open.bigmodel.cn/api/paas/v4',
         isDefault: true,
@@ -365,29 +359,17 @@ export const useModelStore = defineStore('model', () => {
         const botStore = useBotStore();
 
         // 构造完整的模型ID - 使用与 bot.ts 相同的构造方式
-        const modelId = supplier.name + model.id; // 使用 supplier.name 而不是 model.name
-
+        const modelId = supplier.name + '/' + model.id; // 使用 supplier.name 而不是 model.name
         // 更新 chat
         const affectedChats = chatStore.chats.filter((chat) => chat.botId === modelId);
+
         for (const chat of affectedChats) {
             chat.name = name;
+            // 更新bot
+            botStore.updateBotName(chat.botId, name);
         }
-
         if (affectedChats.length > 0) {
             await chatStore.syncData();
-        }
-
-        // 强制更新 bot store
-        await botStore.forceUpdate();
-
-        // 如果当前选中的是被修改的 bot，更新选中状态
-        if (botStore.selectedBot?.id === modelId) {
-            const updatedBot = botStore.sections
-                .flatMap((section) => section.bots)
-                .find((bot) => bot.id === modelId);
-            if (updatedBot) {
-                botStore.selectedBot = updatedBot;
-            }
         }
     };
 
