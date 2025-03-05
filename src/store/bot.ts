@@ -39,6 +39,17 @@ export const useBotStore = defineStore('bot', () => {
         return '#';
     }
 
+    // 根据botId 获取bot
+    function getBotByBotId(botId: string): Bot | undefined {
+        console.log('botId', botId);
+        for (const section of sections.value) {
+            const bot = section.bots.find((b) => b.id === botId);
+            if (bot) {
+                return bot;
+            }
+        }
+    }
+
     // 按字母顺序排序sections
     const sortSections = (sectionsToSort: { letter: string; bots: Bot[] }[]) => {
         return sectionsToSort.sort((a, b) => {
@@ -309,5 +320,6 @@ export const useBotStore = defineStore('bot', () => {
         forceUpdate,
         createBot,
         updateBotModel,
+        getBotByBotId,
     };
 });

@@ -1,4 +1,5 @@
 import type { Chat, Message } from '@/types';
+import { useBotStore } from '@/store/bot';
 
 export interface ChatOptions {
     temperature?: number;
@@ -8,6 +9,7 @@ export interface ChatOptions {
     apiKey: string;
     baseURL?: string;
     systemMessage?: string;
+    botId: string;
 }
 
 export class ChatService {
@@ -27,13 +29,16 @@ export class ChatService {
             // 构建消息历史
             const messages = [];
 
-            // 添加系统消息（如果供应商是 DeepSeek）
-            // if (this.options.baseURL?.includes('deepseek')) {
-            //     messages.push({
-            //         role: 'system',
-            //         content: '你是一个有帮助的助手。',
-            //     });
-            // }
+            const botStore = useBotStore();
+
+            const bot = botStore.getBotByBotId(this.options.botId!);
+
+            if (bot?.prompt) {
+                messages.push({
+                    role: 'system',
+                    content: bot?.prompt,
+                });
+            }
 
             // 添加上下文消息
             messages.push(
@@ -69,11 +74,6 @@ export class ChatService {
             };
 
             requestBody.stream = false;
-
-            console.log('发送请求到:', baseUrl);
-            console.log('请求体:', JSON.stringify(requestBody, null, 2));
-            console.log('使用模型:', modelName, '原始模型名称:', this.options.model);
-            console.log('API 密钥前几位:', this.options.apiKey.substring(0, 5) + '...');
 
             // 检查 API 密钥格式
             if (!this.options.apiKey || this.options.apiKey.trim() === '') {
@@ -144,6 +144,19 @@ export class ChatService {
             // 构建消息历史 (与sendMessage相同)
             const messages = [];
 
+            const botStore = useBotStore();
+
+            const bot = botStore.getBotByBotId(this.options.botId!);
+
+            console.log(this.options.botId, bot);
+
+            if (bot?.prompt) {
+                messages.push({
+                    role: 'system',
+                    content: bot?.prompt,
+                });
+            }
+
             messages.push(
                 ...context.map((msg) => ({
                     role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -155,8 +168,6 @@ export class ChatService {
                 // 删除第一个助手消息,默认开场白不计入
                 messages.shift();
             }
-
-            console.log('消息列表', messages);
 
             messages.push({
                 role: 'user',
@@ -172,8 +183,6 @@ export class ChatService {
             // 与sendMessage中相同的模型名称处理
             let modelName = this.options.model;
 
-            console.log('当前使用的模型:', modelName);
-
             // 构建请求体
             let requestBody: any = {
                 model: modelName,
@@ -183,8 +192,6 @@ export class ChatService {
                 top_p: this.options.topP ?? 0.9,
                 stream: true, // 设置为流式
             };
-
-            console.log('发送流式请求到:', baseUrl);
 
             if (!this.options.apiKey || this.options.apiKey.trim() === '') {
                 throw new Error('API 密钥不能为空');
@@ -236,8 +243,6 @@ export class ChatService {
 
                         if (content) {
                             fullContent += content;
-                            // 每有新内容就立即回调
-                            console.log('流式内容更新:', content);
                             onUpdate(fullContent);
                         }
                     } catch (e) {
@@ -245,9 +250,6 @@ export class ChatService {
                     }
                 }
             }
-
-            // 最终回调一次确保完整内容
-            console.log('流式响应完成，总长度:', fullContent.length);
             onUpdate(fullContent);
             return fullContent;
         } catch (error) {
@@ -279,11 +281,10 @@ export function createChatService(chat: Chat, apiKey: string, baseURL?: string):
 
     // 处理模型 ID
     let modelId = chat.modelId || 'gpt-3.5-turbo';
-    console.log('使用模型 ID:', chat.modelId);
 
     // 检查 API 密钥
     if (!apiKey || apiKey.trim() === '') {
-        console.warn('DeepSeek API 密钥为空，将使用模拟响应');
+        console.warn('密钥为空，将使用模拟响应');
 
         // 返回一个使用模拟响应的服务
         return {
@@ -291,12 +292,7 @@ export function createChatService(chat: Chat, apiKey: string, baseURL?: string):
                 return getSimulatedResponse(message);
             },
         } as ChatService;
-    } else {
-        console.log('API 密钥有效，长度:', apiKey.length);
     }
-
-    console.log('创建聊天服务，使用 URL:', processedBaseURL);
-    console.log('使用模型 ID:', modelId);
 
     return new ChatService({
         temperature: chat.temperature,
@@ -305,5 +301,6 @@ export function createChatService(chat: Chat, apiKey: string, baseURL?: string):
         model: modelId,
         apiKey,
         baseURL: processedBaseURL,
+        botId: chat.botId || '',
     });
 }
