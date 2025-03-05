@@ -101,7 +101,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, nextTick, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { formatMessageTime } from '@/utils/time.js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar/index.js';
@@ -147,6 +147,42 @@ const copyMessage = async (content: string) => {
         });
     }
 };
+
+const chatContainer = ref<HTMLElement | null>(null);
+
+// 安全的滚动到底部函数
+const scrollToBottom = async () => {
+    await nextTick();
+    try {
+        if (chatContainer.value) {
+            chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+        }
+    } catch (error) {
+        console.error('滚动到底部失败:', error);
+    }
+};
+
+// 在组件挂载和更新时使用
+onMounted(() => {
+    setTimeout(scrollToBottom, 100); // 稍微延迟确保 DOM 已更新
+});
+
+// 监听消息变化
+watch(
+    () => chatStore.currentSession?.messages.length,
+    () => {
+        setTimeout(scrollToBottom, 50);
+    },
+    { deep: true }
+);
+
+watch(
+    () => chatStore.currentSession?.id,
+    async () => {
+        scrollToBottom();
+    },
+    { immediate: true }
+);
 </script>
 
 <style scoped></style>
