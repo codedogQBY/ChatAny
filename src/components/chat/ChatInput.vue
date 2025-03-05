@@ -223,14 +223,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'update-loading', loading: boolean): void;
-    (e: 'send-message', content: string): void;
-    (e: 'toggle-network', enabled: boolean): void;
-    (e: 'clear-history'): void;
-    (e: 'edit-bot'): void;
-    (e: 'view-history'): void;
-    (e: 'quote-message', message: any): void;
-    (e: 'cancel-quote'): void;
-    (e: 'generation-status-change', status: boolean): void;
 }>();
 
 // 是否聚焦输入框
@@ -254,9 +246,6 @@ const isDefaultBot = computed(() => {
     const bot = botStore.sections
         .flatMap((section) => section.bots)
         .find((bot) => bot.id === props.chat.botId);
-
-    console.log(botStore.sections.flatMap((section) => section.bots));
-    console.log(bot);
     return bot?.isDefault ?? true;
 });
 // 获取所有可用的模型
@@ -340,7 +329,6 @@ const sendMessage = async (content: string) => {
             sender: 'user',
             status: 'sent',
         });
-
         // 获取服务
         const service = await serviceManager.getService(chatStore.currentChat, supplier);
 
@@ -559,9 +547,15 @@ const showShortcuts = () => {
 
 onMounted(() => {
     // 默认选择第一个可用模型
-    if (!selectedModel.value && modelStore.getAllModels.length > 0) {
+    if (!isDefaultBot) {
         selectedModel.value = modelStore.getAllModels[0].modelId;
         selectedModelId.value = modelStore.getAllModels[0].id;
+    } else {
+        const bot = botStore.sections
+            .flatMap((section) => section.bots)
+            .find((bot) => bot.id === props.chat.botId);
+        selectedModel.value = bot?.model?.modelId!;
+        selectedModelId.value = bot?.model?.supplierId + '/' + bot?.model?.modelId;
     }
 });
 </script>
