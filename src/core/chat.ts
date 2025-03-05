@@ -28,12 +28,12 @@ export class ChatService {
             const messages = [];
 
             // 添加系统消息（如果供应商是 DeepSeek）
-            if (this.options.baseURL?.includes('deepseek')) {
-                messages.push({
-                    role: 'system',
-                    content: '你是一个有帮助的助手。',
-                });
-            }
+            // if (this.options.baseURL?.includes('deepseek')) {
+            //     messages.push({
+            //         role: 'system',
+            //         content: '你是一个有帮助的助手。',
+            //     });
+            // }
 
             // 添加上下文消息
             messages.push(
@@ -259,7 +259,7 @@ export class ChatService {
 
 // 添加模拟 API 响应的辅助函数
 export function getSimulatedResponse(message: string): string {
-    return `这是模拟的 DeepSeek 回复。您发送的消息是: "${message}"。\n\n请确保在设置中配置有效的 API 密钥，以便连接到真实的 AI 服务。`;
+    return `这是模拟的回复。您发送的消息是: "${message}"。\n\n请确保在设置中配置有效的 API 密钥，以便连接到真实的 AI 服务。`;
 }
 
 // 创建聊天服务实例的工厂函数

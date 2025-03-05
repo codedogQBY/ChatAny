@@ -132,24 +132,6 @@ const defaultSuppliers: Supplier[] = [
                     },
                 ],
             },
-            {
-                groupName: 'Claude 3',
-                id: 'd490a386-c60e-4071-b2b0-be429886e306',
-                models: [
-                    {
-                        id: 'claude-3-opus-latest',
-                        name: 'Claude 3 Opus',
-                    },
-                    {
-                        id: 'claude-3-sonnet-20240229',
-                        name: 'Claude 3 Sonnet',
-                    },
-                    {
-                        id: 'claude-3-haiku-20240307',
-                        name: 'Claude 3 Haiku',
-                    },
-                ],
-            },
         ],
         name: 'claude',
         websiteUrl: 'https://claude.ai',
@@ -201,26 +183,64 @@ const defaultSuppliers: Supplier[] = [
         websiteUrl: 'https://bigmodel.cn',
     },
     {
+        apiDocUrl: 'https://openrouter.ai/docs/quickstart',
+        apiKey: '',
+        apiKeyUrl: 'https://openrouter.ai/settings/keys',
+        apiUrl: 'https://openrouter.ai/api/v1',
+        isDefault: true,
+        label: 'OpenRouter',
+        logo: '/src/assets/model/logo/openrouter.png',
+        modelGroup: [
+            {
+                groupName: 'Gemini',
+                id: 'd68sse3-ba5f-443c-9d0b-0rruur5678',
+                models: [
+                    {
+                        id: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                        name: 'Gemini-2-free',
+                    },
+                ],
+            },
+            {
+                groupName: 'Anthropic',
+                id: 'dwere3-rr5f-789c-9d0b-0rrrjkjr8',
+                models: [
+                    {
+                        id: 'anthropic/claude-3.7-sonnet:beta',
+                        name: 'Glaude-3.7-free',
+                    },
+                ],
+            },
+        ],
+        name: 'openrouter',
+        websiteUrl: 'https://openrouter.ai',
+    },
+    {
         apiDocUrl: 'https://www.volcengine.com/docs/82379',
+        apiKeyUrl: 'https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey',
         apiKey: '',
         apiUrl: 'https://ark.cn-beijing.volces.com/api/v3',
         isDefault: true,
-        label: '豆包',
-        logo: '/src/assets/model/logo/doubao.png',
-        modelGroup: [],
-        name: 'doubao',
-        websiteUrl: 'https://www.volcengine.com',
-    },
-    {
-        apiDocUrl: 'https://www.xfyun.cn/doc/spark/Web.html',
-        apiKey: '',
-        apiUrl: 'https://spark-api-open.xf-yun.com/v1/chat/completions',
-        isDefault: true,
-        label: '讯飞星火',
-        logo: '/src/assets/model/logo/xinghuo.png',
-        modelGroup: [],
-        name: 'xinghuo',
-        websiteUrl: 'https://xinghuo.xfyun.cn',
+        label: '火山引擎',
+        logo: '/src/assets/model/logo/huoshan.png',
+        modelGroup: [
+            {
+                groupName: '火山引擎-DeepSeek',
+                id: 'd68sse3-ba5f-443c-9d0b-0rabcd5678',
+                models: [
+                    {
+                        id: 'deepseek-r1-250120',
+                        name: 'DeepSeek-R1-250120',
+                    },
+                    {
+                        id: 'deepseek-v3-241226',
+                        name: 'DeepSeek-V3-250120',
+                    },
+                ],
+            },
+        ],
+        name: 'huoshan',
+        websiteUrl: 'https://www.volcengine.com/experience/ark',
     },
 ];
 
