@@ -9,6 +9,7 @@ export const useChatStore = defineStore('chat', () => {
     const chats = ref<Chat[]>([]);
     const currentChat = ref<Chat | null>(null);
     const currentSession = ref<Session | null>(null);
+    const quotedMessage = ref<Message | null>(null);
 
     const botStore = useBotStore();
 
@@ -370,10 +371,19 @@ export const useChatStore = defineStore('chat', () => {
         return true;
     };
 
+    const setQuotedMessage = (message: Message) => {
+        quotedMessage.value = message;
+    };
+
+    const cancelQuote = () => {
+        quotedMessage.value = null;
+    };
+
     return {
         chats,
         currentChat,
         currentSession,
+        quotedMessage,
         initializeStore,
         selectChat,
         selectSession,
@@ -389,5 +399,7 @@ export const useChatStore = defineStore('chat', () => {
         clearSessionMessages,
         updateChatModel,
         replaceMessage,
+        setQuotedMessage,
+        cancelQuote,
     };
 });

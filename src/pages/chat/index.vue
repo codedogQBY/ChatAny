@@ -19,13 +19,6 @@
                 :user="currentUser"
                 :quotedMessage="quotedMessage"
                 :current-session="chatStore.currentSession"
-                @send-message="sendMessage"
-                @toggle-network="toggleNetwork"
-                @clear-history="clearHistory"
-                @edit-bot="editBot"
-                @view-history="viewHistory"
-                @quote-message="setQuotedMessage"
-                @cancel-quote="cancelQuote"
                 @generation-status-change="handleGenerationStatusChange"
             />
             <div
@@ -59,7 +52,6 @@ import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
-import { v4 as uuidv4 } from 'uuid';
 
 const chatStore = useChatStore();
 const botStore = useBotStore();
@@ -127,118 +119,6 @@ const selectChat = async (chatId: string) => {
     await chatStore.selectChat(chatId);
 };
 
-const sendMessage = async (content: string) => {
-    if (!chatStore.currentChat?.id || !chatStore.currentSession?.id) return;
-
-    // 设置加载状态
-    isGenerating.value = true;
-    console.log('设置isGenerating为true'); // 调试日志
-
-    try {
-        // 先添加用户消息
-        await chatStore.addMessage({
-            content,
-            chatId: chatStore.currentChat.id,
-            sessionId: chatStore.currentSession.id,
-            sender: 'user',
-            status: 'sent',
-        });
-
-        // 添加AI消息占位符
-        const messageId = uuidv4();
-        const aiMessage = {
-            id: messageId,
-            content: '',
-            chatId: chatStore.currentChat.id,
-            sessionId: chatStore.currentSession.id,
-            sender: 'bot',
-            status: 'streaming', // 使用streaming状态
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-        };
-
-        await chatStore.addMessage(aiMessage);
-
-        // 模拟打字效果
-        const fullReply = '这是一个 AI 生成的回复，将会以打字机效果显示。';
-        let currentText = '';
-
-        // 逐字添加文本
-        for (let i = 0; i < fullReply.length; i++) {
-            currentText += fullReply[i];
-            // 更新消息内容，但保持streaming状态
-            await chatStore.replaceMessage(messageId, {
-                ...aiMessage,
-                content: currentText,
-                updatedAt: Date.now(),
-            });
-            // 添加随机延迟来模拟打字速度
-            await new Promise((r) => setTimeout(r, 50 + Math.random() * 50));
-        }
-
-        // 完成后更新状态
-        await chatStore.replaceMessage(messageId, {
-            ...aiMessage,
-            content: fullReply,
-            status: 'sent',
-            updatedAt: Date.now(),
-        });
-    } catch (error) {
-        console.error('消息生成出错:', error);
-        toast({
-            title: '错误',
-            description: '生成回复时出现错误',
-            variant: 'destructive',
-            duration: 3000,
-        });
-    } finally {
-        // 确保在任何情况下都重置状态
-        isGenerating.value = false;
-        console.log('设置isGenerating为false'); // 调试日志
-    }
-};
-
-const toggleNetwork = (enabled: boolean) => {
-    toast({
-        description: `联网模式已${enabled ? '开启' : '关闭'}`,
-        duration: 1000,
-    });
-};
-
-const clearHistory = async () => {
-    if (chatStore.currentChat && chatStore.currentSession) {
-        chatStore.currentSession.messages = [];
-        await chatStore.syncData();
-        toast({
-            description: '当前对话的所有消息已被删除',
-            variant: 'destructive',
-            duration: 1000,
-        });
-    }
-};
-
-const editBot = () => {
-    toast({
-        description: '机器人设置功能即将推出',
-        duration: 1000,
-    });
-};
-
-const viewHistory = () => {
-    toast({
-        description: '历史记录查看功能即将推出',
-        duration: 1000,
-    });
-};
-
-const setQuotedMessage = (message: WindowMessage) => {
-    quotedMessage.value = message;
-};
-
-const cancelQuote = () => {
-    quotedMessage.value = null;
-};
-
 // 处理生成状态变化
 const handleGenerationStatusChange = (status: boolean) => {
     console.log('接收生成状态变化:', status); // 调试日志
@@ -246,14 +126,4 @@ const handleGenerationStatusChange = (status: boolean) => {
 };
 </script>
 
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.5s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-</style>
+<style scoped></style>
