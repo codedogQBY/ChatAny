@@ -16,9 +16,6 @@
                 v-if="chatStore.currentChat && chatStore.currentSession"
                 :key="chatStore.currentChat.id"
                 :chat="currentChatData"
-                :user="currentUser"
-                :quotedMessage="quotedMessage"
-                :current-session="chatStore.currentSession"
                 @generation-status-change="handleGenerationStatusChange"
             />
             <div
@@ -50,33 +47,16 @@ import { useChatStore } from '@/store/chat';
 import { useBotStore } from '@/store/bot';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
-import { useToast } from '@/components/ui/toast/use-toast';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
 
 const chatStore = useChatStore();
 const botStore = useBotStore();
-const { toast } = useToast();
 
 const currentUser = {
     id: 'user',
     name: 'User',
     avatar: '/placeholder.svg?height=40&width=40',
 };
-
-// 修改引用消息的类型
-interface WindowMessage {
-    id: string | number;
-    content: string;
-    sender: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    timestamp: Date;
-    isNew?: boolean;
-}
-
-const quotedMessage = ref<WindowMessage | null>(null);
 
 // 转换 chat 数据以适配 ChatWindow 组件的格式
 const currentChatData = computed(() => {

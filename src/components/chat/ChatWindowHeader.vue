@@ -61,7 +61,7 @@
                         :current-session="currentSession"
                         :bot-name="chat.name"
                         :bot-avatar="chat.avatar || ''"
-                        :user-avatar="user.avatar"
+                        :user-avatar="''"
                         @select="chatStore.selectSession($event)"
                     />
                 </div>
@@ -89,15 +89,10 @@ import type { Chat, Message, Session } from '@/types';
 import { useChatStore } from '@/store/chat';
 import { useToast } from '@/components/ui/toast';
 import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps<{
     chat: Chat;
-    user: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    currentSession: Session | null;
     isLoading: boolean;
 }>();
 
@@ -107,6 +102,7 @@ const emit = defineEmits<{
 }>();
 
 const chatStore = useChatStore();
+const { currentSession } = storeToRefs(chatStore);
 const { toast } = useToast();
 const showSettings = ref(false);
 const showClearConfirm = ref(false);
@@ -117,11 +113,11 @@ const toggleHistory = () => {
 };
 
 const handleClearConfirm = async () => {
-    if (!props.currentSession) return;
+    if (!currentSession) return;
 
     try {
         // 删除当前会话
-        await chatStore.deleteSession(props.currentSession.id);
+        await chatStore.deleteSession(currentSession.id);
         showClearConfirm.value = false;
 
         toast({

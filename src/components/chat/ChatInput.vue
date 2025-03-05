@@ -183,7 +183,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits, computed, nextTick, watch, onMounted } from 'vue';
+import { ref, defineProps, defineEmits, computed, nextTick, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
     Select,
