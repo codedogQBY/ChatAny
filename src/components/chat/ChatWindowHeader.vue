@@ -8,7 +8,9 @@
                 <AvatarImage :src="chat.avatar" :alt="chat.name" />
                 <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
             </Avatar>
-            <h2 class="text-xl font-semibold text-foreground">{{ chat.name }}</h2>
+            <h2 class="text-base font-semibold text-foreground truncate max-w-60">
+                {{ chat.name }}
+            </h2>
             <SessionSelector
                 :sessions="chat.sessions"
                 :current-session="currentSession"
