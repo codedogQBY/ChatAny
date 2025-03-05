@@ -240,18 +240,20 @@ export const useModelStore = defineStore('model', () => {
         if (!suppliers.value) return [];
 
         // 返回所有模型的扁平数组，包含供应商信息
-        return suppliers.value.flatMap((supplier) =>
-            supplier.modelGroup.flatMap((group) =>
-                group.models.map((model) => ({
-                    id: `${supplier.name}/${model.id}`, // 完整的模型ID
-                    name: model.name,
-                    groupName: group.groupName,
-                    supplierId: supplier.name, // 添加供应商ID
-                    modelId: model.id, // 原始模型ID
-                    isDefault: supplier.isDefault,
-                }))
-            )
-        );
+        return suppliers.value
+            .filter((supplier) => supplier.apiKey)
+            .flatMap((supplier) =>
+                supplier.modelGroup.flatMap((group) =>
+                    group.models.map((model) => ({
+                        id: `${supplier.name}/${model.id}`, // 完整的模型ID
+                        name: model.name,
+                        groupName: group.groupName,
+                        supplierId: supplier.name, // 添加供应商ID
+                        modelId: model.id, // 原始模型ID
+                        isDefault: supplier.isDefault,
+                    }))
+                )
+            );
     });
 
     // 同步数据到本地存储
