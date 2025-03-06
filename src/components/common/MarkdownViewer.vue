@@ -57,17 +57,20 @@ const updateContent = async () => {
     html.value = cleanRenderedHtml(renderedHtml);
 
     // 檢查是否有Mermaid圖表
-    const hasMermaid = html.value.includes('class="mermaid"');
+    const hasMermaid = html.value.includes('class="mermaid-container"');
 
-    // 只有當存在mermaid圖表時才調用渲染
-    if (hasMermaid) {
-        // 使用setTimeout確保DOM完全更新
-        setTimeout(async () => {
-            if (containerRef.value) {
+    // 使用setTimeout確保DOM完全更新
+    setTimeout(async () => {
+        if (containerRef.value) {
+            // 添加代码块复制功能
+            addCopyListeners();
+
+            // 只有当存在mermaid圖表時才調用渲染
+            if (hasMermaid) {
                 await markdownRenderer.renderMermaid(containerRef.value);
             }
-        }, 100);
-    }
+        }
+    }, 100);
 };
 
 // 添加复制功能
@@ -75,28 +78,29 @@ const handleCopyClick = (event: Event) => {
     const button = event.target as HTMLButtonElement;
     const wrapper = button.closest('.code-block-wrapper');
     if (!wrapper) return;
-    
+
     const codeBlock = wrapper.querySelector('code');
     if (!codeBlock) return;
-    
+
     // 获取纯文本内容
     const textToCopy = codeBlock.textContent || '';
-    
+
     // 复制到剪贴板
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard
+        .writeText(textToCopy)
         .then(() => {
             // 更改按钮文本
             button.textContent = '复制成功';
-            
+
             // 2秒后恢复
             setTimeout(() => {
                 button.textContent = '复制';
             }, 2000);
         })
-        .catch(err => {
+        .catch((err) => {
             console.error('复制失败:', err);
             button.textContent = '复制失败';
-            
+
             setTimeout(() => {
                 button.textContent = '复制';
             }, 2000);
@@ -106,18 +110,22 @@ const handleCopyClick = (event: Event) => {
 // 在DOM更新后添加事件监听
 const addCopyListeners = () => {
     if (!containerRef.value) return;
-    
+
     const copyButtons = containerRef.value.querySelectorAll('.copy-button');
-    copyButtons.forEach(button => {
+    copyButtons.forEach((button) => {
         button.addEventListener('click', handleCopyClick);
     });
 };
 
 // 在内容更新后添加事件监听
-watch(() => html.value, () => {
-    // 使用setTimeout确保DOM已更新
-    setTimeout(addCopyListeners, 100);
-}, { immediate: false });
+watch(
+    () => html.value,
+    () => {
+        // 使用setTimeout确保DOM已更新
+        setTimeout(addCopyListeners, 100);
+    },
+    { immediate: false }
+);
 
 // 監聽內容變化
 watch(() => props.content, updateContent, { immediate: true });
@@ -163,10 +171,83 @@ onMounted(async () => {
 }
 
 .markdown-viewer :deep(.mermaid-container) {
-    background: #f8f9fa;
     border-radius: 8px;
-    overflow-x: auto;
     margin: 10px 0;
+}
+
+.markdown-viewer :deep(.mermaid-code-wrapper) {
+    margin: 0;
+}
+
+.markdown-viewer :deep(.mermaid-render-button) {
+    border: none;
+    color: #ccc;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.markdown-viewer :deep(.mermaid-render-button:hover) {
+    background-color: #444;
+    color: #fff;
+}
+
+/* Mermaid控制栏样式 - 类似代码块顶部栏 */
+.markdown-viewer :deep(.mermaid-controls) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #fff;
+    font-size: 0.9rem;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: 0;
+}
+
+.markdown-viewer :deep(.mermaid-language) {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #ccc;
+    font-weight: normal;
+}
+
+.markdown-viewer :deep(.mermaid-back-to-code) {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #ccc;
+}
+
+.markdown-viewer :deep(.mermaid-back-to-code:hover) {
+    background-color: #444;
+    color: #fff;
+}
+
+.markdown-viewer :deep(.mermaid-rendered) {
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    overflow-x: auto;
+    margin-top: 0;
+    border: 1px solid #333;
+    border-top: none;
+}
+
+.markdown-viewer :deep(.mermaid-loading) {
+    color: #3498db;
+    padding: 16px;
+    text-align: center;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #eee;
 }
 
 .markdown-viewer :deep(.mermaid) {
@@ -176,23 +257,6 @@ onMounted(async () => {
 }
 
 .markdown-viewer :deep(.mermaid-error) {
-    color: #e74c3c;
-    padding: 10px;
-    border: 1px dashed #e74c3c;
-    border-radius: 4px;
-    margin: 10px 0;
-}
-
-.markdown-viewer :deep(.mermaid-loading) {
-    color: #3498db;
-    padding: 10px;
-    border: 1px dashed #3498db;
-    border-radius: 4px;
-    margin: 10px 0;
-    text-align: center;
-}
-
-.markdown-viewer :deep(.markdown-error) {
     color: #e74c3c;
     padding: 10px;
     border: 1px dashed #e74c3c;
@@ -298,7 +362,7 @@ onMounted(async () => {
     .markdown-viewer :deep(.code-block-wrapper) {
         border-color: #222;
     }
-    
+
     .markdown-viewer :deep(.code-header) {
         background-color: #222;
         border-color: #333;
