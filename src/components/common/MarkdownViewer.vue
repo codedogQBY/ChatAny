@@ -70,11 +70,61 @@ const updateContent = async () => {
     }
 };
 
+// 添加复制功能
+const handleCopyClick = (event: Event) => {
+    const button = event.target as HTMLButtonElement;
+    const wrapper = button.closest('.code-block-wrapper');
+    if (!wrapper) return;
+    
+    const codeBlock = wrapper.querySelector('code');
+    if (!codeBlock) return;
+    
+    // 获取纯文本内容
+    const textToCopy = codeBlock.textContent || '';
+    
+    // 复制到剪贴板
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+            // 更改按钮文本
+            button.textContent = '复制成功';
+            
+            // 2秒后恢复
+            setTimeout(() => {
+                button.textContent = '复制';
+            }, 2000);
+        })
+        .catch(err => {
+            console.error('复制失败:', err);
+            button.textContent = '复制失败';
+            
+            setTimeout(() => {
+                button.textContent = '复制';
+            }, 2000);
+        });
+};
+
+// 在DOM更新后添加事件监听
+const addCopyListeners = () => {
+    if (!containerRef.value) return;
+    
+    const copyButtons = containerRef.value.querySelectorAll('.copy-button');
+    copyButtons.forEach(button => {
+        button.addEventListener('click', handleCopyClick);
+    });
+};
+
+// 在内容更新后添加事件监听
+watch(() => html.value, () => {
+    // 使用setTimeout确保DOM已更新
+    setTimeout(addCopyListeners, 100);
+}, { immediate: false });
+
 // 監聽內容變化
 watch(() => props.content, updateContent, { immediate: true });
 
 onMounted(async () => {
     await updateContent();
+    addCopyListeners();
 });
 </script>
 
@@ -179,5 +229,79 @@ onMounted(async () => {
 
 .markdown-viewer :deep(table tr:hover) {
     background-color: #f1f1f1;
+}
+
+/* 代码块样式 - 修改为深色顶部栏 */
+.markdown-viewer :deep(.code-block-wrapper) {
+    margin: 1rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.markdown-viewer :deep(.code-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.markdown-viewer :deep(.code-language) {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #ccc;
+    font-weight: normal;
+}
+
+/* 修改复制按钮样式，移除边框 */
+.markdown-viewer :deep(.copy-button) {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #ccc;
+}
+
+.markdown-viewer :deep(.copy-button:hover) {
+    background-color: #444;
+    color: #fff;
+}
+
+.markdown-viewer :deep(.code-block) {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    background-color: #282c34; /* atom-one-dark 背景色 */
+}
+
+/* 确保代码文本颜色在深色背景上可见 */
+.markdown-viewer :deep(.code-block code) {
+    color: #abb2bf; /* 浅灰色文本，适合深色背景 */
+    font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+/* 确保highlight.js样式正确应用 */
+.markdown-viewer :deep(.hljs) {
+    display: block;
+    overflow-x: auto;
+    color: #abb2bf;
+    background: #282c34;
+}
+
+/* 暗色模式适配 - 保持一致的深色样式 */
+@media (prefers-color-scheme: dark) {
+    .markdown-viewer :deep(.code-block-wrapper) {
+        border-color: #222;
+    }
+    
+    .markdown-viewer :deep(.code-header) {
+        background-color: #222;
+        border-color: #333;
+    }
 }
 </style>

@@ -13,7 +13,7 @@
                             <AvatarImage :src="chat.avatar" :alt="chat.name" />
                             <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
                         </Avatar>
-                        <div class="flex flex-col max-w-[75%] relative group">
+                        <div class="flex flex-col max-w-[90%] relative group">
                             <div class="text-sm text-muted-foreground mb-1 flex items-center">
                                 <span>{{ chat.name }}</span>
                             </div>

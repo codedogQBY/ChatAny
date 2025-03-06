@@ -48,12 +48,18 @@ class MarkdownRenderer {
                     // 不立即为图表分配ID，仅为其添加类名，以便后续识别和处理
                     return `<div class="mermaid-container"><pre class="mermaid">${code.text}</pre></div>`;
                 }
+                
+                // 使用highlightAuto来确保代码高亮正确应用
+                const highlighted = hljs.highlightAuto(code.text);
+                const language = code.lang || highlighted.language || 'javascript';
+                
                 return `
-                <div class="relative">
-                    <button class="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-700 dark:text-gray-200" @click='window.navigator.clipboard.writeText(${code.text})'>
-                        复制代码
-                    </button>
-                    <pre class="max-w-full overflow-x-auto  rounded-md p-4 mb-4 border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"><code>${hljs.highlightAuto(code.text).value}</code></pre>
+                <div class="code-block-wrapper">
+                    <div class="code-header">
+                        <span class="code-language">${language}</span>
+                        <button class="copy-button">复制</button>
+                    </div>
+                    <pre class="code-block"><code class="hljs ${highlighted.language || ''}">${highlighted.value}</code></pre>
                 </div>`;
             };
         }
