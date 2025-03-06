@@ -28,7 +28,7 @@
                 </div>
             </AccordionTrigger>
             <AccordionContent>
-                <InfoCard :model="item" />
+                <InfoCard :supplier="item" />
             </AccordionContent>
         </AccordionItem>
     </Accordion>

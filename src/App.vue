@@ -38,7 +38,7 @@ onMounted(async () => {
         </div>
     </div>
     <!-- 全局通知 -->
-    <div class="fixed top-4 right-4 z-50">
+    <div class="fixed top-4 right-4" style="z-index: 10500">
         <Toaster />
     </div>
 </template>

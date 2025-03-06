@@ -118,18 +118,6 @@ export class ChatService {
         } catch (error) {
             console.error('Chat completion error:', error);
 
-            // 如果是余额不足错误，返回模拟响应
-            if (error instanceof Error && error.message.includes('余额不足')) {
-                console.log('使用模拟响应模式 - 余额不足');
-                return this.simulateResponse(message);
-            }
-
-            // 如果是 API 密钥错误，也返回模拟响应
-            if (error instanceof Error && error.message.includes('密钥无效')) {
-                console.log('API 密钥无效，使用模拟响应模式');
-                return this.simulateResponse(message) + '\n\n请检查您的 API 密钥设置。';
-            }
-
             // 其他错误也使用模拟响应
             console.log('未知错误，使用模拟响应模式:', error);
             return this.simulateResponse(message);
@@ -322,4 +310,55 @@ export function createChatService(chat: Chat, apiKey: string, baseURL?: string):
         baseURL: processedBaseURL,
         botId: chat.botId || '',
     });
+}
+
+// 无上下文发起非流式请求,用于测试和会话命名
+export async function sendMessageNoContext(
+    message: string,
+    options: {
+        url: string;
+        model: string;
+        apiKey: string;
+        maxTokens: number;
+    }
+): Promise<any> {
+    try {
+        // 构建请求体
+        const requestBody = {
+            model: options.model,
+            messages: [
+                {
+                    role: 'user',
+                    content: message,
+                },
+            ],
+            max_tokens: options.maxTokens || 1280,
+            stream: false,
+        };
+
+        const authHeader = `Bearer ${options.apiKey}`;
+
+        const response = await fetch(options.url + '/chat/completions', {
+            // 确保正确的端点
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: authHeader,
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            const errorData = await response
+                .json()
+                .catch(() => ({ error: { message: `HTTP错误: ${response.status}` } }));
+            console.error('无上下文API响应错误:', errorData);
+            throw new Error(errorData.error?.message || `请求失败: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (e) {
+        console.error('无上下文非流式请求错误:', e);
+        throw e;
+    }
 }
