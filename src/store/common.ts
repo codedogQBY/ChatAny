@@ -10,6 +10,12 @@ interface CommonState {
     sessionMode: SessionModeEnum;
     followSystem: boolean;
     imagePath: string;
+    // 会话命名模型Id
+    sessionModelId: string;
+    // 快捷指令模型Id
+    shortcutModelId: string;
+    // 翻译模型Id
+    translateModelId: string;
 }
 
 const defaultState: CommonState = {
@@ -19,6 +25,9 @@ const defaultState: CommonState = {
     sessionMode: SessionModeEnum.LEFT,
     followSystem: false,
     imagePath: '',
+    sessionModelId: '',
+    shortcutModelId: '',
+    translateModelId: '',
 };
 
 export const useCommonStore = defineStore('common', () => {
@@ -28,6 +37,9 @@ export const useCommonStore = defineStore('common', () => {
     const sessionMode = ref<SessionModeEnum>(defaultState.sessionMode);
     const followSystem = ref<boolean>(defaultState.followSystem);
     const imagePath = ref<string>(defaultState.imagePath);
+    const sessionModelId = ref<string>(defaultState.sessionModelId);
+    const shortcutModelId = ref<string>(defaultState.shortcutModelId);
+    const translateModelId = ref<string>(defaultState.translateModelId);
 
     const getLanguage = computed(() => language.value);
     const getDarkMode = computed(() => darkMode.value);
@@ -35,6 +47,9 @@ export const useCommonStore = defineStore('common', () => {
     const getSessionMode = computed(() => sessionMode.value);
     const getFollowSystem = computed(() => followSystem.value);
     const getImagePath = computed(() => imagePath.value);
+    const getSessionModelId = computed(() => sessionModelId.value);
+    const getShortcutModelId = computed(() => shortcutModelId.value);
+    const getTranslateModelId = computed(() => translateModelId.value);
 
     // 同步数据到本地存储
     const syncData = async () => {
@@ -45,6 +60,9 @@ export const useCommonStore = defineStore('common', () => {
             sessionMode: sessionMode.value,
             followSystem: followSystem.value,
             imagePath: imagePath.value,
+            sessionModelId: sessionModelId.value,
+            shortcutModelId: shortcutModelId.value,
+            translateModelId: translateModelId.value,
         });
     };
 
@@ -58,12 +76,18 @@ export const useCommonStore = defineStore('common', () => {
             sessionMode.value = savedState.sessionMode;
             followSystem.value = savedState.followSystem;
             imagePath.value = savedState.imagePath;
+            sessionModelId.value = savedState.sessionModelId;
+            shortcutModelId.value = savedState.shortcutModelId;
+            translateModelId.value = savedState.translateModelId;
         } else {
             language.value = defaultState.language;
             darkMode.value = defaultState.darkMode;
             themeColor.value = defaultState.themeColor;
             sessionMode.value = defaultState.sessionMode;
             followSystem.value = defaultState.followSystem;
+            sessionModelId.value = defaultState.sessionModelId;
+            shortcutModelId.value = defaultState.shortcutModelId;
+            translateModelId.value = defaultState.translateModelId;
 
             // 初始化图片存储路径
             try {
@@ -132,6 +156,21 @@ export const useCommonStore = defineStore('common', () => {
         await syncData();
     };
 
+    const setSessionModelId = async (val: string) => {
+        sessionModelId.value = val;
+        await syncData();
+    };
+
+    const setShortcutModelId = async (val: string) => {
+        shortcutModelId.value = val;
+        await syncData();
+    };
+
+    const setTranslateModelId = async (val: string) => {
+        translateModelId.value = val;
+        await syncData();
+    };
+
     return {
         getLanguage,
         getDarkMode,
@@ -139,6 +178,9 @@ export const useCommonStore = defineStore('common', () => {
         getSessionMode,
         getFollowSystem,
         getImagePath,
+        getSessionModelId,
+        getShortcutModelId,
+        getTranslateModelId,
         setLanguage,
         setDarkMode,
         setThemeColor,
@@ -146,5 +188,8 @@ export const useCommonStore = defineStore('common', () => {
         setFollowSystem,
         setImagePath,
         initializeStore,
+        setSessionModelId,
+        setShortcutModelId,
+        setTranslateModelId,
     };
 });

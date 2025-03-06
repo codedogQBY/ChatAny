@@ -162,7 +162,7 @@
 <script lang="ts" setup>
 import { ref, defineProps, defineEmits, computed, nextTick, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import ModelSelector from '@/components/chat/ModelSelector.vue';
+import ModelSelector from '@/components/common/ModelSelector.vue';
 import {
     CameraIcon,
     CommandIcon,
@@ -265,8 +265,6 @@ const sendMessage = async (content: string) => {
         if (!selectedModel.value) {
             throw new Error('请先选择一个模型');
         }
-
-        console.log('当前选择的模型:', selectedModel.value);
 
         // 获取当前供应商信息
         let supplierName = '';
@@ -468,7 +466,7 @@ const handleModelChange = async (modelValue: string, modelId: string) => {
     // 保存模型 ID
     selectedModel.value = modelValue;
     selectedModelId.value = modelId;
-    
+
     // 找到对应的供应商和模型
     const model = modelStore.getAllModels.find((m) => m.id === modelId);
 

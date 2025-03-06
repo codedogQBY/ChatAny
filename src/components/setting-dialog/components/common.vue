@@ -279,11 +279,70 @@
                 </div>
             </div>
         </div>
+
+        <!-- 默认模型设置 -->
+        <div class="space-y-6">
+            <h3 class="text-lg font-medium flex items-center">默认模型设置</h3>
+            <div class="space-y-4">
+                <div
+                    class="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 transition-colors"
+                >
+                    <div class="flex items-center">
+                        <EditIcon class="h-5 w-5 text-muted-foreground mr-2" />
+                        <div>
+                            <span class="text-sm font-medium">话题命名模型</span>
+                            <p class="text-xs text-muted-foreground mt-1">
+                                用于自动生成新会话的标题
+                            </p>
+                        </div>
+                    </div>
+                    <ModelSelector
+                        v-model:modelId="sessionModelId"
+                        @change="handleSessionModelChange"
+                    />
+                </div>
+
+                <div
+                    class="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 transition-colors"
+                >
+                    <div class="flex items-center">
+                        <WandSparklesIcon class="h-5 w-5 text-muted-foreground mr-2" />
+                        <div>
+                            <span class="text-sm font-medium">快捷指令模型</span>
+                            <p class="text-xs text-muted-foreground mt-1">用于处理预设的快捷指令</p>
+                        </div>
+                    </div>
+                    <ModelSelector
+                        v-model:modelId="shortcutModelId"
+                        @change="handleShortcutModelChange"
+                    />
+                </div>
+
+                <div
+                    class="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 transition-colors"
+                >
+                    <div class="flex items-center">
+                        <LanguagesIcon class="h-5 w-5 text-muted-foreground mr-2" />
+                        <div>
+                            <span class="text-sm font-medium">翻译模型</span>
+                            <p class="text-xs text-muted-foreground mt-1">
+                                用于内容翻译和多语言处理
+                            </p>
+                        </div>
+                    </div>
+                    <ModelSelector
+                        v-model:modelId="translateModelId"
+                        @change="handleTranslateModelChange"
+                    />
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -307,6 +366,8 @@ import { Button } from '@/components/ui/button';
 import { DARK_MODE, ThemeEnum } from '@/types';
 import useLightDarkSwitch from '@/hook/useLightDarkSwitch';
 import { useCommonStore } from '@/store/common';
+import { useModelStore } from '@/store/model';
+import ModelSelector from '@/components/common/ModelSelector.vue';
 import {
     Loader2Icon,
     RotateCcwIcon,
@@ -316,10 +377,12 @@ import {
     FolderOpenIcon,
     FolderIcon,
     ImagesIcon,
+    EditIcon,
+    LanguagesIcon,
+    WandSparklesIcon,
 } from 'lucide-vue-next';
 import { useToast } from '@/components/ui/toast/use-toast';
 import store from '@/hook/useStore';
-import { useModelStore } from '@/store/model';
 import { useBotStore } from '@/store/bot';
 import { useChatStore } from '@/store/chat';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -333,19 +396,16 @@ const { getThemeColor, setThemeColor, setFollowSystem, getImagePath, setImagePat
     useCommonStore();
 const { toast } = useToast();
 
-const theme = ref(darkMode.value);
-const themeColor = ref<ThemeEnum>(getThemeColor);
-const language = ref('zh-CN');
-const isResetting = ref(false);
-const isDebouncing = ref(false);
-const showResetConfirm = ref(false);
-const showTip = ref(false);
-const tipMessage = ref('');
-const followSystem = ref(false);
-const importProgress = ref(0);
-const isImporting = ref(false);
-const isExporting = ref(false);
-const imagePath = ref('');
+const commonStore = useCommonStore();
+const modelStore = useModelStore();
+
+// 使用 storeToRefs 获取响应式引用
+const { getSessionModelId, getShortcutModelId, getTranslateModelId } = storeToRefs(commonStore);
+
+// 创建本地状态绑定到store中的值
+const sessionModelId = ref(getSessionModelId.value);
+const shortcutModelId = ref(getShortcutModelId.value);
+const translateModelId = ref(getTranslateModelId.value);
 
 // 主题色选项
 const themeColors = [
@@ -367,6 +427,20 @@ const languages = [
     { value: 'ko', label: '한국어' },
 ];
 
+const theme = ref(darkMode.value);
+const themeColor = ref<ThemeEnum>(getThemeColor);
+const language = ref('zh-CN');
+const isResetting = ref(false);
+const isDebouncing = ref(false);
+const showResetConfirm = ref(false);
+const showTip = ref(false);
+const tipMessage = ref('');
+const followSystem = ref(false);
+const importProgress = ref(0);
+const isImporting = ref(false);
+const isExporting = ref(false);
+const imagePath = ref('');
+
 // 显示提示的函数
 const showTipMessage = (message: string) => {
     tipMessage.value = message;
@@ -384,10 +458,8 @@ const handleResetSystem = async () => {
     try {
         await store.clear();
 
-        const modelStore = useModelStore();
         const botStore = useBotStore();
         const chatStore = useChatStore();
-        const commonStore = useCommonStore();
 
         await modelStore.initializeStore();
         await botStore.initializeStore();
@@ -473,6 +545,11 @@ onMounted(async () => {
             console.error('初始化头像路径失败:', error);
         }
     }
+
+    // 初始化模型 ID
+    sessionModelId.value = commonStore.getSessionModelId;
+    shortcutModelId.value = commonStore.getShortcutModelId;
+    translateModelId.value = commonStore.getTranslateModelId;
 });
 
 // 在组件卸载时清理
@@ -641,6 +718,24 @@ const changeAvatarFolder = async () => {
             variant: 'destructive',
         });
     }
+};
+
+// 处理话题命名模型变化
+const handleSessionModelChange = async (modelId: string, modelKey: string) => {
+    sessionModelId.value = modelKey;
+    await commonStore.setSessionModelId(modelKey);
+};
+
+// 处理快捷指令模型变化
+const handleShortcutModelChange = async (modelId: string, modelKey: string) => {
+    shortcutModelId.value = modelKey;
+    await commonStore.setShortcutModelId(modelKey);
+};
+
+// 处理翻译模型变化
+const handleTranslateModelChange = async (modelId: string, modelKey: string) => {
+    translateModelId.value = modelKey;
+    await commonStore.setTranslateModelId(modelKey);
 };
 </script>
 
