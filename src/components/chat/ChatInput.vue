@@ -183,7 +183,9 @@ import { useBotStore } from '@/store/bot';
 import { serviceManager } from '@/core/services';
 import { useChatStore } from '@/store/chat';
 import { useModelStore } from '@/store/model';
+import { useCommonStore } from '@/store/common';
 import { toast } from '@/components/ui/toast';
+import { sendMessageNoContext } from '@/core/chat';
 
 const props = defineProps<{
     chat: Chat;
@@ -205,6 +207,7 @@ const networkEnabled = ref(false);
 const chatStore = useChatStore();
 const modelStore = useModelStore();
 const botStore = useBotStore();
+const commonStore = useCommonStore();
 
 const { quotedMessage } = storeToRefs(chatStore);
 
@@ -217,28 +220,7 @@ const isDefaultBot = computed(() => {
         .find((bot) => bot.id === props.chat.botId);
     return bot?.isDefault ?? true;
 });
-// 获取所有可用的模型
-const availableModels = computed(() => {
-    const models = modelStore.getAllModels;
-    if (!models) return [];
 
-    // 直接返回所有模型，按组分类
-    const groupedModels = models.reduce(
-        (acc, model) => {
-            if (!acc[model.groupName]) {
-                acc[model.groupName] = [];
-            }
-            acc[model.groupName].push(model);
-            return acc;
-        },
-        {} as Record<string, typeof models>
-    );
-
-    return Object.entries(groupedModels).map(([groupName, models]) => ({
-        name: groupName,
-        models: models,
-    }));
-});
 // 修改计算属性以在加载时禁用发送按钮
 const canSendMessage = computed(() => {
     return inputMessage.value.trim().length > 0 && !props.isLoading;
@@ -297,6 +279,37 @@ const sendMessage = async (content: string) => {
             status: 'sent',
             quoteContent: quotedMessage.value?.content || '',
         });
+
+        // 会话命名
+        const currentMessages = chatStore.currentSession.messages || [];
+        // 如果只有一个用户消息，尝试重命名会话
+        const isSessionRenamed = currentMessages.filter((m) => m.sender === 'user').length === 1;
+        if (isSessionRenamed) {
+            const sessionModelId = commonStore.getSessionModelId;
+            if (sessionModelId) {
+                const modelInfo = modelStore.getAllModels.find((m) => m.id === sessionModelId);
+                // 获取供应商
+                const supplier = modelStore.getSuppliers.find(
+                    (s) => s.name === modelInfo?.supplierId
+                );
+                sendMessageNoContext(
+                    `
+                  你是一名擅长会话的助理，你需要将用户的会话总结为 15 个字以内的标题，标题语言与用户的首要语言一致，不要使用标点符号和其他特殊符号。请注意直接返回标题即可，不需要其他内容。以下是用户的会话内容：${content}
+                `,
+                    {
+                        url: supplier?.apiUrl!,
+                        model: modelInfo?.modelId!,
+                        apiKey: supplier?.apiKey!,
+                        maxTokens: 4000,
+                    }
+                ).then((res) => {
+                    chatStore.renameSession(
+                        chatStore.currentSession?.id!,
+                        res.choices[0].message.content || '新的会话'
+                    );
+                });
+            }
+        }
 
         // 获取服务
         const service = await serviceManager.getService(chatStore.currentChat, supplier);

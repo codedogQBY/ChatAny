@@ -209,7 +209,6 @@ import TextInput from '@/components/setting-dialog/components/model/text-input.v
 import { useModelStore } from '@/store/model';
 import { toast } from '@/components/ui/toast';
 import { sendMessageNoContext } from '@/core/chat';
-import { message } from '@tauri-apps/plugin-dialog';
 
 const {
     removeModelGroup,
