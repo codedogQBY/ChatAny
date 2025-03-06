@@ -1,7 +1,7 @@
 <template>
     <div class="flex-1 overflow-y-auto px-4 py-6" ref="chatContainer">
         <div class="max-w-4xl mx-auto">
-            <TransitionGroup name="message" tag="div" class="space-y-8">
+            <TransitionGroup name="message" tag="div" class="space-y-2">
                 <div
                     v-for="message in currentSession?.messages"
                     :key="message.id"
