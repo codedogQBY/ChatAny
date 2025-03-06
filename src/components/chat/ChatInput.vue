@@ -292,17 +292,14 @@ const sendMessage = async (content: string) => {
                 const supplier = modelStore.getSuppliers.find(
                     (s) => s.name === modelInfo?.supplierId
                 );
-                sendMessageNoContext(
-                    `
-                  你是一名擅长会话的助理，你需要将用户的会话总结为 15 个字以内的标题，标题语言与用户的首要语言一致，不要使用标点符号和其他特殊符号。请注意直接返回标题即可，不需要其他内容。以下是用户的会话内容：${content}
-                `,
-                    {
-                        url: supplier?.apiUrl!,
-                        model: modelInfo?.modelId!,
-                        apiKey: supplier?.apiKey!,
-                        maxTokens: 4000,
-                    }
-                ).then((res) => {
+                sendMessageNoContext(content, {
+                    url: supplier?.apiUrl!,
+                    model: modelInfo?.modelId!,
+                    apiKey: supplier?.apiKey!,
+                    maxTokens: 4000,
+                    systemPrompt:
+                        '你是一名擅长会话的助理，你需要将用户的会话总结为 15 个字以内的标题，标题语言与用户的首要语言一致，不要使用标点符号和其他特殊符号。请注意直接返回标题即可，不需要其他内容。',
+                }).then((res) => {
                     chatStore.renameSession(
                         chatStore.currentSession?.id!,
                         res.choices[0].message.content || '新的会话'

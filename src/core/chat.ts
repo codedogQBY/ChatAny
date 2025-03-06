@@ -327,18 +327,25 @@ export async function sendMessageNoContext(
         model: string;
         apiKey: string;
         maxTokens: number;
+        systemPrompt?: string;
     }
 ): Promise<any> {
     try {
+        const messages = [];
+        if (options.systemPrompt) {
+            messages.push({
+                role: 'system',
+                content: options.systemPrompt,
+            });
+        }
+        messages.push({
+            role: 'user',
+            content: message,
+        });
         // 构建请求体
         const requestBody = {
             model: options.model,
-            messages: [
-                {
-                    role: 'user',
-                    content: message,
-                },
-            ],
+            messages,
             max_tokens: options.maxTokens || 1280,
             stream: false,
         };
