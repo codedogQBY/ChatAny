@@ -328,7 +328,9 @@ const sendMessage = async (content: string) => {
             sessionId: chatStore.currentSession.id,
             sender: 'user',
             status: 'sent',
+            quoteContent: quotedMessage.value?.content || '',
         });
+
         // 获取服务
         const service = await serviceManager.getService(chatStore.currentChat, supplier);
 

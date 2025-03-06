@@ -70,6 +70,8 @@ export interface Message {
     content: string;
     // 思考内容
     thinkContent?: string;
+    // 引用内容
+    quoteContent?: string;
     sender: MessageSender;
     status: MessageStatus;
     createdAt: number;

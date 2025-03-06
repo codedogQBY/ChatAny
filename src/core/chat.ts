@@ -149,7 +149,15 @@ export class ChatService {
             messages.push(
                 ...context.map((msg) => ({
                     role: msg.sender === 'user' ? 'user' : 'assistant',
-                    content: msg.content,
+                    content: msg.quoteContent
+                        ? `
+                            user quoted message start
+                            ${msg.quoteContent}
+                            user quoted message end
+                            ------------
+                            ${message}
+                        `
+                        : msg.content,
                 }))
             );
 
@@ -171,6 +179,8 @@ export class ChatService {
                         ${message}
                         `,
                 });
+                // 清除原来的引用
+                chatStore.cancelQuote();
             } else {
                 messages.push({
                     role: 'user',
@@ -209,9 +219,6 @@ export class ChatService {
                 },
                 body: JSON.stringify(requestBody),
             });
-
-            // 清除原来的引用
-            chatStore.cancelQuote();
 
             if (!response.ok) {
                 const errorData = await response

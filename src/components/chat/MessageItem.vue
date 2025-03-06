@@ -34,13 +34,11 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, onMounted, watch } from 'vue';
 import MarkdownViewer from '@/components/common/MarkdownViewer.vue';
+import { Message } from '@/types';
 
-const props = defineProps({
-    message: {
-        type: Object,
-        required: true,
-    },
-});
+const { message } = defineProps<{
+    message: Message;
+}>();
 
 const emit = defineEmits(['copy', 'quote']);
 
@@ -49,7 +47,7 @@ const displayContent = ref('');
 
 // 同时监听消息内容和状态变化
 watch(
-    () => [props.message.content, props.message.status],
+    () => [message.content, message.status],
     ([newContent, newStatus]) => {
         console.log('消息状态更新:', newStatus, '内容长度:', newContent?.length || 0);
 

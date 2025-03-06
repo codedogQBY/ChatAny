@@ -46,7 +46,7 @@
                         </div>
                     </template>
                     <template v-else>
-                        <div class="flex flex-col items-end max-w-[75%] relative group">
+                        <div class="flex flex-col items-end max-w-[95%] relative group">
                             <div
                                 class="text-sm text-muted-foreground mb-1 self-end flex items-center"
                             >
@@ -54,33 +54,46 @@
                             </div>
                             <div>
                                 <div
-                                    class="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-4 hover:shadow-md transition-shadow duration-200"
+                                    class="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-4 hover:shadow-md transition-shadow duration-200 w-auto"
                                 >
                                     <p class="whitespace-pre-wrap">{{ message.content }}</p>
                                 </div>
-                                <div
-                                    class="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end"
-                                >
-                                    <div class="message-actions flex space-x-1 mr-2">
-                                        <button
-                                            @click="copyMessage(message.content)"
-                                            class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
-                                        >
-                                            <CopyIcon class="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                            @click="setQuotedMessage(message)"
-                                            class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
-                                        >
-                                            <ReplyIcon class="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                    <span>{{
-                                        message.createdAt
-                                            ? formatMessageTime(message.createdAt)
-                                            : ''
-                                    }}</span>
+                            </div>
+                            <div
+                                v-if="message.quoteContent"
+                                class="mt-2 max-w-[60%] rounded-xl bg-gray-200 text-xs p-2 text-gray-400"
+                            >
+                                <HoverCard>
+                                    <HoverCardTrigger>
+                                        <div class="line-clamp-2">{{ message.quoteContent }}</div>
+                                    </HoverCardTrigger>
+                                    <HoverCardContent>
+                                        <div class="max-h-60 overflow-y-auto w-full text-sm">
+                                            {{ message.quoteContent }}
+                                        </div>
+                                    </HoverCardContent>
+                                </HoverCard>
+                            </div>
+                            <div
+                                class="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end"
+                            >
+                                <div class="message-actions flex space-x-1 mr-2 mt-2">
+                                    <button
+                                        @click="copyMessage(message.content)"
+                                        class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <CopyIcon class="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        @click="setQuotedMessage(message)"
+                                        class="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <ReplyIcon class="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
+                                <span>{{
+                                    message.createdAt ? formatMessageTime(message.createdAt) : ''
+                                }}</span>
                             </div>
                         </div>
                         <Avatar class="mt-0.5 flex-shrink-0">
@@ -108,8 +121,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar/inde
 import { CopyIcon, ReplyIcon } from 'lucide-vue-next';
 import MessageItem from '@/components/chat/MessageItem.vue';
 import { useChatStore } from '@/store/chat.js';
-import type { Chat, Message, Session } from '@/types/index.js';
+import type { Chat, Message } from '@/types/index.js';
 import { toast } from '@/components/ui/toast';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 const props = defineProps<{
     chat: Chat;
