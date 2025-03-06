@@ -35,35 +35,12 @@
             <div class="flex items-center justify-between border-none px-2 py-1">
                 <div class="flex items-center space-x-1">
                     <!-- 只有非默认机器人才显示模型选择器 -->
-                    <Select
+                    <ModelSelector
                         v-if="!isDefaultBot"
-                        v-model="selectedModelId"
-                        @update:modelValue="handleModelChange"
+                        v-model:modelId="selectedModelId"
+                        @change="handleModelChange"
                         :disabled="isLoading"
-                    >
-                        <SelectTrigger class="w-[140px] h-8 hover:bg-accent">
-                            <SelectValue placeholder="选择模型" />
-                        </SelectTrigger>
-                        <SelectContent side="top" class="max-h-[200px]">
-                            <SelectGroup v-for="group in availableModels" :key="group.name">
-                                <SelectLabel
-                                    class="font-semibold text-primary px-2 py-1.5 text-sm border-b"
-                                >
-                                    {{ group.name }}
-                                </SelectLabel>
-                                <div class="py-1">
-                                    <SelectItem
-                                        v-for="model in group.models"
-                                        :key="model.id"
-                                        :value="model.id"
-                                        class="text-sm hover:bg-accent cursor-pointer ml-2"
-                                    >
-                                        {{ model.name }}
-                                    </SelectItem>
-                                </div>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    />
 
                     <TooltipProvider>
                         <Tooltip>
@@ -185,15 +162,7 @@
 <script lang="ts" setup>
 import { ref, defineProps, defineEmits, computed, nextTick, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import ModelSelector from '@/components/chat/ModelSelector.vue';
 import {
     CameraIcon,
     CommandIcon,
@@ -486,7 +455,7 @@ const setInputFocus = (value: boolean) => {
 };
 
 // 处理模型变更
-const handleModelChange = async (modelId: string) => {
+const handleModelChange = async (modelValue: string, modelId: string) => {
     if (!modelId) return;
 
     // 获取当前机器人
@@ -496,6 +465,10 @@ const handleModelChange = async (modelId: string) => {
 
     if (!bot) return;
 
+    // 保存模型 ID
+    selectedModel.value = modelValue;
+    selectedModelId.value = modelId;
+    
     // 找到对应的供应商和模型
     const model = modelStore.getAllModels.find((m) => m.id === modelId);
 
@@ -503,8 +476,7 @@ const handleModelChange = async (modelId: string) => {
         console.warn('找不到模型信息:', modelId);
         return;
     }
-    selectedModel.value = model.modelId;
-    selectedModelId.value = modelId;
+
     // 更新机器人的模型信息（如果不是默认机器人）
     if (!bot.isDefault) {
         await botStore.updateBotModel(bot.id, model.supplierId, model.modelId);
