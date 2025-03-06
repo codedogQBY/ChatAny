@@ -145,23 +145,25 @@
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger as-child>
-                                                <LoaderCircleIcon
-                                                    v-if="
-                                                        isTestingLoading &&
-                                                        currentTestModelId === model.id
-                                                    "
-                                                    class="h-4 w-4 animate-spin"
-                                                ></LoaderCircleIcon>
-                                                <Link2Icon
-                                                    v-else
-                                                    @click="handleTestModel(model)"
-                                                    class="h-4 w-4 hover:text-gray-400"
-                                                    :class="
-                                                        isTestingLoading
-                                                            ? 'cursor-not-allowed'
-                                                            : 'cursor-pointer'
-                                                    "
-                                                />
+                                                <div>
+                                                    <LoaderCircleIcon
+                                                        v-if="
+                                                            isTestingLoading &&
+                                                            currentTestModelId === model.id
+                                                        "
+                                                        class="h-4 w-4 animate-spin"
+                                                    ></LoaderCircleIcon>
+                                                    <Link2Icon
+                                                        v-else
+                                                        @click="handleTestModel(model)"
+                                                        class="h-4 w-4 hover:text-gray-400"
+                                                        :class="
+                                                            isTestingLoading
+                                                                ? 'cursor-not-allowed'
+                                                                : 'cursor-pointer'
+                                                        "
+                                                    />
+                                                </div>
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p>测试模型连接</p>
@@ -207,6 +209,7 @@ import TextInput from '@/components/setting-dialog/components/model/text-input.v
 import { useModelStore } from '@/store/model';
 import { toast } from '@/components/ui/toast';
 import { sendMessageNoContext } from '@/core/chat';
+import { message } from '@tauri-apps/plugin-dialog';
 
 const {
     removeModelGroup,
@@ -310,7 +313,7 @@ const handleTestModel = async (model: Model) => {
             model: model.id,
             maxTokens: 1,
         });
-        if (res) {
+        if (res && !res.error) {
             toast({
                 description: `${label} 模型 ${model.name} 连接成功`,
                 variant: 'default',
@@ -319,7 +322,8 @@ const handleTestModel = async (model: Model) => {
         } else {
             toast({
                 title: `${label} 模型 ${model.name} 连接失败`,
-                description: '请检查 API 地址、 API 密钥 、模型id是否正确',
+                description:
+                    `${res?.error?.message}` || '请检查 API 地址、 API 密钥 、模型id是否正确',
                 variant: 'destructive',
                 duration: 2000,
             });

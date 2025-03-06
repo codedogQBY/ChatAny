@@ -1,7 +1,8 @@
 // MarkdownViewer.vue
 <script setup lang="ts">
 import { markdownRenderer } from '@/utils/markdownRenderer';
-import { onMounted, ref, watch, nextTick, computed } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
+import 'highlight.js/styles/atom-one-dark.css';
 
 const props = defineProps<{
     content: string;
@@ -44,20 +45,20 @@ const updateContent = async () => {
     }
 
     contentHash.value = newHash;
-    
+
     // 檢查是否內容為空或只有空白字元
     if (!sanitizedContent.value.trim()) {
         html.value = ''; // 空內容不需要渲染
         return;
     }
-    
+
     // 渲染Markdown內容並清理
     const renderedHtml = markdownRenderer.render(sanitizedContent.value);
     html.value = cleanRenderedHtml(renderedHtml);
 
     // 檢查是否有Mermaid圖表
     const hasMermaid = html.value.includes('class="mermaid"');
-    
+
     // 只有當存在mermaid圖表時才調用渲染
     if (hasMermaid) {
         // 使用setTimeout確保DOM完全更新

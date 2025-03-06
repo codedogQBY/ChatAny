@@ -2,6 +2,7 @@ import { marked, MarkedOptions, Renderer, Tokens } from 'marked';
 import mermaid from 'mermaid';
 import katex from 'katex';
 import { v4 as uuidV4 } from 'uuid';
+import hljs from 'highlight.js';
 
 type MermaidConfig = Parameters<typeof mermaid.initialize>[0];
 type KatexOptions = katex.KatexOptions;
@@ -42,16 +43,20 @@ class MarkdownRenderer {
         const renderer = new Renderer();
 
         if (this.mermaidEnabled) {
-            const originalCode = renderer.code || Renderer.prototype.code;
             renderer.code = (code: Tokens.Code): string => {
                 if (code.lang === 'mermaid') {
                     // 不立即为图表分配ID，仅为其添加类名，以便后续识别和处理
                     return `<div class="mermaid-container"><pre class="mermaid">${code.text}</pre></div>`;
                 }
-                return originalCode.call(renderer, code);
+                return `
+                <div class="relative">
+                    <button class="absolute top-2 right-2 p-1 rounded-md bg-gray-200 dark:bg-gray-700 dark:text-gray-200" @click='window.navigator.clipboard.writeText(${code.text})'>
+                        复制代码
+                    </button>
+                    <pre class="max-w-full overflow-x-auto  rounded-md p-4 mb-4 border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"><code>${hljs.highlightAuto(code.text).value}</code></pre>
+                </div>`;
             };
         }
-
         marked.setOptions({
             renderer,
             breaks: true,
