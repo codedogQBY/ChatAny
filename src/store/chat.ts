@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import store from '@/hook/useStore';
 import { useBotStore } from './bot';
-import type { Chat, Session, Message } from '@/types';
+import type { Chat, Session, Message, Bot } from '@/types';
 import { useUsageStore } from './usage';
 
 export const useChatStore = defineStore('chat', () => {
@@ -197,6 +197,31 @@ export const useChatStore = defineStore('chat', () => {
         return false;
     };
 
+    // 为 bot创建 chat
+    const createChatForBot = async (bot: Bot) => {
+        const chatId = uuidv4();
+        const newChat: Chat = {
+            id: chatId,
+            name: bot.name,
+            botId: bot.id,
+            sessions: [createSession(bot.id, chatId)],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            temperature: 0.7,
+            maxTokens: 1280,
+            contextSize: 6,
+            topP: 0.9,
+            avatar: bot.avatar,
+            isDefault: bot.isDefault,
+            modelId: bot.model?.modelId,
+        };
+
+        chats.value.push(newChat);
+        await selectChat(newChat.id);
+        await syncData();
+        return newChat;
+    };
+
     // 通过 botId 获取或创建 chat
     const getChatByBotId = async (botId: string) => {
         // 先查找是否已存在
@@ -212,30 +237,7 @@ export const useChatStore = defineStore('chat', () => {
             .find((bot) => bot.id === botId);
 
         if (!bot) throw new Error('Bot not found');
-
-        const chatId = uuidv4();
-        const newChat: Chat = {
-            id: chatId,
-            name: bot.name,
-            botId: bot.id, // 使用机器人的 ID
-            sessions: [createSession(bot.id, chatId)],
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            temperature: 0.7,
-            maxTokens: 1280,
-            contextSize: 6,
-            topP: 0.9,
-            avatar: bot.avatar,
-            isDefault: bot.isDefault,
-            modelId: bot.model?.supplierId
-                ? bot.model.modelId // 如果有指定模型，使用指定的模型
-                : undefined, // 否则等待用户选择
-        };
-
-        chats.value.push(newChat);
-        await selectChat(newChat.id);
-        await syncData();
-        return newChat;
+        return await createChatForBot(bot);
     };
 
     // 更新聊天设置
@@ -408,5 +410,6 @@ export const useChatStore = defineStore('chat', () => {
         replaceMessage,
         setQuotedMessage,
         cancelQuote,
+        createChatForBot,
     };
 });

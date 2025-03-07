@@ -44,34 +44,28 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useChatStore } from '@/store/chat';
-import { useBotStore } from '@/store/bot';
 import ChatSidebar from './ChatSidebar.vue';
 import ChatWindow from './ChatWindow.vue';
 import { MessageCircleMoreIcon } from 'lucide-vue-next';
 
 const chatStore = useChatStore();
-const botStore = useBotStore();
-
-const currentUser = {
-    id: 'user',
-    name: 'User',
-    avatar: '/placeholder.svg?height=40&width=40',
-};
 
 // 修改 currentChatData 的计算属性定义
 const currentChatData = computed(() => {
-    return chatStore.currentChat || {
-        id: '',
-        name: '',
-        botId: '',
-        sessions: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        temperature: 0.7,
-        maxTokens: 1280,
-        topP: 0.9,
-        contextSize: 6
-    };
+    return (
+        chatStore.currentChat || {
+            id: '',
+            name: '',
+            botId: '',
+            sessions: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            temperature: 0.7,
+            maxTokens: 1280,
+            topP: 0.9,
+            contextSize: 6,
+        }
+    );
 });
 
 const isGenerating = ref(false);

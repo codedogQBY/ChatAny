@@ -311,16 +311,35 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 新增模型组中的模型
-    const addModel = (model: Supplier, modelGroup: ModelGroup) => {
+    const addModel = async (model: Supplier, modelGroup: ModelGroup) => {
         const supplierIndex = suppliers.value.findIndex((item) => item.name === model.name);
         const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
+        const modelId = `new-${uuidV4().slice(0, 8)}`;
         suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models.push({
-            id: `new-${uuidV4().slice(0, 8)}`,
+            id: modelId,
             name: '新模型',
             description: '',
         });
+
+        // 新增bot机器人
+        // 新增chat聊天
+        const botStore = useBotStore();
+        const chatStore = useChatStore();
+        const bot = await botStore.addBot({
+            name: '新模型',
+            avatar: '',
+            description: '',
+            isDefault: true,
+            model: {
+                supplierId: model.name,
+                modelId,
+            },
+        });
+
+        await chatStore.createChatForBot(bot);
+
         syncData();
     };
 
