@@ -12,7 +12,7 @@
         </div>
         <div
             v-else-if="message.status === 'error'"
-            class="message-content error hover:shadow-md transition-shadow duration-200 bg-destructive/10"
+            class="message-content error hover:shadow-md transition-shadow duration-200 bg-destructive/10 text-wrap break-all"
         >
             {{ message.content }}
         </div>

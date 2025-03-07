@@ -298,7 +298,7 @@ const sendMessage = async (content: string) => {
                     apiKey: supplier?.apiKey!,
                     maxTokens: 4000,
                     systemPrompt:
-                        '你是一名擅长会话的助理，你需要将用户的会话总结为 15 个字以内的标题，标题语言与用户的首要语言一致，不要使用标点符号和其他特殊符号。请注意直接返回标题即可，不需要其他内容。',
+                        '你是一名擅长会话的助理，你需要将用户的会话总结为 20 个字或者（单词）以内的标题，标题语言与用户的首要语言一致，不要使用标点符号和其他特殊符号。请注意直接返回标题即可，不需要其他内容。',
                 }).then((res) => {
                     chatStore.renameSession(
                         chatStore.currentSession?.id!,
