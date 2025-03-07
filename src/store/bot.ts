@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+// @ts-ignore
 import pinyin from 'pinyin';
 import store from '@/hook/useStore';
 import { useModelStore } from './model';

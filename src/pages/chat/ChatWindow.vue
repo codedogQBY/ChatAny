@@ -24,13 +24,6 @@ import MessageList from '@/components/chat/MessageList.vue';
 
 const props = defineProps<{
     chat: Chat;
-    user: {
-        id: string;
-        name: string;
-        avatar: string;
-    };
-    quotedMessage: Message | null;
-    currentSession: Session | null;
 }>();
 
 const emit = defineEmits<{

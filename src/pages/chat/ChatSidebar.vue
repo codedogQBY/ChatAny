@@ -60,9 +60,6 @@
                                 {{ chat.description }}
                             </p>
                         </div>
-                        <Badge v-if="chat.unreadCount" variant="destructive" class="ml-2 shrink-0">
-                            {{ chat.unreadCount }}
-                        </Badge>
                     </div>
                 </div>
             </TransitionGroup>
