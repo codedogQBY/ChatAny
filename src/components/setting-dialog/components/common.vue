@@ -408,15 +408,19 @@ const shortcutModelId = ref(getShortcutModelId.value);
 const translateModelId = ref(getTranslateModelId.value);
 
 // 主题色选项
-const themeColors = [
-    { value: 'green', label: '绿色', color: '#16A34A' },
-    { value: 'rose', label: '玫红色', color: '#E11D48' },
-    { value: 'blue', label: '蓝色', color: '#2563EB' },
-    { value: 'zinc', label: '黑色', color: '#18181B' },
-    { value: 'orange', label: '橙色', color: '#F97316' },
-    { value: 'yellow', label: '黄色', color: '#FACC15' },
-    { value: 'violet', label: '紫色', color: '#7C3AED' },
-    { value: 'red', label: '红色', color: '#DC2626' },
+const themeColors: {
+    value: ThemeEnum;
+    label: string;
+    color: string;
+}[] = [
+    { value: ThemeEnum.GREEN, label: '绿色', color: '#16A34A' },
+    { value: ThemeEnum.ROSE, label: '玫红色', color: '#E11D48' },
+    { value: ThemeEnum.BLUE, label: '蓝色', color: '#2563EB' },
+    { value: ThemeEnum.ZINC, label: '黑色', color: '#18181B' },
+    { value: ThemeEnum.ORANGE, label: '橙色', color: '#F97316' },
+    { value: ThemeEnum.YELLOW, label: '黄色', color: '#FACC15' },
+    { value: ThemeEnum.VIOLET, label: '紫色', color: '#7C3AED' },
+    { value: ThemeEnum.RED, label: '红色', color: '#DC2626' },
 ];
 
 // 语言选项

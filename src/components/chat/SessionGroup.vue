@@ -133,7 +133,6 @@ const handleDeleteConfirm = async () => {
                 <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100">
                     <Button
                         variant="ghost"
-                        size="icon-xs"
                         class="h-5 w-5"
                         @click.stop="startEdit(session, $event)"
                     >
@@ -141,7 +140,6 @@ const handleDeleteConfirm = async () => {
                     </Button>
                     <Button
                         variant="ghost"
-                        size="icon-xs"
                         class="h-5 w-5 text-destructive/50 hover:text-destructive"
                         @click.stop="handleDeleteClick(session.id, $event)"
                     >

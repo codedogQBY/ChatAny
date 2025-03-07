@@ -5,7 +5,7 @@
     >
         <div class="flex items-center space-x-3">
             <Avatar>
-                <AvatarImage :src="chat.avatar" :alt="chat.name" />
+                <AvatarImage :src="chat.avatar || ''" :alt="chat.name" />
                 <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
             </Avatar>
             <h2 class="text-base font-semibold text-foreground truncate max-w-60">
@@ -119,7 +119,8 @@ const handleClearConfirm = async () => {
 
     try {
         // 删除当前会话
-        await chatStore.deleteSession(currentSession.id);
+        // @ts-ignore
+        await chatStore.deleteSession(currentSession.value.id);
         showClearConfirm.value = false;
 
         toast({

@@ -31,7 +31,7 @@
                         ]"
                     >
                         <Avatar class="h-8 w-8 shrink-0">
-                            <AvatarImage :src="chat.avatar" :alt="chat.name" />
+                            <AvatarImage :src="chat.avatar || ''" :alt="chat.name" />
                             <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
                         </Avatar>
                         <div class="ml-3 flex-1 min-w-0">

@@ -93,7 +93,6 @@
                                             <Button
                                                 v-if="!bot.isDefault"
                                                 variant="ghost"
-                                                size="icon-xs"
                                                 class="opacity-0 transition-opacity"
                                                 :class="{ 'opacity-100': hoveredBotId === bot.id }"
                                                 @click.stop="handleDeleteBot(bot, $event)"

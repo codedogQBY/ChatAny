@@ -3,9 +3,9 @@
         <Popover v-model:open="isOpen">
             <PopoverTrigger class="flex items-center justify-center space-x-1">
                 <span class="text-gray-500 text-sm max-w-40 truncate">
-                    {{ currentSession.title }}
+                    {{ currentSession?.title }}
                 </span>
-                <Button variant="ghost" size="icon-sm" class="h-7 w-7">
+                <Button variant="ghost" class="h-7 w-7">
                     <component :is="isOpen ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
                 </Button>
             </PopoverTrigger>

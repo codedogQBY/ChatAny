@@ -53,7 +53,7 @@ const updateContent = async () => {
     }
 
     // 渲染Markdown內容並清理
-    const renderedHtml = markdownRenderer.render(sanitizedContent.value);
+    const renderedHtml = await markdownRenderer.render(sanitizedContent.value);
     html.value = cleanRenderedHtml(renderedHtml);
 
     // 檢查是否有Mermaid圖表

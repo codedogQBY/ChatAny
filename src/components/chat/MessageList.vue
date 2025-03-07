@@ -10,7 +10,7 @@
                 >
                     <template v-if="message.sender !== 'user'">
                         <Avatar class="mt-0.5 flex-shrink-0">
-                            <AvatarImage :src="chat.avatar" :alt="chat.name" />
+                            <AvatarImage :src="chat?.avatar || ''" :alt="chat.name" />
                             <AvatarFallback>{{ chat.name[0] }}</AvatarFallback>
                         </Avatar>
                         <div class="flex flex-col max-w-[90%] relative group">
