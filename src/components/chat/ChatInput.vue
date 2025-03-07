@@ -218,7 +218,7 @@ const isDefaultBot = computed(() => {
     const bot = botStore.sections
         .flatMap((section) => section.bots)
         .find((bot) => bot.id === props.chat.botId);
-    return bot?.isDefault ?? true;
+    return bot?.isDefault;
 });
 
 // 修改计算属性以在加载时禁用发送按钮
@@ -528,14 +528,14 @@ const showShortcuts = () => {
 };
 
 onMounted(() => {
-    // 默认选择第一个可用模型
-    if (!isDefaultBot) {
+    // 如果没有选择模型，则选择第一个可用模型
+    const bot = botStore.sections
+        .flatMap((section) => section.bots)
+        .find((bot) => bot.id === props.chat.botId);
+    if (!bot?.model) {
         selectedModel.value = modelStore.getAllModels[0].modelId;
         selectedModelId.value = modelStore.getAllModels[0].id;
     } else {
-        const bot = botStore.sections
-            .flatMap((section) => section.bots)
-            .find((bot) => bot.id === props.chat.botId);
         selectedModel.value = bot?.model?.modelId!;
         selectedModelId.value = bot?.model?.supplierId + '/' + bot?.model?.modelId;
     }
