@@ -269,7 +269,6 @@ const sendMessage = async (content: string) => {
 
         // 获取历史消息
         const history = chatStore.currentSession.messages.slice(-chatStore.currentChat.contextSize);
-
         // 添加用户消息
         await chatStore.addMessage({
             content,

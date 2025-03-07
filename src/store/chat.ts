@@ -177,10 +177,6 @@ export const useChatStore = defineStore('chat', () => {
         currentSession.value.updatedAt = Date.now();
         currentChat.value.updatedAt = Date.now();
 
-        // 清除使用统计缓存
-        const usageStore = useUsageStore();
-        usageStore.clearCache();
-
         await syncData();
         return newMessage;
     };
@@ -194,13 +190,7 @@ export const useChatStore = defineStore('chat', () => {
             console.log(`更新消息状态: ${messageId} -> ${status}`);
             message.status = status;
             message.updatedAt = Date.now();
-            
-            // 如果是用户消息状态变更，清除使用统计缓存
-            if (message.sender === 'user') {
-                const usageStore = useUsageStore();
-                usageStore.clearCache();
-            }
-            
+
             await syncData();
             return true;
         }
@@ -335,11 +325,7 @@ export const useChatStore = defineStore('chat', () => {
 
         // 过滤掉要删除的聊天
         chats.value = chats.value.filter((chat) => chat.botId !== botId);
-        
-        // 清除使用统计缓存
-        const usageStore = useUsageStore();
-        usageStore.clearCache();
-        
+
         await syncData();
     };
 

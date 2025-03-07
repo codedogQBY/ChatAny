@@ -253,6 +253,9 @@ export class ChatService {
                         if (!trimmedLine) continue;
 
                         const parsedData = JSON.parse(trimmedLine);
+                        if (parsedData.error) {
+                            throw new Error(parsedData.error);
+                        }
                         const content = parsedData.choices?.[0]?.delta?.content || '';
 
                         if (content) {
