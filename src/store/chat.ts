@@ -314,6 +314,11 @@ export const useChatStore = defineStore('chat', () => {
         if (currentChat.value?.botId === botId) {
             currentChat.value = null;
             currentSession.value = null;
+            // 重新选择第一个聊天，第一个会话
+            if (chats.value.length > 0) {
+                currentChat.value = chats.value[0];
+                currentSession.value = chats.value[0].sessions[0];
+            }
         }
 
         // 过滤掉要删除的聊天
