@@ -400,26 +400,6 @@ const sendMessage = async (content: string) => {
                 // 完成后重置加载状态
                 emit('update-loading', false);
             }
-        } else {
-            // 非流式响应
-            try {
-                const response = await service.sendMessage(content, history);
-                if (pendingMessage) {
-                    pendingMessage.content = response;
-                    pendingMessage.status = 'sent';
-                    await chatStore.syncData();
-                }
-            } catch (error) {
-                console.error('非流式响应失败:', error);
-                if (pendingMessage) {
-                    pendingMessage.content = '响应生成失败，请稍后再试。';
-                    pendingMessage.status = 'error';
-                    await chatStore.syncData();
-                }
-            } finally {
-                // 完成后重置加载状态
-                emit('update-loading', false);
-            }
         }
 
         // 最后确保滚动到底部
