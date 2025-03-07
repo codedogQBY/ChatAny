@@ -1,7 +1,7 @@
 <template>
     <div class="usage-chart">
         <div class="w-full">
-            <div class="flex flex-col lg:flex-row gap-4">
+            <div class="flex flex-col sm:flex-row gap-4">
                 <!-- 热力图区域 -->
                 <div class="flex-1 min-w-0">
                     <!-- 可滚动容器 -->
@@ -88,9 +88,9 @@
                 </div>
 
                 <!-- 年份选择器 -->
-                <div class="lg:ml-4">
+                <div class="sm:ml-4">
                     <!-- 移动端：Select 组件 -->
-                    <div class="lg:hidden w-32" v-if="sortedYears.length > 0">
+                    <div class="sm:hidden w-32" v-if="sortedYears.length > 0">
                         <Select
                             v-model:modelValue="selectedYear"
                             @update:modelValue="handleYearChange"
@@ -113,7 +113,7 @@
                     </div>
                     <!-- 桌面端：Button 组件 -->
                     <div
-                        class="hidden lg:flex flex-col gap-2 text-sm"
+                        class="hidden sm:flex flex-col gap-2 text-sm"
                         v-if="sortedYears.length > 0"
                     >
                         <Button
