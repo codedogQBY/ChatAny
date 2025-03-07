@@ -103,7 +103,7 @@
                                     <SelectItem
                                         v-for="year in sortedYears"
                                         :key="year"
-                                        :value="year"
+                                        :value="String(year)"
                                     >
                                         {{ year }}
                                     </SelectItem>
@@ -119,9 +119,9 @@
                         <Button
                             v-for="year in sortedYears"
                             :key="year"
-                            :variant="selectedYear === year ? 'default' : 'secondary'"
+                            :variant="Number(selectedYear) === year ? 'default' : 'secondary'"
                             class="justify-start"
-                            @click="handleYearChange(year)"
+                            @click="handleYearChange(String(year))"
                         >
                             {{ year }}
                         </Button>
@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import {
@@ -160,25 +160,20 @@ const emit = defineEmits<{
     (e: 'update:year', year: number): void;
 }>();
 
-onMounted(() => {
-    if (props.availableYears.length > 0 && !props.year) {
-        emit('update:year', props.availableYears[0]);
-    }
+const selectedYear = ref(String(props.year));
+
+watch(() => props.year, (newYear) => {
+    selectedYear.value = String(newYear);
 });
+
+const handleYearChange = (value: string) => {
+    emit('update:year', Number(value));
+};
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const selectedYear = computed({
-    get: () => props.year,
-    set: (value) => emit('update:year', value),
-});
-
 const sortedYears = computed(() => {
     return [...props.availableYears].sort((a, b) => b - a); // 倒序排列
 });
-
-const handleYearChange = (year: number) => {
-    selectedYear.value = year;
-};
 
 const weeks = computed(() => {
     const result: DayData[][] = [];

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import store from '@/hook/useStore';
 import { useChatStore } from './chat';
+import type { Ref } from 'vue';
 
 interface DayData {
     date: string;
@@ -14,7 +15,12 @@ interface UsageData {
 
 export const useUsageStore = defineStore('usage', () => {
     const usageData = ref<UsageData>({});
-    const selectedYear = ref(new Date().getFullYear());
+    const selectedYear = ref<number>(new Date().getFullYear());
+
+    // 修改为简单的 ref 而不是 getter/setter
+    const setSelectedYear = (year: number) => {
+        selectedYear.value = year;
+    };
 
     // 同步数据到本地存储
     const syncData = async () => {
@@ -113,7 +119,8 @@ export const useUsageStore = defineStore('usage', () => {
 
     return {
         usageData,
-        selectedYear,
+        selectedYear: computed(() => selectedYear.value),  // 返回计算属性而不是 ref
+        setSelectedYear,
         getBotUsage,
         getAvailableYears,
         resetSelectedYear,

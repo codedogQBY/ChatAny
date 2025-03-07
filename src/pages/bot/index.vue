@@ -230,7 +230,7 @@
                                     :available-years="
                                         usageStore.getAvailableYears(botStore.selectedBot?.id || '')
                                     "
-                                    @update:year="usageStore.selectedYear = $event"
+                                    @update:year="usageStore.setSelectedYear($event)"
                                 />
                             </CardContent>
                         </Card>

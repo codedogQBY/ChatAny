@@ -58,38 +58,19 @@ const currentUser = {
     avatar: '/placeholder.svg?height=40&width=40',
 };
 
-// 转换 chat 数据以适配 ChatWindow 组件的格式
+// 修改 currentChatData 的计算属性定义
 const currentChatData = computed(() => {
-    if (!chatStore.currentChat || !chatStore.currentSession) return null;
-
-    const bot = botStore.sections
-        .flatMap((section) => section.bots)
-        .find((bot) => bot.id === chatStore.currentChat?.botId);
-
-    return {
-        id: chatStore.currentChat.id,
-        name: chatStore.currentChat.name,
-        avatar: bot?.avatar,
-        sessions: chatStore.currentChat.sessions,
-        botId: chatStore.currentChat.botId,
-        messages: chatStore.currentSession.messages.map((msg) => ({
-            id: msg.id,
-            content: msg.content,
-            sender:
-                msg.sender === 'user'
-                    ? currentUser
-                    : {
-                          id: 'bot',
-                          name: chatStore?.currentChat?.name || 'Bot',
-                          avatar: bot?.avatar || '',
-                      },
-            timestamp: new Date(msg.createdAt),
-            isNew: msg.sender === 'bot' && msg.status === 'pending',
-        })),
-        temperature: chatStore.currentChat.temperature,
-        maxTokens: chatStore.currentChat.maxTokens,
-        topP: chatStore.currentChat.topP,
-        contextSize: chatStore.currentChat.contextSize,
+    return chatStore.currentChat || {
+        id: '',
+        name: '',
+        botId: '',
+        sessions: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        temperature: 0.7,
+        maxTokens: 1280,
+        topP: 0.9,
+        contextSize: 6
     };
 });
 
