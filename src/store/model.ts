@@ -245,6 +245,9 @@ const defaultSuppliers: Supplier[] = [
 ];
 
 export const useModelStore = defineStore('model', () => {
+    const chatStore = useChatStore();
+    const botStore = useBotStore();
+
     const suppliers = ref<Supplier[]>(defaultSuppliers);
 
     const getSuppliers = computed(() => suppliers.value);
@@ -252,7 +255,6 @@ export const useModelStore = defineStore('model', () => {
     // 获取所有可用的模型
     const getAllModels = computed(() => {
         if (!suppliers.value) return [];
-
         // 返回所有模型的扁平数组，包含供应商信息
         return suppliers.value
             .filter((supplier) => supplier.apiKey)
@@ -298,21 +300,28 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 删除模型组中的模型
-    const removeModel = async (model: Supplier, modelGroup: ModelGroup, Supplier: Model) => {
-        const supplierIndex = suppliers.value.findIndex((item) => item.name === model.name);
+    const removeModel = async (supplier: Supplier, modelGroup: ModelGroup, model: Model) => {
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
         const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
         const modelIndex = suppliers.value[supplierIndex].modelGroup[
             modelGroupIndex
-        ].models.findIndex((item) => item.id === Supplier.id);
+        ].models.findIndex((item) => item.id === model.id);
+
         suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models.splice(modelIndex, 1);
+
+        const modelId = supplier.name + '/' + model.id;
+        // 删除bot
+        await botStore.deleteBot(modelId);
+        // 删除chat
+        await chatStore.deleteChatsByBotId(modelId);
         await syncData();
     };
 
     // 新增模型组中的模型
-    const addModel = async (model: Supplier, modelGroup: ModelGroup) => {
-        const supplierIndex = suppliers.value.findIndex((item) => item.name === model.name);
+    const addModel = async (supplier: Supplier, modelGroup: ModelGroup) => {
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
         const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
@@ -323,17 +332,13 @@ export const useModelStore = defineStore('model', () => {
             description: '',
         });
 
-        // 新增bot机器人
-        // 新增chat聊天
-        const botStore = useBotStore();
-        const chatStore = useChatStore();
         const bot = await botStore.addBot({
             name: '新模型',
-            avatar: '',
+            avatar: supplier.logo || '',
             description: '',
             isDefault: true,
             model: {
-                supplierId: model.name,
+                supplierId: supplier.name,
                 modelId,
             },
         });
@@ -355,12 +360,20 @@ export const useModelStore = defineStore('model', () => {
     };
 
     // 删除模型组
-    const removeModelGroup = (model: Supplier, modelGroup: ModelGroup) => {
-        const modelIndex = suppliers.value.findIndex((item) => item.name === model.name);
-        const modelGroupIndex = suppliers.value[modelIndex].modelGroup.findIndex(
+    const removeModelGroup = async (supplier: Supplier, modelGroup: ModelGroup) => {
+        const supplierIndex = suppliers.value.findIndex((item) => item.name === supplier.name);
+        const modelGroupIndex = suppliers.value[supplierIndex].modelGroup.findIndex(
             (item) => item.groupName === modelGroup.groupName
         );
-        suppliers.value[modelIndex].modelGroup.splice(modelGroupIndex, 1);
+        for (const model of modelGroup.models) {
+            const modelId = supplier.name + '/' + model.id;
+            // 删除bot
+            await botStore.deleteBot(modelId);
+            // 删除chat
+            await chatStore.deleteChatsByBotId(modelId);
+        }
+        await suppliers.value[supplierIndex].modelGroup.splice(modelGroupIndex, 1);
+
         syncData();
     };
 
@@ -393,12 +406,9 @@ export const useModelStore = defineStore('model', () => {
         suppliers.value[supplierIndex].modelGroup[modelGroupIndex].models[modelIndex].name = name;
         await syncData();
 
-        // 获取 chatStore 和 botStore 实例
-        const chatStore = useChatStore();
-        const botStore = useBotStore();
-
         // 构造完整的模型ID - 使用与 bot.ts 相同的构造方式
-        const modelId = supplier.name + '/' + model.id; // 使用 supplier.name 而不是 model.name
+        const modelId = supplier.name + '/' + model.id;
+
         // 更新 chat
         const affectedChats = chatStore.chats.filter((chat) => chat.botId === modelId);
 

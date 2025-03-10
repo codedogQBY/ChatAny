@@ -239,7 +239,7 @@ const sendMessage = async (content: string) => {
 
         // 自动选择默认模型
         if (!selectedModel.value && modelStore.getAllModels.length > 0) {
-            selectedModel.value = modelStore.getAllModels[0].modelId;
+            selectedModel.value = modelStore?.getAllModels[0]?.modelId || '';
             console.log('已自动选择默认模型:', selectedModel.value);
         }
 
@@ -512,8 +512,8 @@ onMounted(() => {
         .flatMap((section) => section.bots)
         .find((bot) => bot.id === props.chat.botId);
     if (!bot?.model) {
-        selectedModel.value = modelStore.getAllModels[0].modelId;
-        selectedModelId.value = modelStore.getAllModels[0].id;
+        selectedModel.value = modelStore.getAllModels[0]?.modelId || '';
+        selectedModelId.value = modelStore.getAllModels[0]?.id || '';
     } else {
         selectedModel.value = bot?.model?.modelId!;
         selectedModelId.value = bot?.model?.supplierId + '/' + bot?.model?.modelId;

@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import store from '@/hook/useStore';
 import { useBotStore } from './bot';
 import type { Chat, Session, Message, Bot } from '@/types';
-import { useUsageStore } from './usage';
 
 export const useChatStore = defineStore('chat', () => {
     const chats = ref<Chat[]>([]);
@@ -64,6 +63,7 @@ export const useChatStore = defineStore('chat', () => {
                     avatar: bot.avatar,
                     isDefault: bot.isDefault,
                     modelId: bot.model?.modelId,
+                    supplierId: bot.model?.supplierId,
                 };
             })
         );
@@ -199,7 +199,7 @@ export const useChatStore = defineStore('chat', () => {
 
     // 为 bot创建 chat
     const createChatForBot = async (bot: Bot) => {
-        const chatId = uuidv4();
+        const chatId = bot.isDefault ? bot.model?.supplierId + '' + bot.model?.modelId : uuidv4();
         const newChat: Chat = {
             id: chatId,
             name: bot.name,
@@ -214,6 +214,7 @@ export const useChatStore = defineStore('chat', () => {
             avatar: bot.avatar,
             isDefault: bot.isDefault,
             modelId: bot.model?.modelId,
+            supplierId: bot.isDefault ? bot.model?.supplierId : '', // 只有默认bot的chat才有supplierId
         };
 
         chats.value.push(newChat);
@@ -314,12 +315,17 @@ export const useChatStore = defineStore('chat', () => {
 
     // 删除指定 botId 的所有聊天
     const deleteChatsByBotId = async (botId: string) => {
+        console.log(`删除所有 botId 为 ${botId} 的聊天`);
+        console.log('当前聊天:', currentChat.value);
+        console.log(currentChat.value?.botId === botId);
         // 如果当前聊天属于要删除的机器人，先清空当前聊天
         if (currentChat.value?.botId === botId) {
             currentChat.value = null;
             currentSession.value = null;
+            console.log('清空当前聊天');
             // 重新选择第一个聊天，第一个会话
             if (chats.value.length > 0) {
+                console.log('重新选择第一个聊天');
                 currentChat.value = chats.value[0];
                 currentSession.value = chats.value[0].sessions[0];
             }

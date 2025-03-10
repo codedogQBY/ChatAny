@@ -133,7 +133,9 @@ export const useBotStore = defineStore('bot', () => {
         const letter = getFirstLetter(bot.name);
         const newBot: Bot = {
             ...bot,
-            id: `custom-${Date.now()}`,
+            id: bot.isDefault
+                ? `${bot.model?.supplierId}/${bot.model?.modelId}`
+                : `custom-${Date.now()}`,
         };
 
         const index = sections.value.findIndex((s) => s.letter === letter);
@@ -210,26 +212,18 @@ export const useBotStore = defineStore('bot', () => {
 
     // 删除机器人
     const deleteBot = async (botId: string) => {
-        // 先备份当前的自定义机器人
-        const customBots = sections.value.flatMap((section) =>
-            section.bots.filter((bot) => !bot.isDefault)
-        );
+        // 先备份当前的机器人
+        const Bots = sections.value.flatMap((section) => section.bots);
+        const bot = Bots.find((b) => b.id === botId);
 
-        // 重新生成包含默认机器人的列表
-        sections.value = generateBotsFromModels();
-
-        // 将未被删除的自定义机器人添加回去
-        customBots.forEach((bot) => {
-            if (bot.id !== botId) {
-                const letter = getFirstLetter(bot.name);
-                const sectionIndex = sections.value.findIndex((s) => s.letter === letter);
-                if (sectionIndex === -1) {
-                    sections.value.push({ letter, bots: [bot] });
-                } else {
-                    sections.value[sectionIndex].bots.push(bot);
-                }
+        // 找到并移除旧的bot
+        for (const section of sections.value) {
+            const botIndex = section.bots.findIndex((b) => b.id === botId);
+            if (botIndex !== -1) {
+                section.bots.splice(botIndex, 1);
+                break;
             }
-        });
+        }
 
         // 删除空的分组
         sections.value = sections.value.filter((section) => section.bots.length > 0);

@@ -102,6 +102,7 @@ export interface Chat {
     avatar?: string;
     isDefault?: boolean;
     modelId?: string;
+    supplierId?: string;
 }
 
 export interface Bot {
