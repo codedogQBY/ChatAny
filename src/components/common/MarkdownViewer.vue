@@ -1,4 +1,3 @@
-// MarkdownViewer.vue
 <script setup lang="ts">
 import { markdownRenderer } from '@/utils/markdownRenderer';
 import { onMounted, ref, watch, computed } from 'vue';
@@ -6,11 +5,14 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 const props = defineProps<{
     content: string;
+    steaming?: boolean;
 }>();
 
 const html = ref<string>('');
 const containerRef = ref<HTMLElement>();
 const contentHash = ref<string>('');
+
+let lastRenderedLength = 0; // 添加这个变量来追踪上次渲染的长度
 
 // 計算簡化內容，移除多餘換行符
 const sanitizedContent = computed(() => {
@@ -38,35 +40,46 @@ const cleanRenderedHtml = (htmlContent: string) => {
 };
 
 const updateContent = async () => {
-    // 檢查內容是否已更改
+    // 检查内容是否已更改
     const newHash = getContentHash(sanitizedContent.value);
     if (newHash === contentHash.value && html.value) {
-        return; // 內容未更改，跳過渲染
+        return;
     }
 
     contentHash.value = newHash;
 
-    // 檢查是否內容為空或只有空白字元
+    // 检查是否内容为空或只有空白字符
     if (!sanitizedContent.value.trim()) {
-        html.value = ''; // 空內容不需要渲染
+        html.value = '';
+        lastRenderedLength = 0;
         return;
     }
 
-    // 渲染Markdown內容並清理
-    const renderedHtml = await markdownRenderer.render(sanitizedContent.value);
-    html.value = cleanRenderedHtml(renderedHtml);
+    if (props.steaming) {
+        // 获取完整的渲染HTML
+        const fullHtml = await markdownRenderer.render(sanitizedContent.value);
+        const cleanedHtml = cleanRenderedHtml(fullHtml);
 
-    // 檢查是否有Mermaid圖表
-    const hasMermaid = html.value.includes('class="mermaid-container"');
+        // 只处理新增的内容
+        if (cleanedHtml.length > lastRenderedLength) {
+            const newContent = cleanedHtml.slice(lastRenderedLength);
+            html.value = cleanedHtml.slice(0, lastRenderedLength) + newContent;
+            lastRenderedLength = cleanedHtml.length;
+        }
+    } else {
+        // 非流式渲染，直接显示完整内容
+        const renderedHtml = await markdownRenderer.render(sanitizedContent.value);
+        html.value = cleanRenderedHtml(renderedHtml);
+        lastRenderedLength = html.value.length;
+    }
 
-    // 使用setTimeout確保DOM完全更新
+    // 使用 setTimeout 确保 DOM 完全更新
     setTimeout(async () => {
         if (containerRef.value) {
-            // 添加代码块复制功能
             addCopyListeners();
 
-            // 只有当存在mermaid圖表時才調用渲染
-            if (hasMermaid) {
+            // 只有当存在 mermaid 图表时才调用渲染
+            if (html.value.includes('class="mermaid-container"')) {
                 await markdownRenderer.renderMermaid(containerRef.value);
             }
         }
@@ -137,7 +150,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div ref="containerRef" class="markdown-viewer" v-html="html"></div>
+    <div ref="containerRef" class="markdown-viewer" :class="{ typing: props.steaming }">
+        <div class="content-wrapper">
+            <div v-html="html" class="markdown-content"></div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -367,5 +384,56 @@ onMounted(async () => {
         background-color: #222;
         border-color: #333;
     }
+}
+
+/* 修改打字机相关样式 */
+.content-wrapper {
+    position: relative;
+    display: block;
+}
+
+.markdown-content {
+    display: inline;
+}
+
+/* 使用伪元素实现光标 */
+.typing .markdown-content::after {
+    content: '';
+    display: inline-block;
+    width: 4px; /* 调整光标宽度 */
+    height: 1.2em; /* 调整光标高度 */
+    background-color: currentColor;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: cursor-blink 1s step-start infinite;
+}
+
+@keyframes cursor-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+/* 确保 markdown 内容中的块级元素正确显示 */
+.markdown-viewer :deep(p),
+.markdown-viewer :deep(pre),
+.markdown-viewer :deep(blockquote),
+.markdown-viewer :deep(ul),
+.markdown-viewer :deep(ol) {
+    display: block;
+    margin: 1em 0;
+}
+
+/* 确保最后一个块级元素和光标在同一行 */
+.markdown-viewer :deep(p:last-child),
+.markdown-viewer :deep(pre:last-child),
+.markdown-viewer :deep(blockquote:last-child),
+.markdown-viewer :deep(ul:last-child),
+.markdown-viewer :deep(ol:last-child) {
+    display: inline;
 }
 </style>

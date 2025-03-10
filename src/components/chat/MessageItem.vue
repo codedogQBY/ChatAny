@@ -20,7 +20,7 @@
             v-else-if="message.status === 'streaming'"
             class="message-content hover:shadow-md transition-shadow duration-200 bg-secondary/30"
         >
-            <MarkdownViewer :content="displayContent" />
+            <MarkdownViewer :steaming="true" :content="displayContent" />
         </div>
         <div
             v-else
@@ -44,21 +44,23 @@ const emit = defineEmits(['copy', 'quote']);
 
 // 用于打字机效果的计算属性
 const displayContent = ref('');
+let lastContentLength = 0; // 添加这个变量来追踪上次内容长度
 
-// 同时监听消息内容和状态变化
+// 修改 watch 逻辑
 watch(
     () => [message.content, message.status],
     ([newContent, newStatus]) => {
-        console.log('消息状态更新:', newStatus, '内容长度:', newContent?.length || 0);
-
         if (newStatus === 'streaming') {
+            // 只追加新增的内容
+            if (newContent && newContent.length > lastContentLength) {
+                const newPart = newContent.slice(lastContentLength);
+                displayContent.value += newPart;
+                lastContentLength = newContent.length;
+            }
+        } else {
+            // 非流式状态直接显示完整内容
             displayContent.value = newContent;
-        } else if (newStatus === 'error') {
-            // 确保错误状态下显示错误消息
-            displayContent.value = newContent;
-        } else if (newStatus === 'sent') {
-            // 发送完成状态
-            displayContent.value = newContent;
+            lastContentLength = newContent?.length || 0;
         }
     },
     { immediate: true, deep: true }
